@@ -1,0 +1,55 @@
+// TODO: apparently group sizes differ in performance depending on the gpu manufacturer, for Invidea the size should be
+// 32 ex: (8,4,1), should test later
+#define MATRIX_THREAD_COUNT_X 8
+#define MATRIX_THREAD_COUNT_Y 8
+
+#pragma kernel transpose_matrix
+#pragma kernel matrix_dot_product
+
+#pragma kernel test
+
+unsigned int input_column_size;
+unsigned int input_row_size;
+unsigned int weights_row_size;
+
+StructuredBuffer<float> input;
+StructuredBuffer<float> weights;
+StructuredBuffer<float> biases;
+RWStructuredBuffer<float> output;
+
+[numthreads(1,1,1)]
+void test(uint3 id : SV_DispatchThreadID)
+{
+    output[0] = input[0];
+    //GroupMemoryBarrierWithGroupSync();
+    //InterlockedAdd(output[0], 1);
+}
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void transpose_matrix(uint3 id : SV_DispatchThreadID)
+{
+    //TODO: put here return condition so threads work correctly
+    output[id.y * input_column_size + id.x] = input[id.x * input_row_size + id.y];
+}
+
+// x = column 1
+// y = row 2
+// row size 1 = column size 2
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void matrix_dot_product(uint3 id : SV_DispatchThreadID)
+{
+    //TODO: checking for x value might not be necessary
+    if(id.x >= input_column_size || id.y >= weights_row_size)
+        return;
+        
+    float result = 0;
+    for (unsigned int i = 0; i < input_row_size; ++i)
+    {
+        result += input[id.x * input_row_size + i] * weights[i * weights_row_size + id.y];
+    }
+
+    result += biases[id.y];
+    output[id.x * weights_row_size + id.y] = result < 0 ? 0 : result;
+}
+
+
