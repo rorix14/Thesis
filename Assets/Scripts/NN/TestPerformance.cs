@@ -101,7 +101,6 @@ namespace NN
             }
             
             stopwatch.Stop();
-            
             foreach (var gpuLayer in cpuMultiLayers)
             {
                 gpuLayer.Dispose();

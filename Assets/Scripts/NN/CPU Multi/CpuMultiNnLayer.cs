@@ -55,23 +55,21 @@ namespace NN.CPU_Multi
                 _matrixDotProductJob.Inputs = _inputs;
                 _matrixDotProductJob.Output = _output;
             }
-
-            // for (int i = 0; i < _inputs.Length; i++)
-            // {
-            //     var y = i % Inputs.GetLength(1);
-            //     _inputs[i] = Inputs[(i + Inputs.GetLength(1) - y) / Inputs.GetLength(1) - 1, y];
-            // }
-
-            float[] tt = _inputs.ToArray();
+            
+            for (int i = 0; i < _inputs.Length; i++)
+            {
+                var y = i % Inputs.GetLength(1);
+                _inputs[i] = Inputs[(i + Inputs.GetLength(1) - y) / Inputs.GetLength(1) - 1, y];
+            }
             
             var matrixDotProductJobHandle = _matrixDotProductJob.Schedule(_output.Length, 64);
             matrixDotProductJobHandle.Complete();
            
-            // for (int i = 0; i < _output.Length; i++)
-            // {
-            //     var y = i % Output.GetLength(1);
-            //     Output[(i + Output.GetLength(1) - y) / Output.GetLength(1) - 1, y] = _output[i];
-            // }
+            for (int i = 0; i < _output.Length; i++)
+            {
+                var y = i % Output.GetLength(1);
+                Output[(i + Output.GetLength(1) - y) / Output.GetLength(1) - 1, y] = _output[i];
+            }
         }
 
         [BurstCompile]
