@@ -123,14 +123,6 @@ namespace Stealth_Game
             _viewMesh.RecalculateNormals();
         }
         
-        private Vector3 DirFromAngle(float angleInDegrees, bool angleIsGlobal)
-        {
-            if (!angleIsGlobal)
-                angleInDegrees += transform.eulerAngles.y;
-
-            return new Vector3(Mathf.Sin(angleInDegrees * Mathf.Deg2Rad), 0, Mathf.Cos(angleInDegrees * Mathf.Deg2Rad));
-        }
-
         private Vector3 ViewCast(float globalAngle)
         {
             var direction = DirFromAngle(globalAngle, true);
@@ -138,7 +130,15 @@ namespace Stealth_Game
                 ? hit.point
                 : transform.position + direction * viewRadius;
         }
+        
+        private Vector3 DirFromAngle(float angleInDegrees, bool angleIsGlobal)
+        {
+            if (!angleIsGlobal)
+                angleInDegrees += transform.eulerAngles.y;
 
+            return new Vector3(Mathf.Sin(angleInDegrees * Mathf.Deg2Rad), 0, Mathf.Cos(angleInDegrees * Mathf.Deg2Rad));
+        }
+        
         public void ResetAgent()
         {
             var transformRef = transform;

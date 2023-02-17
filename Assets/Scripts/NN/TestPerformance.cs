@@ -36,14 +36,25 @@ namespace NN
 
             const int epochs = 100;
 
-            var runtime = RunCPUSingle(x, epochs, layers);
-            print("CPU single took: " + runtime + " ms");
+            long singleCPU = 0;
+            long muliCPU = 0;
+            long GPU = 0;
+            for (int i = 0; i < 10000; i++)
+            {
+                singleCPU += RunCPUSingle(x, epochs, layers);
+                muliCPU += RunCPUMulti(x, epochs, layers);
+                GPU += RunGPUCompute(x, epochs, layers);
 
-            runtime = RunCPUMulti(x, epochs, layers);
-            print("CPU multi took: " + runtime + " ms");
+            }
 
-            runtime = RunGPUCompute(x, epochs, layers);
-            print("GPU compute took: " + runtime + " ms");
+            //var runtime = RunCPUSingle(x, epochs, layers);
+            print("CPU single took: " + singleCPU / 10000 + " ms");
+
+            //runtime = RunCPUMulti(x, epochs, layers);
+            print("CPU multi took: " + singleCPU / 10000 + " ms");
+
+            //runtime = RunGPUCompute(x, epochs, layers);
+            print("GPU compute took: " + singleCPU / 10000 + " ms");
         }
 
         private long RunCPUSingle(float[,] data, int epochs, params BaseLayer[] layers)
