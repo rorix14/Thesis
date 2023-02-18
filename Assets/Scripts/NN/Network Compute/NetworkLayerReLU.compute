@@ -1,0 +1,69 @@
+#define MATRIX_THREAD_COUNT_X 8
+#define MATRIX_THREAD_COUNT_Y 8
+
+#pragma kernel forward_pass_ReLU
+#pragma kernel backwards_pass_ReLU
+
+unsigned int input_column_size;
+unsigned int input_row_size;
+unsigned int weights_row_size;
+
+RWStructuredBuffer<float> input;
+StructuredBuffer<float> weights;
+StructuredBuffer<float> biases;
+RWStructuredBuffer<float> output;
+
+RWStructuredBuffer<float> d_values;
+RWStructuredBuffer<float> d_weights;
+RWStructuredBuffer<float> d_biases;
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
+{
+    //TODO: checking for x value might not be necessary
+    if (id.x >= input_column_size || id.y >= weights_row_size)
+        return;
+
+    //dot product
+    float result = 0;
+    for (unsigned int i = 0; i < input_row_size; ++i)
+    {
+        result += input[id.x * input_row_size + i] * weights[i * weights_row_size + id.y];
+    }
+
+    result += biases[id.y];
+
+    // do ReLU activation
+    output[id.x * weights_row_size + id.y] = result < 0 ? 0 : result;
+}
+
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_ReLU(uint3 id : SV_DispatchThreadID)
+{
+    // ReLU backwards
+    const int index = id.x * weights_row_size + id.y;
+    d_values[index] = output[index] == 0 ? 0 : d_values[index];
+
+    // dense layer backwards
+    // transpose matrix forward inputs
+    output[id.y * input_column_size + id.x] = input[id.x * input_row_size + id.y];    
+}
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void transpose(uint3 id : SV_DispatchThreadID)
+{
+    /*
+    uint index = id.x + id.y * width; // the index of the current element
+    uint transposedIndex = id.y + id.x * height; // the index of the transposed element
+
+    // only perform the transpose operation for the upper-right triangle of the matrix to avoid redundant calculations
+    if (index < transposedIndex)
+    {
+        // swap the current element with the transposed element
+        float temp = result[index];
+        result[index] = result[transposedIndex];
+        result[transposedIndex] = temp;
+    }*/
+}
+
