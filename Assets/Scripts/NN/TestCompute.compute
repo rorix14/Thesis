@@ -1,0 +1,18 @@
+#pragma kernel KernelA
+#pragma kernel KernelB
+
+RWStructuredBuffer<float> buffer;
+RWStructuredBuffer<float> read_buffer;
+
+[numthreads(8, 8, 1)]
+void KernelA(uint3 id : SV_DispatchThreadID)
+{
+    buffer[id.x] += -3;
+}
+
+[numthreads(8, 8, 1)]
+void KernelB(uint3 id : SV_DispatchThreadID)
+{
+    //buffer[id.x] += 2;
+    read_buffer[id.x] = buffer[id.x] * 2;
+}
