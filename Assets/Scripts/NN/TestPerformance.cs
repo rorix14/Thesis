@@ -39,22 +39,24 @@ namespace NN
             long singleCPU = 0;
             long muliCPU = 0;
             long GPU = 0;
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 5000; i++)
             {
                 singleCPU += RunCPUSingle(x, epochs, layers);
                 muliCPU += RunCPUMulti(x, epochs, layers);
                 GPU += RunGPUCompute(x, epochs, layers);
-
+                
+                if(i % 100 == 0)
+                    print("iter: " + i);
             }
 
             //var runtime = RunCPUSingle(x, epochs, layers);
-            print("CPU single took: " + singleCPU / 10000 + " ms");
+            print("CPU single took: " + singleCPU / 5000 + " ms");
 
             //runtime = RunCPUMulti(x, epochs, layers);
-            print("CPU multi took: " + singleCPU / 10000 + " ms");
+            print("CPU multi took: " + muliCPU / 5000 + " ms");
 
             //runtime = RunGPUCompute(x, epochs, layers);
-            print("GPU compute took: " + singleCPU / 10000 + " ms");
+            print("GPU compute took: " + GPU / 5000 + " ms");
         }
 
         private long RunCPUSingle(float[,] data, int epochs, params BaseLayer[] layers)
@@ -82,7 +84,7 @@ namespace NN
                 result += value;
             }
 
-            print("Final value sum: " + result);
+            //print("Final value sum: " + result);
             return stopwatch.ElapsedMilliseconds;
         }
 
@@ -123,7 +125,7 @@ namespace NN
                 result += value;
             }
 
-            print("Final value sum: " + result);
+            //print("Final value sum: " + result);
             return stopwatch.ElapsedMilliseconds;
         }
 
@@ -169,7 +171,7 @@ namespace NN
                 result += value;
             }
 
-            print("Final value sum: " + result);
+            //print("Final value sum: " + result);
             return stopwatch.ElapsedMilliseconds;
         }
 
