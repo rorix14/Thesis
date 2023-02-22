@@ -1,3 +1,6 @@
+using System.Linq;
+using UnityEngine;
+
 namespace NN.CPU_Single
 {
     //TODO: this base class might not be needed, activation function can probably inherit directly form the BaseLayer class
@@ -25,6 +28,8 @@ namespace NN.CPU_Single
 
         public override void Backward(float[,] dValues)
         {
+            // float result = dValues.Cast<float>().Sum();
+            // Debug.Log("(cpu) d_values value sum: " + result);
             DInputs = NnMath.CopyMatrix(dValues);
             for (int i = 0; i < DInputs.GetLength(0); i++)
             {

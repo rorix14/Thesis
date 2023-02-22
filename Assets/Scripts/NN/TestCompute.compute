@@ -1,18 +1,28 @@
 #pragma kernel KernelA
 #pragma kernel KernelB
 
-RWStructuredBuffer<float> buffer;
-RWStructuredBuffer<float> read_buffer;
+RWStructuredBuffer<int> buffer;
+RWStructuredBuffer<int> read_buffer;
 
 [numthreads(8, 8, 1)]
 void KernelA(uint3 id : SV_DispatchThreadID)
 {
-    buffer[id.x] += -3;
+    //buffer[id.x] += -3;
 }
 
 [numthreads(8, 8, 1)]
 void KernelB(uint3 id : SV_DispatchThreadID)
 {
     //buffer[id.x] += 2;
-    read_buffer[id.x] = buffer[id.x] * 2;
+    //read_buffer[id.x] = buffer[id.x] * 2;
+
+    if(id.x > 3 || id.y > 0) return;
+    //read_buffer[id.x] = 4;
+    //GroupMemoryBarrierWithGroupSync();
+    for (int i = 0; i < 4; ++i)
+    {
+        InterlockedAdd(read_buffer[i], 1);
+        InterlockedAdd(buffer[0], 1);
+       //read_buffer[i] += 1;
+    }
 }

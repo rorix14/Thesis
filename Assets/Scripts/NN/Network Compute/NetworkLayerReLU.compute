@@ -2,20 +2,19 @@
 #define MATRIX_THREAD_COUNT_Y 8
 
 #pragma kernel forward_pass_ReLU
-#pragma kernel backwards_pass_ReLU
+#pragma kernel backwards_pass_ReLU_weights_biases
+#pragma kernel backwards_pass_ReLU_inputs
 
 unsigned int input_column_size;
 unsigned int input_row_size;
 unsigned int weights_row_size;
 
-RWStructuredBuffer<float> input;
+StructuredBuffer<float> input;
 StructuredBuffer<float> weights;
 StructuredBuffer<float> biases;
 RWStructuredBuffer<float> output;
 
-RWStructuredBuffer<float> d_values;
-RWStructuredBuffer<float> d_weights;
-RWStructuredBuffer<float> d_biases;
+// TODO: should see if a MATRIX_THREAD_COUNT_Y of 1 is faster, as inputs and outputs might just have the size of 1
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
@@ -30,40 +29,69 @@ void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
     {
         result += input[id.x * input_row_size + i] * weights[i * weights_row_size + id.y];
     }
-
     result += biases[id.y];
 
     // do ReLU activation
-    output[id.x * weights_row_size + id.y] = result < 0 ? 0 : result;
+    output[id.x * weights_row_size + id.y] = result < 0.0f ? 0.0f : result;
 }
 
+StructuredBuffer<float> d_values;
+RWStructuredBuffer<float> d_weights;
+RWStructuredBuffer<float> d_biases;
+RWStructuredBuffer<float> d_inputs;
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void backwards_pass_ReLU(uint3 id : SV_DispatchThreadID)
+void backwards_pass_ReLU_weights_biases(uint3 id : SV_DispatchThreadID)
 {
-    // ReLU backwards
-    const int index = id.x * weights_row_size + id.y;
-    d_values[index] = output[index] == 0 ? 0 : d_values[index];
+    if (id.x >= input_row_size || id.y >= weights_row_size)
+        return;
 
-    // dense layer backwards
-    // transpose matrix forward inputs
-    output[id.y * input_column_size + id.x] = input[id.x * input_row_size + id.y];    
-}
-
-[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void transpose(uint3 id : SV_DispatchThreadID)
-{
-    /*
-    uint index = id.x + id.y * width; // the index of the current element
-    uint transposedIndex = id.y + id.x * height; // the index of the transposed element
-
-    // only perform the transpose operation for the upper-right triangle of the matrix to avoid redundant calculations
-    if (index < transposedIndex)
+    float d_weight = 0;
+    float d_bias = 0;
+    for (unsigned int i = 0; i < input_column_size; ++i)
     {
-        // swap the current element with the transposed element
-        float temp = result[index];
-        result[index] = result[transposedIndex];
-        result[transposedIndex] = temp;
-    }*/
+        const int d_index = i * weights_row_size + id.y;
+        const float d_value = output[d_index] > 0.0f ? d_values[d_index] : 0.0f;
+
+        // input matrix is accessed if it was transposed
+        d_weight += input[i * input_row_size + id.x] * d_value;
+        d_bias += d_value;
+    }
+
+    d_weights[id.x * weights_row_size + id.y] = d_weight;
+    // setting id.y shows more than once, but the d_bias value is always the same, so race condition should not be a problem 
+    d_biases[id.y] = d_bias;
 }
 
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_ReLU_inputs(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= input_row_size)
+        return;
+    
+    float d_input = 0;
+    for (unsigned int i = 0; i < weights_row_size; ++i)
+    {
+        const int d_index = id.x * weights_row_size + i;
+        const float d_value = output[d_index] > 0.0f ? d_values[d_index] : 0.0f;
+
+        d_input += d_value * weights[id.y * weights_row_size + i];
+    }
+
+    d_inputs[id.x * input_row_size + id.y] = 0;
+    d_inputs[id.x * input_row_size + id.y] = d_input;
+}
+
+// // maybe this not needed.. I might be able to use the transposed values directly in the dot product calculation
+// [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+// void transpose_input_matrix(uint3 id : SV_DispatchThreadID)
+// {
+//     transposed_input[id.y * input_column_size + id.x] = input[id.x * input_row_size + id.y];
+// }
+//
+// [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+// void transpose_weight_matrix(uint3 id : SV_DispatchThreadID)
+// {
+//     // TODO: change to the write values
+//     transposed_weights[id.y * input_column_size + id.x] = input[id.x * input_row_size + id.y];
+// }

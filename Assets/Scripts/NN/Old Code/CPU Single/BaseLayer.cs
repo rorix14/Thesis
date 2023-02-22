@@ -2,7 +2,7 @@ namespace NN.CPU_Single
 {
     public abstract class BaseLayer 
     {
-        protected float[,] Inputs;
+        public float[,] Inputs;
         public float[,] Output;
         public float[,] DInputs;
 

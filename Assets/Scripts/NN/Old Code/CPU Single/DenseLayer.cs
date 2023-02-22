@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 namespace NN.CPU_Single
@@ -52,6 +53,7 @@ namespace NN.CPU_Single
 
         public override void Backward(float[,] dValues)
         {
+           
             DWeights = NnMath.MatrixDotProduct(NnMath.TransposeMatrix(Inputs), dValues);
 
             DBiases = new float[1, dValues.GetLength(1)];
@@ -83,6 +85,9 @@ namespace NN.CPU_Single
             }
 
             DInputs = NnMath.MatrixDotProduct(dValues, NnMath.TransposeMatrix(Weights));
+            
+            // float result = Weights.Cast<float>().Sum();
+            // Debug.Log("(cpu) weights value sum: " + result);
         }
     }
 }

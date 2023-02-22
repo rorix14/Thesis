@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace NN
@@ -9,21 +10,23 @@ namespace NN
         [SerializeField] private ComputeShader shader;
         [SerializeField] private ComputeShader test_shader;
 
-        // public static ComputeBuffer Buffer;
         private void Start()
         {
             var (x, y) = GenerateSinSample();
-            print(x.GetLength(0));
+            //print(x.GetLength(0));
 
-            const int epochs = 100;
+            const int epochs = 1;
 
             var layers = new NetworkLayer[]
             {
                 new NetworkLayer(x.GetLength(1), 64, Instantiate(shader)),
                 new NetworkLayer(64, 64, Instantiate(shader)),
-                new NetworkLayer(64, 1, Instantiate(shader))
+                new NetworkLayer(64, 4, Instantiate(shader))
             };
 
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            
             for (int i = 0; i < epochs; i++)
             {
                 layers[0].Forward(x);
@@ -32,47 +35,66 @@ namespace NN
                     layers[j].Forward(layers[j - 1].Output);
                 }
             }
-
-            float result = 0;
-            foreach (var value in layers[layers.Length - 1].Output)
+            
+            for (int i = 0; i < epochs; i++)
             {
-                result += value;
+                layers[layers.Length - 1].Backward(layers[layers.Length - 1].Output);
+                for (int j = layers.Length - 2; j >= 0; j--)
+                {
+                    layers[j].Backward(layers[j + 1].DInputs);
+                }
             }
 
-            print("Final value sum: " + result);
+            stopwatch.Stop();
+
+            float result = 0;
+            // foreach (var value in layers[layers.Length - 1].Output)
+            //     result += value;
+            
+            foreach (var value in layers[0].DInputs)
+                result += value;
+
+            //print("(GPU compute) Final value sum: " + result);
+            //print("(GPU compute) Took: " + stopwatch.ElapsedMilliseconds + " ms");
 
             foreach (var layer in layers)
             {
                 layer.Dispose();
             }
 
-            TestBuffer();
+            //TestBuffer();
         }
 
         private void TestBuffer()
         {
             var testShader = Instantiate(test_shader);
-            var Buffer = new ComputeBuffer(4, sizeof(float));
-            var readBuffer = new ComputeBuffer(4, sizeof(float));
-            float[] tt = new float[4];
-            Buffer.SetData(tt);
-
+            var buffer = new ComputeBuffer(4, sizeof(int));
+            var readBuffer = new ComputeBuffer(4, sizeof(int));
+            var tt = new int[4];
+            var tt_1 = new int[4];
+            
             int kernelIndexA = testShader.FindKernel("KernelA");
-            testShader.SetBuffer(kernelIndexA, "buffer", Buffer);
+            testShader.SetBuffer(kernelIndexA, "buffer", buffer);
             int kernelIndexB = testShader.FindKernel("KernelB");
-            testShader.SetBuffer(kernelIndexB, "buffer", Buffer);
+            testShader.SetBuffer(kernelIndexB, "buffer", buffer);
             testShader.SetBuffer(kernelIndexB, "read_buffer", readBuffer);
+            
+            buffer.SetData(tt);
+            readBuffer.SetData(tt_1);
             
             testShader.Dispatch(kernelIndexA, 128, 1, 1);
             testShader.Dispatch(kernelIndexB, 128, 1, 1);
 
-            readBuffer.GetData(tt);
-            foreach (var t in tt)
+            readBuffer.GetData(tt_1);
+            foreach (var t in tt_1)
             {
                 print(t);
             }
 
-            Buffer.Dispose();
+            buffer.GetData(tt);
+            print(tt[0]);
+            
+            buffer.Dispose();
             readBuffer.Dispose();
         }
 

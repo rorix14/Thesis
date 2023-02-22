@@ -30,12 +30,12 @@ namespace NN
                 new ActivationReLu(),
                 new DenseLayer(64, 64),
                 new ActivationReLu(),
-                new DenseLayer(64, 1),
+                new DenseLayer(64, 4),
                 new ActivationReLu()
             };
 
-            const int epochs = 100;
-            print(x.GetLength(0));
+            const int epochs = 1;
+            //print("(CPU single) " + x.GetLength(0));
             // long singleCPU = 0;
             // long muliCPU = 0;
             // long GPU = 0;
@@ -49,14 +49,50 @@ namespace NN
             //         print("iter: " + i);
             // }
             
-            var runtime = RunCPUSingle(x, epochs, layers);
-            //print("CPU single took: " + singleCPU / 5000 + " ms");
+            var runtime = RunCPUSingleBackwards(x, epochs, layers);
+            //print("(CPU single) took: " + runtime + " ms");
 
             runtime = RunCPUMulti(x, epochs, layers);
             //print("CPU multi took: " + muliCPU / 5000 + " ms");
 
             runtime = RunGPUCompute(x, epochs, layers);
             //print("GPU compute took: " + GPU / 5000 + " ms");
+        }
+
+        private long RunCPUSingleBackwards(float[,] data, int epochs, params BaseLayer[] layers)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            
+            for (int i = 0; i < epochs; i++)
+            {
+                layers[0].Forward(data);
+                for (int j = 1; j < layers.Length; j++)
+                {
+                    layers[j].Forward(layers[j - 1].Output);
+                }
+            }
+            
+            for (int i = 0; i < epochs; i++)
+            {
+                layers[layers.Length - 1].Backward(layers[layers.Length - 1].Output);
+                for (int j = layers.Length - 2; j >= 0; j--)
+                {
+                    layers[j].Backward(layers[j + 1].DInputs);
+                }
+            }
+            
+            stopwatch.Stop();
+            
+            float result = 0;
+            // foreach (var value in layers[layers.Length - 1].Output)
+            //     result += value;
+            
+            foreach (var value in ((DenseLayer)layers[0]).DInputs)
+                 result += value;
+            //print("(CPU single) Final value sum: " + result);
+            
+            return stopwatch.ElapsedMilliseconds;
         }
 
         private long RunCPUSingle(float[,] data, int epochs, params BaseLayer[] layers)
@@ -84,7 +120,7 @@ namespace NN
                 result += value;
             }
 
-            //print("Final value sum: " + result);
+            print("(CPU single) Final value sum: " + result);
             return stopwatch.ElapsedMilliseconds;
         }
 
