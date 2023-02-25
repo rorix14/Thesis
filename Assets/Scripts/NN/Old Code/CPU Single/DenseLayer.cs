@@ -86,8 +86,12 @@ namespace NN.CPU_Single
 
             DInputs = NnMath.MatrixDotProduct(dValues, NnMath.TransposeMatrix(Weights));
             
-            // float result = Weights.Cast<float>().Sum();
-            // Debug.Log("(cpu) weights value sum: " + result);
+            // float result = DInputs.Cast<float>().Sum();
+            // Debug.Log("(cpu) d_inputs value sum: " + result);
+            // result = DWeights.Cast<float>().Sum();
+            // Debug.Log("(cpu) d_weights value sum: " + result);
+            // result = DBiases.Cast<float>().Sum();
+            // Debug.Log("(cpu) d_biases value sum: " + result);
         }
     }
 }

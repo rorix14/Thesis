@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 namespace NN.CPU_Single
@@ -80,6 +81,9 @@ namespace NN.CPU_Single
                     DInputs[i, j] = -2 * ((yTrue[i, j] - dValues[i, j]) / numOfOutputs) / numOfSamples;
                 }
             }
+            
+            // float result = DInputs.Cast<float>().Sum();
+            // Debug.Log("(cpu) d_loss value sum: " + result);
         }
     }
 }

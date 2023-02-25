@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace NN.CPU_Single
@@ -51,24 +52,25 @@ namespace NN.CPU_Single
             {
                 float weightMomentumCorrected;
                 float weightCacheCorrected;
-
+            
                 for (int j = 0; j <  layer.DWeights.GetLength(1); j++)
                 {
                     _layerToWeightsMomentum[layer][i, j] = _beta1 * _layerToWeightsMomentum[layer][i, j] +
                                                            (1 - _beta1) * layer.DWeights[i, j];
                     weightMomentumCorrected =
                         _layerToWeightsMomentum[layer][i, j] / (1 - Mathf.Pow(_beta1, _iteration + 1));
-
+            
                     _layerToWeightsCache[layer][i, j] = _beta2 * _layerToWeightsCache[layer][i, j] +
                                                         (1 - _beta2) * Mathf.Pow(layer.DWeights[i, j], 2);
+                    
                     weightCacheCorrected = _layerToWeightsCache[layer][i, j] /
                                            (1 - Mathf.Pow(_beta2, _iteration + 1));
-
+            
                     layer.Weights[i, j] += -_currentLearningRate * weightMomentumCorrected /
                                             (Mathf.Sqrt(weightCacheCorrected) + _epsilon);
                 }
             }
-            
+
             for (int i = 0; i <  layer.DBiases.GetLength(0); i++)
             {
                 float biasMomentumCorrected;
@@ -79,16 +81,27 @@ namespace NN.CPU_Single
                                                           (1 - _beta1) * layer.DBiases[i, j];
                     biasMomentumCorrected =
                         _layerToBiasesMomentum[layer][i, j] / (1 - Mathf.Pow(_beta1, _iteration + 1));
-
+            
                     _layerToBiasesCache[layer][i, j] = _beta2 * _layerToBiasesCache[layer][i, j] +
                                                        (1 - _beta2) * Mathf.Pow(layer.DBiases[i, j], 2);
-
+            
                     biasCacheCorrected = _layerToBiasesCache[layer][i, j] / (1 - Mathf.Pow(_beta2, _iteration + 1));
-
+            
                     layer.Biases[i, j] += -_currentLearningRate * biasMomentumCorrected /
                                            (Mathf.Sqrt(biasCacheCorrected) + _epsilon);
                 }
             }
+            
+            // float result = layer.DBiases.Cast<float>().Sum();
+            // Debug.Log("(cpu) d_biases value sum: " + result);
+            // result = layer.Biases.Cast<float>().Sum();
+            // Debug.Log("(cpu) biases value sum: " + result);
+            // float result =   layer.DWeights.Cast<float>().Sum();
+            // Debug.Log("(cpu) d_weights value sum: " + result);
+            // result =   layer.Weights.Cast<float>().Sum();
+            // Debug.Log("(cpu) Weights value sum: " + result);
+            // result =   layer.DInputs.Cast<float>().Sum();
+            // Debug.Log("(cpu) d_inputs value sum: " + result);
         }
 
         public void PostUpdateParams()

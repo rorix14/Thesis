@@ -15,18 +15,18 @@ namespace NN
             var (x, y) = GenerateSinSample();
             //print(x.GetLength(0));
 
-            const int epochs = 1;
+            const int epochs = 5;
 
             var layers = new NetworkLayer[]
             {
                 new NetworkLayer(x.GetLength(1), 64, Instantiate(shader)),
                 new NetworkLayer(64, 64, Instantiate(shader)),
-                new NetworkLayer(64, 4, Instantiate(shader))
+                new NetworkLayer(64, 1, Instantiate(shader))
             };
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            
+
             for (int i = 0; i < epochs; i++)
             {
                 layers[0].Forward(x);
@@ -34,28 +34,41 @@ namespace NN
                 {
                     layers[j].Forward(layers[j - 1].Output);
                 }
-            }
             
-            for (int i = 0; i < epochs; i++)
-            {
-                layers[layers.Length - 1].Backward(layers[layers.Length - 1].Output);
+                print("(GPU) loss: " + layers[layers.Length - 1].ForwardLoss(y));
+                //layers[layers.Length - 1].ForwardLoss(y);
+                layers[layers.Length - 1].BackwardLoss();
+            
+                layers[layers.Length - 1].Backward(layers[layers.Length - 1].DInputsLoss);
                 for (int j = layers.Length - 2; j >= 0; j--)
                 {
                     layers[j].Backward(layers[j + 1].DInputs);
                 }
             }
 
+            //print("(GPU) loss: " + layers[layers.Length - 1].ForwardLoss(y));
+
+            // for (int i = 0; i < epochs; i++)
+            // {
+            //     layers[layers.Length - 1].BackwardLoss();
+            //     layers[layers.Length - 1].Backward(layers[layers.Length - 1].DInputsLoss);
+            //     for (int j = layers.Length - 2; j >= 0; j--)
+            //     {
+            //         layers[j].Backward(layers[j + 1].DInputs);
+            //     }
+            // }
+
             stopwatch.Stop();
 
-            float result = 0;
+            //float result = 0;
             // foreach (var value in layers[layers.Length - 1].Output)
             //     result += value;
-            
-            foreach (var value in layers[0].DInputs)
-                result += value;
+
+            // foreach (var value in layers[0].DInputs)
+            //     result += value;
 
             //print("(GPU compute) Final value sum: " + result);
-            //print("(GPU compute) Took: " + stopwatch.ElapsedMilliseconds + " ms");
+           // print("(GPU compute) Took: " + stopwatch.ElapsedMilliseconds + " ms");
 
             foreach (var layer in layers)
             {
@@ -68,32 +81,34 @@ namespace NN
         private void TestBuffer()
         {
             var testShader = Instantiate(test_shader);
-            var buffer = new ComputeBuffer(4, sizeof(int));
+            var buffer = new ComputeBuffer(4, sizeof(float));
             var readBuffer = new ComputeBuffer(4, sizeof(int));
-            var tt = new int[4];
+            var tt = new float[4];
             var tt_1 = new int[4];
-            
+
             int kernelIndexA = testShader.FindKernel("KernelA");
             testShader.SetBuffer(kernelIndexA, "buffer", buffer);
             int kernelIndexB = testShader.FindKernel("KernelB");
             testShader.SetBuffer(kernelIndexB, "buffer", buffer);
             testShader.SetBuffer(kernelIndexB, "read_buffer", readBuffer);
-            
+
             buffer.SetData(tt);
             readBuffer.SetData(tt_1);
-            
+
             testShader.Dispatch(kernelIndexA, 128, 1, 1);
             testShader.Dispatch(kernelIndexB, 128, 1, 1);
 
             readBuffer.GetData(tt_1);
             foreach (var t in tt_1)
             {
-                print(t);
+                //print(t);
             }
 
             buffer.GetData(tt);
+            //print("CPU: " + Mathf.Pow(-0.54442121213476f, 6));
             print(tt[0]);
-            
+            print(tt[1]);
+
             buffer.Dispose();
             readBuffer.Dispose();
         }

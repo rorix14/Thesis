@@ -1,7 +1,7 @@
 #pragma kernel KernelA
 #pragma kernel KernelB
 
-RWStructuredBuffer<int> buffer;
+RWStructuredBuffer<float> buffer;
 RWStructuredBuffer<int> read_buffer;
 
 [numthreads(8, 8, 1)]
@@ -18,11 +18,17 @@ void KernelB(uint3 id : SV_DispatchThreadID)
 
     if(id.x > 3 || id.y > 0) return;
     //read_buffer[id.x] = 4;
-    //GroupMemoryBarrierWithGroupSync();
     for (int i = 0; i < 4; ++i)
     {
         InterlockedAdd(read_buffer[i], 1);
-        InterlockedAdd(buffer[0], 1);
+        //InterlockedAdd(buffer[0], 1);
        //read_buffer[i] += 1;
     }
+
+    buffer[0] = 5;
+    GroupMemoryBarrierWithGroupSync();
+    buffer[1] = buffer[0] * buffer[15];
+    // const float tt = -0.54442121213476;
+    // buffer[0] = tt * tt * tt * tt * tt * tt;
+    // buffer[1] = pow(tt, 6);
 }

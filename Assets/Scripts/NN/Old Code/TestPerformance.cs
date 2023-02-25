@@ -30,11 +30,11 @@ namespace NN
                 new ActivationReLu(),
                 new DenseLayer(64, 64),
                 new ActivationReLu(),
-                new DenseLayer(64, 4),
+                new DenseLayer(64, 1),
                 new ActivationReLu()
             };
 
-            const int epochs = 1;
+            const int epochs = 5;
             //print("(CPU single) " + x.GetLength(0));
             // long singleCPU = 0;
             // long muliCPU = 0;
@@ -49,7 +49,7 @@ namespace NN
             //         print("iter: " + i);
             // }
             
-            var runtime = RunCPUSingleBackwards(x, epochs, layers);
+            var runtime = RunCPUSingleBackwards(x, y, epochs, layers);
             //print("(CPU single) took: " + runtime + " ms");
 
             runtime = RunCPUMulti(x, epochs, layers);
@@ -59,37 +59,59 @@ namespace NN
             //print("GPU compute took: " + GPU / 5000 + " ms");
         }
 
-        private long RunCPUSingleBackwards(float[,] data, int epochs, params BaseLayer[] layers)
+        private long RunCPUSingleBackwards(float[,] dataX, float[,] dataY, int epochs, params BaseLayer[] layers)
         {
+            var mse = new LossFunctionMeanSquaredError();
+            var Adam = new OptimizerAdam(0.005f, 1e-3f);
+
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             
             for (int i = 0; i < epochs; i++)
             {
-                layers[0].Forward(data);
+                layers[0].Forward(dataX);
                 for (int j = 1; j < layers.Length; j++)
                 {
                     layers[j].Forward(layers[j - 1].Output);
                 }
-            }
-            
-            for (int i = 0; i < epochs; i++)
-            {
-                layers[layers.Length - 1].Backward(layers[layers.Length - 1].Output);
+
+                print("(cpu) loss: " + mse.Calculate(layers[layers.Length - 1].Output, dataY));
+                mse.Calculate(layers[layers.Length - 1].Output, dataY);
+                
+                mse.Backward(layers[layers.Length - 1].Output, dataY);
+                layers[layers.Length - 1].Backward(mse.DInputs);
                 for (int j = layers.Length - 2; j >= 0; j--)
                 {
                     layers[j].Backward(layers[j + 1].DInputs);
                 }
+                
+                Adam.PreUpdateParams();
+                Adam.UpdateParams((DenseLayer)layers[4]);
+                Adam.UpdateParams((DenseLayer)layers[2]);
+                Adam.UpdateParams((DenseLayer)layers[0]);
+                Adam.PostUpdateParams();
             }
+            
+            //print("(cpu) loss: " + mse.Calculate(layers[layers.Length - 1].Output, dataY));
+            
+            // for (int i = 0; i < epochs; i++)
+            // {
+            //     mse.Backward(layers[layers.Length - 1].Output, dataY);
+            //     layers[layers.Length - 1].Backward(mse.DInputs);
+            //     for (int j = layers.Length - 2; j >= 0; j--)
+            //     {
+            //         layers[j].Backward(layers[j + 1].DInputs);
+            //     }
+            // }
             
             stopwatch.Stop();
             
-            float result = 0;
+            //float result = 0;
             // foreach (var value in layers[layers.Length - 1].Output)
             //     result += value;
             
-            foreach (var value in ((DenseLayer)layers[0]).DInputs)
-                 result += value;
+            // foreach (var value in ((DenseLayer)layers[0]).DInputs)
+            //      result += value;
             //print("(CPU single) Final value sum: " + result);
             
             return stopwatch.ElapsedMilliseconds;

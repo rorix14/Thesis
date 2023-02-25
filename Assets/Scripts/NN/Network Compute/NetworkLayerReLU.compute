@@ -2,16 +2,19 @@
 #define MATRIX_THREAD_COUNT_Y 8
 
 #pragma kernel forward_pass_ReLU
-#pragma kernel backwards_pass_ReLU_weights_biases
+#pragma kernel forward_pass_MSE_loss
 #pragma kernel backwards_pass_ReLU_inputs
+#pragma kernel backwards_pass_ReLU_weights_Adam
+#pragma kernel backwards_pass_ReLU_biases_Adam
+#pragma kernel backwards_pass_MSE_loss
 
 unsigned int input_column_size;
 unsigned int input_row_size;
 unsigned int weights_row_size;
 
 StructuredBuffer<float> input;
-StructuredBuffer<float> weights;
-StructuredBuffer<float> biases;
+RWStructuredBuffer<float> weights;
+RWStructuredBuffer<float> biases;
 RWStructuredBuffer<float> output;
 
 // TODO: should see if a MATRIX_THREAD_COUNT_Y of 1 is faster, as inputs and outputs might just have the size of 1
@@ -35,40 +38,36 @@ void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
     output[id.x * weights_row_size + id.y] = result < 0.0f ? 0.0f : result;
 }
 
-StructuredBuffer<float> d_values;
-RWStructuredBuffer<float> d_weights;
-RWStructuredBuffer<float> d_biases;
-RWStructuredBuffer<float> d_inputs;
-
-[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void backwards_pass_ReLU_weights_biases(uint3 id : SV_DispatchThreadID)
+StructuredBuffer<float> y_true;
+RWStructuredBuffer<float> sample_losses;
+// number of threads can be different, this should be the best configuration for 1D arrays 
+[numthreads(32,1, 1)]
+void forward_pass_MSE_loss(uint3 id : SV_DispatchThreadID)
 {
-    if (id.x >= input_row_size || id.y >= weights_row_size)
+    if (id.x >= input_column_size)
         return;
 
-    float d_weight = 0;
-    float d_bias = 0;
-    for (unsigned int i = 0; i < input_column_size; ++i)
+    float result = 0;
+    for (unsigned int i = 0; i < weights_row_size; ++i)
     {
-        const int d_index = i * weights_row_size + id.y;
-        const float d_value = output[d_index] > 0.0f ? d_values[d_index] : 0.0f;
-
-        // input matrix is accessed if it was transposed
-        d_weight += input[i * input_row_size + id.x] * d_value;
-        d_bias += d_value;
+        const int index = id.x * weights_row_size + i;
+        result += pow(y_true[index] - output[index], 2);
     }
 
-    d_weights[id.x * weights_row_size + id.y] = d_weight;
-    // setting id.y shows more than once, but the d_bias value is always the same, so race condition should not be a problem 
-    d_biases[id.y] = d_bias;
+    sample_losses[id.x] = result / weights_row_size;
 }
+
+StructuredBuffer<float> d_values;
+RWStructuredBuffer<float> d_inputs;
+//RWStructuredBuffer<float> d_weights;
+//RWStructuredBuffer<float> d_biases;
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void backwards_pass_ReLU_inputs(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_column_size || id.y >= input_row_size)
         return;
-    
+
     float d_input = 0;
     for (unsigned int i = 0; i < weights_row_size; ++i)
     {
@@ -78,20 +77,83 @@ void backwards_pass_ReLU_inputs(uint3 id : SV_DispatchThreadID)
         d_input += d_value * weights[id.y * weights_row_size + i];
     }
 
-    d_inputs[id.x * input_row_size + id.y] = 0;
     d_inputs[id.x * input_row_size + id.y] = d_input;
 }
 
-// // maybe this not needed.. I might be able to use the transposed values directly in the dot product calculation
-// [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-// void transpose_input_matrix(uint3 id : SV_DispatchThreadID)
-// {
-//     transposed_input[id.y * input_column_size + id.x] = input[id.x * input_row_size + id.y];
-// }
-//
-// [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-// void transpose_weight_matrix(uint3 id : SV_DispatchThreadID)
-// {
-//     // TODO: change to the write values
-//     transposed_weights[id.y * input_column_size + id.x] = input[id.x * input_row_size + id.y];
-// }
+// Adam optimizer variables
+unsigned int iteration;
+float learning_rate;
+float beta_1;
+float beta_2;
+float epsilon;
+RWStructuredBuffer<float> weights_momentum;
+RWStructuredBuffer<float> weights_cache;
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_ReLU_weights_Adam(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_row_size || id.y >= weights_row_size)
+        return;
+
+    float d_weight = 0;
+    for (unsigned int i = 0; i < input_column_size; ++i)
+    {
+        const int d_index = i * weights_row_size + id.y;
+        const float d_value = output[d_index] > 0.0f ? d_values[d_index] : 0.0f;
+
+        // input matrix is accessed if it was transposed
+        d_weight += input[i * input_row_size + id.x] * d_value;
+    }
+
+    const float weight_index = id.x * weights_row_size + id.y;
+    //d_weights[weight_index] = d_weight;
+    //Adam update
+    weights_momentum[weight_index] = beta_1 * weights_momentum[weight_index] + (1 - beta_1) * d_weight;
+    const float weights_momentum_corrected = weights_momentum[weight_index] / (1 - pow(beta_1, iteration + 1));
+
+    weights_cache[weight_index] = beta_2 * weights_cache[weight_index] + (1 - beta_2) * pow(d_weight, 2);
+    const float weights_cash_corrected = weights_cache[weight_index] / (1 - pow(beta_2, iteration + 1));
+
+    weights[weight_index] += -learning_rate * weights_momentum_corrected / (sqrt(weights_cash_corrected) + epsilon);
+}
+
+RWStructuredBuffer<float> biases_momentum;
+RWStructuredBuffer<float> biases_cache;
+
+[numthreads(32,1,1)]
+void backwards_pass_ReLU_biases_Adam(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= weights_row_size)
+        return;
+
+    float d_bias = 0;
+    for (unsigned int i = 0; i < input_column_size; ++i)
+    {
+        const int d_index = i * weights_row_size + id.x;
+        const float d_value = output[d_index] > 0.0f ? d_values[d_index] : 0.0f;
+        d_bias += d_value;
+    }
+
+    //d_biases[id.x] = d_bias;
+    //Adam update
+    biases_momentum[id.x] = beta_1 * biases_momentum[id.x] + (1 - beta_1) * d_bias;
+    const float bias_momentum_corrected = biases_momentum[id.x] / (1 - pow(beta_1, iteration + 1));
+
+    biases_cache[id.x] = beta_2 * biases_cache[id.x] + (1 - beta_2) * pow(d_bias, 2);
+    const float bias_cash_corrected = biases_cache[id.x] / (1 - pow(beta_2, iteration + 1));
+
+    biases[id.x] += -learning_rate * bias_momentum_corrected / (sqrt(bias_cash_corrected) + epsilon);
+}
+
+RWStructuredBuffer<float> d_inputs_loss;
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_MSE_loss(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= weights_row_size)
+        return;
+
+    const int index = id.x * weights_row_size + id.y;
+    const float d_input = -2.0f * (y_true[index] - output[index]) / weights_row_size / input_column_size;
+    d_inputs_loss[id.x * weights_row_size + id.y] = d_input;
+}
