@@ -15,36 +15,40 @@ namespace NN
             var (x, y) = GenerateSinSample();
             //print(x.GetLength(0));
 
-            const int epochs = 5;
-
+            const int epochs = 1000;
+            
             var layers = new NetworkLayer[]
             {
-                new NetworkLayer(x.GetLength(1), 64, Instantiate(shader)),
-                new NetworkLayer(64, 64, Instantiate(shader)),
-                new NetworkLayer(64, 1, Instantiate(shader))
+                new NetworkLayer(x.GetLength(1), 64, ActivationFunction.ReLu,Instantiate(shader)),
+                new NetworkLayer(64, 64, ActivationFunction.ReLu,Instantiate(shader)),
+                new NetworkLayer(64, 1, ActivationFunction.Linear,Instantiate(shader))
             };
+
+            var model = new NetworkModel(layers, new MeanSquaredError(Instantiate(shader)));
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
+            
+           model.Train(epochs, x, y, 999);
 
-            for (int i = 0; i < epochs; i++)
-            {
-                layers[0].Forward(x);
-                for (int j = 1; j < layers.Length; j++)
-                {
-                    layers[j].Forward(layers[j - 1].Output);
-                }
+            // for (int i = 0; i < epochs; i++)
+            // {
+            //     layers[0].Forward(x);
+            //     for (int j = 1; j < layers.Length; j++)
+            //     {
+            //         layers[j].Forward(layers[j - 1].Output);
+            //     }
             
-                print("(GPU) loss: " + layers[layers.Length - 1].ForwardLoss(y));
-                //layers[layers.Length - 1].ForwardLoss(y);
-                layers[layers.Length - 1].BackwardLoss();
-            
-                layers[layers.Length - 1].Backward(layers[layers.Length - 1].DInputsLoss);
-                for (int j = layers.Length - 2; j >= 0; j--)
-                {
-                    layers[j].Backward(layers[j + 1].DInputs);
-                }
-            }
+                // print("(GPU) loss: " + layers[layers.Length - 1].ForwardLoss(y));
+                // //layers[layers.Length - 1].ForwardLoss(y);
+                // layers[layers.Length - 1].BackwardLoss();
+                //
+                // layers[layers.Length - 1].Backward(layers[layers.Length - 1].DInputsLoss);
+                // for (int j = layers.Length - 2; j >= 0; j--)
+                // {
+                //     layers[j].Backward(layers[j + 1].DInputs);
+                // }
+            //}
 
             //print("(GPU) loss: " + layers[layers.Length - 1].ForwardLoss(y));
 
@@ -59,7 +63,8 @@ namespace NN
             // }
 
             stopwatch.Stop();
-
+            model.Dispose();
+            
             //float result = 0;
             // foreach (var value in layers[layers.Length - 1].Output)
             //     result += value;
@@ -68,12 +73,12 @@ namespace NN
             //     result += value;
 
             //print("(GPU compute) Final value sum: " + result);
-           // print("(GPU compute) Took: " + stopwatch.ElapsedMilliseconds + " ms");
+          // print("(GPU compute) Took: " + stopwatch.ElapsedMilliseconds + " ms");
 
-            foreach (var layer in layers)
-            {
-                layer.Dispose();
-            }
+            // foreach (var layer in layers)
+            // {
+            //     layer.Dispose();
+            // }
 
             //TestBuffer();
         }
@@ -123,7 +128,7 @@ namespace NN
             while (timeAdditive <= 1.0f)
             {
                 xValues.Add(timeAdditive);
-                yValues.Add(Mathf.Sin(Mathf.Deg2Rad * (58 * Mathf.PI * 2 * timeAdditive)));
+                yValues.Add(Mathf.Sin(Mathf.Deg2Rad * (58 * Mathf.PI * 20 * timeAdditive)));
                 timeAdditive += Time.deltaTime / 6;
             }
 

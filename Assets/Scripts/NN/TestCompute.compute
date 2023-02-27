@@ -10,6 +10,8 @@ void KernelA(uint3 id : SV_DispatchThreadID)
     //buffer[id.x] += -3;
 }
 
+void test_function(int index, RWStructuredBuffer<float> b_1, RWStructuredBuffer<int> b_2);
+
 [numthreads(8, 8, 1)]
 void KernelB(uint3 id : SV_DispatchThreadID)
 {
@@ -31,4 +33,13 @@ void KernelB(uint3 id : SV_DispatchThreadID)
     // const float tt = -0.54442121213476;
     // buffer[0] = tt * tt * tt * tt * tt * tt;
     // buffer[1] = pow(tt, 6);
+    read_buffer[0] = 4;
+    test_function(0, buffer, read_buffer);
 }
+
+void test_function(int index, RWStructuredBuffer<float> b_1, RWStructuredBuffer<int> b_2)
+{
+    b_1[index] = b_2[index] + 6;
+}
+
+
