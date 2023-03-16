@@ -53,6 +53,8 @@ namespace NN
 
             _outputBuffer.SetData(output);
             _yTrueBuffer.SetData(yTrue);
+            
+            //TODO: this might be faster if done in a unity job, since it is just using the x group
             Shader.Dispatch(KernelHandleForwardLoss, _threadGroupXForward, 1, 1);
             _sampleLossesBuffer.GetData(_sampleLosses);
 

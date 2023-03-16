@@ -30,6 +30,17 @@ namespace NN.CPU_Single
 
             return copyMat;
         }
+        
+        public static void CopyMatrix(float[,] inMat, float[,] matToCopy)
+        {
+            for (int i = 0; i < matToCopy.GetLength(0); i++)
+            {
+                for (int j = 0; j < matToCopy.GetLength(1); j++)
+                {
+                    inMat[i, j] = matToCopy[i, j];
+                }
+            }
+        }
 
         public static float[,] MatrixDotProduct(float[,] mat1, float[,] mat2)
         {
@@ -74,7 +85,7 @@ namespace NN.CPU_Single
                 }
             }
 
-            return Mathf.Sqrt((sum) / values.Length);
+            return Mathf.Sqrt(sum / values.Length);
         }
 
         public static float RandomGaussian(float minValue = 0.0f, float maxValue = 1.0f)

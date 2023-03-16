@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
+using Image = UnityEngine.UI.Image;
 
 namespace Graphs
 {
@@ -46,13 +48,14 @@ namespace Graphs
             _xValueList = new List<float>();
             _yValueList = new List<float>();
         }
-        
+
         public void SetGraph(List<float> xValueList, List<float> yValueList, GraphType graphType, string title,
             string xLabel, string yLabel)
         {
             _xValueList = xValueList;
             _yValueList = yValueList;
 
+            _graphVisual?.CleanUp();
             _graphVisual = graphType switch
             {
                 GraphType.LineGraph => new LineGraphVisual(graphContainer, Color.white, 5f, 0f),
@@ -60,6 +63,8 @@ namespace Graphs
                 _ => _graphVisual
             };
 
+
+            //TODO: if done repeatedly cash text variables
             graphTitle.text = title;
             xGraphLabel.text = string.Concat("x= ", xLabel);
             yGraphLabel.text = string.Concat("y= ", yLabel);
@@ -69,26 +74,25 @@ namespace Graphs
         private void InitializeGraph(IReadOnlyList<float> valueList, GraphVisual graphVisual)
         {
             foreach (var xLabel in _xLabelList)
-                Destroy(xLabel);
+                Destroy(xLabel.gameObject);
 
             foreach (var yLabel in _yLabelList)
-                Destroy(yLabel);
+                Destroy(yLabel.gameObject);
 
             foreach (var xDash in _xDashList)
-                Destroy(xDash);
+                Destroy(xDash.gameObject);
 
             foreach (var yDash in _yDashList)
-                Destroy(yDash);
+                Destroy(yDash.gameObject);
 
             _xLabelList.Clear();
             _yLabelList.Clear();
             _xDashList.Clear();
             _yDashList.Clear();
 
-            graphVisual.CleanUp();
-
             int valueListSize = valueList.Count;
-            var sizeDelta = graphContainer.sizeDelta;
+            //var sizeDelta = graphContainer.sizeDelta;
+            var sizeDelta = graphContainer.rect.size;
             float graphWidth = sizeDelta.x;
             float graphHeight = sizeDelta.y;
             float xSize = graphWidth / valueListSize;
@@ -96,6 +100,12 @@ namespace Graphs
 
             bool valueIsLess = valueListSize <= xMaxSeparatorCount;
             int separatorCount = valueIsLess ? valueListSize : xMaxSeparatorCount;
+
+            // graphTitle.anchoredPosition = new Vector2(graphWidth / 2 - graphTitle.rect.width / 2, graphHeight);
+            // graphTitle.sizeDelta = new Vector2(graphTitle.sizeDelta.x,
+            //     (GetComponent<RectTransform>().rect.height - graphHeight) / 2 * 0.85f);
+            // xGraphLabel.anchoredPosition = new Vector2(0, graphHeight);
+            // yGraphLabel.anchoredPosition = new Vector2(0, graphHeight);
 
             for (int i = 0; i < separatorCount; i++)
             {
@@ -109,12 +119,13 @@ namespace Graphs
                 var dashX = Instantiate(dashTemplateX, graphContainer, false);
                 dashX.gameObject.SetActive(true);
                 dashX.anchoredPosition = new Vector2(xPos, 0);
+                dashX.sizeDelta = new Vector2(graphHeight * 100, 3);
                 _xDashList.Add(dashX);
 
                 var labelX = Instantiate(labelTemplateX, graphContainer, false);
                 labelX.gameObject.SetActive(true);
                 labelX.anchoredPosition = new Vector2(xPos, -25f);
-                labelX.GetComponent<TextMeshProUGUI>().text = (normalizedValue * valueListSize).ToString("F1");
+                labelX.GetComponent<TextMeshProUGUI>().text = (normalizedValue * valueListSize).ToString("F0");
                 _xLabelList.Add(labelX);
             }
 
@@ -127,6 +138,7 @@ namespace Graphs
                 var dashY = Instantiate(dashTemplateY, graphContainer, false);
                 dashY.gameObject.SetActive(true);
                 dashY.anchoredPosition = new Vector2(0, normalizedValue * graphHeight);
+                dashY.sizeDelta = new Vector2(graphWidth * 100, 3);
                 _yDashList.Add(dashY);
 
                 var labelY = Instantiate(labelTemplateY, graphContainer, false);
@@ -146,7 +158,8 @@ namespace Graphs
             CalculateYScale(out var yMin, out var yMax);
 
             bool yScaleChanged = Mathf.Abs(yMinBefore - yMin) > 0 || Mathf.Abs(yMaxBefore - yMax) > 0;
-            float xSize = graphContainer.sizeDelta.x / _yValueList.Count;
+            float graphWidth = graphContainer.rect.size.x;
+            float xSize = graphWidth / _yValueList.Count;
             var xPadding = xSize * graphVisual.PaddingPercentage;
 
             bool xScaleChanged = _yValueList.Count <= xMaxSeparatorCount;
@@ -173,6 +186,7 @@ namespace Graphs
 
                 float xPos = xPadding + i * xSize;
                 _xDashList[i].anchoredPosition = new Vector2(xPos, 0);
+                _xDashList[i].sizeDelta = new Vector2(graphWidth * 100, 3);
                 _xLabelList[i].anchoredPosition = new Vector2(xPos, -25f);
             }
 
@@ -261,7 +275,7 @@ namespace Graphs
 
             public override void CreateGraphVisual(IReadOnlyList<float> values, float yMin, float yMax)
             {
-                var containerSize = GraphContainer.sizeDelta;
+                var containerSize = GraphContainer.rect.size;
                 var xSize = containerSize.x / values.Count;
                 var xPadding = xSize * PaddingPercentage;
 
@@ -275,7 +289,7 @@ namespace Graphs
 
             public override void UpdateGraphElement(int index, float value, float yMin, float yMax)
             {
-                var containerSize = GraphContainer.sizeDelta;
+                var containerSize = GraphContainer.rect.size;
                 float yPos = (value - yMin) / (yMax - yMin) * containerSize.y;
 
                 var bar = _barList[index];
@@ -284,7 +298,7 @@ namespace Graphs
 
             public override void UpdateAllGraphElements(IReadOnlyList<float> values, float yMin, float yMax)
             {
-                var containerSize = GraphContainer.sizeDelta;
+                var containerSize = GraphContainer.rect.size;
                 var xSize = containerSize.x / values.Count;
 
                 for (int i = 0; i < values.Count; i++)
@@ -323,7 +337,7 @@ namespace Graphs
             public override void CleanUp()
             {
                 foreach (var bar in _barList)
-                    Destroy(bar);
+                    Destroy(bar.gameObject);
 
                 _barList.Clear();
             }
@@ -346,7 +360,7 @@ namespace Graphs
 
             public override void CreateGraphVisual(IReadOnlyList<float> values, float yMin, float yMax)
             {
-                var containerSize = GraphContainer.sizeDelta;
+                var containerSize = GraphContainer.rect.size;
                 var xSize = containerSize.x / values.Count;
                 var xPadding = xSize * PaddingPercentage;
 
@@ -367,7 +381,7 @@ namespace Graphs
 
             public override void UpdateGraphElement(int index, float value, float yMin, float yMax)
             {
-                float yPos = (value - yMin) / (yMax - yMin) * GraphContainer.sizeDelta.y;
+                float yPos = (value - yMin) / (yMax - yMin) * GraphContainer.rect.size.y;
 
                 var lineRenderer = _lineList[0].GetComponent<LineRendererHUD>();
                 lineRenderer.points[index] = new Vector2(lineRenderer.points[index].x, yPos);
@@ -376,7 +390,7 @@ namespace Graphs
 
             public override void UpdateAllGraphElements(IReadOnlyList<float> values, float yMin, float yMax)
             {
-                var containerSize = GraphContainer.sizeDelta;
+                var containerSize = GraphContainer.rect.size;
                 var xSize = containerSize.x / values.Count;
 
                 var lineRenderer = _lineList[0].GetComponent<LineRendererHUD>();
@@ -408,6 +422,7 @@ namespace Graphs
 
                 var rectTransform = line.GetComponent<RectTransform>();
                 rectTransform.anchoredPosition = new Vector2(0f, 0f);
+                rectTransform.sizeDelta = new Vector2(0, 0);
                 rectTransform.anchorMin = new Vector2(0, 0);
                 rectTransform.anchorMax = new Vector2(1, 1);
                 rectTransform.pivot = new Vector2(0f, 0f);
@@ -416,8 +431,9 @@ namespace Graphs
 
             public override void CleanUp()
             {
+                print("Hello!?");
                 foreach (var line in _lineList)
-                    Destroy(line);
+                    Destroy(line.gameObject);
 
                 _lineList.Clear();
             }

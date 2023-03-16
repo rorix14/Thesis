@@ -3,13 +3,15 @@
 
 #pragma kernel forward_pass_ReLU
 #pragma kernel backwards_pass_ReLU_inputs
-#pragma kernel backwards_pass_ReLU_weights_Adam
-#pragma kernel backwards_pass_ReLU_biases_Adam
+#pragma kernel backwards_pass_ReLU_weights_biases_Adam
+
+#pragma kernel forward_pass_Tanh
+#pragma kernel backwards_pass_Tanh_inputs
+#pragma kernel backwards_pass_Tanh_weights_biases_Adam
 
 #pragma kernel forward_pass_linear
-#pragma kernel backwards_pass_Linear_inputs
-#pragma kernel backwards_pass_linear_weights_Adam
-#pragma kernel backwards_pass_linear_biases_Adam
+#pragma kernel backwards_pass_linear_inputs
+#pragma kernel backwards_pass_linear_weights_biases_Adam
 
 #pragma kernel forward_pass_MSE_loss
 #pragma kernel backwards_pass_MSE_loss
@@ -28,7 +30,7 @@ RWStructuredBuffer<float> output;
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
 {
-    //TODO: checking for x value might not be necessary
+    //TODO: checking for x value might not be necessary, out of bounds always returns zero
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
 
@@ -57,7 +59,8 @@ void forward_pass_MSE_loss(uint3 id : SV_DispatchThreadID)
     for (unsigned int i = 0; i < weights_row_size; ++i)
     {
         const int index = id.x * weights_row_size + i;
-        result += pow(y_true[index] - output[index], 2);
+        const float error = y_true[index] - output[index];
+        result += error * error;
     }
 
     sample_losses[id.x] = result / weights_row_size;
@@ -85,67 +88,46 @@ void backwards_pass_ReLU_inputs(uint3 id : SV_DispatchThreadID)
 }
 
 // Adam optimizer variables
-unsigned int iteration;
-float learning_rate;
 float beta_1;
 float beta_2;
 float epsilon;
+float current_learning_rate;
+float beta_1_corrected;
+float beta_2_corrected;
+
 RWStructuredBuffer<float> weights_momentum;
 RWStructuredBuffer<float> weights_cache;
 
+RWStructuredBuffer<float> biases_momentum;
+RWStructuredBuffer<float> biases_cache;
+
+void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
+                    RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache);
+
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void backwards_pass_ReLU_weights_Adam(uint3 id : SV_DispatchThreadID)
+void backwards_pass_ReLU_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_row_size || id.y >= weights_row_size)
         return;
 
     float d_weight = 0;
+    float d_bias = 0;
     for (unsigned int i = 0; i < input_column_size; ++i)
     {
         const int d_index = i * weights_row_size + id.y;
         const float d_value = output[d_index] > 0.0f ? d_values[d_index] : 0.0f;
+        d_bias += d_value;
 
         // input matrix is accessed if it was transposed
         d_weight += input[i * input_row_size + id.x] * d_value;
     }
 
     const float weight_index = id.x * weights_row_size + id.y;
-    //Adam update
-    weights_momentum[weight_index] = beta_1 * weights_momentum[weight_index] + (1 - beta_1) * d_weight;
-    const float weights_momentum_corrected = weights_momentum[weight_index] / (1 - pow(beta_1, iteration + 1));
+    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache);
 
-    weights_cache[weight_index] = beta_2 * weights_cache[weight_index] + (1 - beta_2) * pow(d_weight, 2);
-    const float weights_cash_corrected = weights_cache[weight_index] / (1 - pow(beta_2, iteration + 1));
+    if (id.x != 0) return;
 
-    weights[weight_index] += -learning_rate * weights_momentum_corrected / (sqrt(weights_cash_corrected) + epsilon);
-}
-
-RWStructuredBuffer<float> biases_momentum;
-RWStructuredBuffer<float> biases_cache;
-
-[numthreads(32,1,1)]
-void backwards_pass_ReLU_biases_Adam(uint3 id : SV_DispatchThreadID)
-{
-    if (id.x >= weights_row_size)
-        return;
-
-    float d_bias = 0;
-    for (unsigned int i = 0; i < input_column_size; ++i)
-    {
-        const int d_index = i * weights_row_size + id.x;
-        const float d_value = output[d_index] > 0.0f ? d_values[d_index] : 0.0f;
-        d_bias += d_value;
-    }
-
-    //Adam update
-    //TODO: might be able to put Adam update in a function call
-    biases_momentum[id.x] = beta_1 * biases_momentum[id.x] + (1 - beta_1) * d_bias;
-    const float bias_momentum_corrected = biases_momentum[id.x] / (1 - pow(beta_1, iteration + 1));
-
-    biases_cache[id.x] = beta_2 * biases_cache[id.x] + (1 - beta_2) * pow(d_bias, 2);
-    const float bias_cash_corrected = biases_cache[id.x] / (1 - pow(beta_2, iteration + 1));
-
-    biases[id.x] += -learning_rate * bias_momentum_corrected / (sqrt(bias_cash_corrected) + epsilon);
+    Adam_optimizer(id.y, d_bias, biases, biases_momentum, biases_cache);
 }
 
 RWStructuredBuffer<float> d_inputs_loss;
@@ -160,11 +142,11 @@ void backwards_pass_MSE_loss(uint3 id : SV_DispatchThreadID)
     d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) / weights_row_size / input_column_size;
 }
 
-// Functions used for linear layers
+////////// Functions used for Tanh layers ///////////////
+
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void forward_pass_linear(uint3 id : SV_DispatchThreadID)
+void forward_pass_Tanh(uint3 id : SV_DispatchThreadID)
 {
-    //TODO: checking for x value might not be necessary
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
 
@@ -173,12 +155,76 @@ void forward_pass_linear(uint3 id : SV_DispatchThreadID)
     {
         result += input[id.x * input_row_size + i] * weights[i * weights_row_size + id.y];
     }
+    result += biases[id.y];
+
+    const float exp_pos = exp(result);
+    const float exp_neg = exp(-result);
     
+    output[id.x * weights_row_size + id.y] = (exp_pos - exp_neg) / (exp_pos + exp_neg);
+}
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_Tanh_inputs(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= input_row_size)
+        return;
+
+    float d_input = 0;
+    for (unsigned int i = 0; i < weights_row_size; ++i)
+    {
+        const int d_index = id.x * weights_row_size + i;
+        const float d_value = (1 - output[d_index] * output[d_index]) * d_values[d_index];
+
+        d_input += d_value * weights[id.y * weights_row_size + i];
+    }
+
+    d_inputs[id.x * input_row_size + id.y] = d_input;
+}
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_Tanh_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_row_size || id.y >= weights_row_size)
+        return;
+
+    float d_weight = 0;
+    float d_bias = 0;
+    for (unsigned int i = 0; i < input_column_size; ++i)
+    {
+        const int d_index = i * weights_row_size + id.y;
+        const float d_value = (1 - output[d_index] * output[d_index]) * d_values[d_index];
+        d_bias += d_value;
+
+        d_weight += input[i * input_row_size + id.x] * d_value;
+    }
+
+    const float weight_index = id.x * weights_row_size + id.y;
+    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache);
+
+    if (id.x != 0) return;
+
+    Adam_optimizer(id.y, d_bias, biases, biases_momentum, biases_cache);
+}
+
+////////// Functions used for linear layers ///////////////
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void forward_pass_linear(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= weights_row_size)
+        return;
+
+    float result = 0;
+    for (unsigned int i = 0; i < input_row_size; ++i)
+    {
+        result += input[id.x * input_row_size + i] * weights[i * weights_row_size + id.y];
+    }
+
     output[id.x * weights_row_size + id.y] = result + biases[id.y];
 }
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void backwards_pass_Linear_inputs(uint3 id : SV_DispatchThreadID)
+void backwards_pass_linear_inputs(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_column_size || id.y >= input_row_size)
         return;
@@ -193,27 +239,56 @@ void backwards_pass_Linear_inputs(uint3 id : SV_DispatchThreadID)
 }
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void backwards_pass_linear_weights_Adam(uint3 id : SV_DispatchThreadID)
+void backwards_pass_linear_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_row_size || id.y >= weights_row_size)
         return;
 
     float d_weight = 0;
+    float d_bias = 0;
     for (unsigned int i = 0; i < input_column_size; ++i)
     {
-        d_weight += input[i * input_row_size + id.x] * d_values[i * weights_row_size + id.y];
+        const float d_value = d_values[i * weights_row_size + id.y];
+        d_bias += d_value;
+        d_weight += input[i * input_row_size + id.x] * d_value;
     }
 
     const float weight_index = id.x * weights_row_size + id.y;
-    
-    //Adam update
-    weights_momentum[weight_index] = beta_1 * weights_momentum[weight_index] + (1 - beta_1) * d_weight;
-    const float weights_momentum_corrected = weights_momentum[weight_index] / (1 - pow(beta_1, iteration + 1));
+    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache);
 
-    weights_cache[weight_index] = beta_2 * weights_cache[weight_index] + (1 - beta_2) * pow(d_weight, 2);
-    const float weights_cash_corrected = weights_cache[weight_index] / (1 - pow(beta_2, iteration + 1));
+    if (id.x != 0) return;
 
-    weights[weight_index] += -learning_rate * weights_momentum_corrected / (sqrt(weights_cash_corrected) + epsilon);
+    Adam_optimizer(id.y, d_bias, biases, biases_momentum, biases_cache);
+}
+
+inline void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
+                           RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache)
+{
+    momentum[index] = beta_1 * momentum[index] + (1 - beta_1) * d_value;
+    const float momentum_corrected = momentum[index] / (1 - beta_1_corrected);
+
+    cache[index] = beta_2 * cache[index] + (1 - beta_2) * (d_value * d_value);
+    const float cash_corrected = cache[index] / (1 - beta_2_corrected);
+
+    buffer_to_update[index] += -current_learning_rate * momentum_corrected / (sqrt(cash_corrected) + epsilon);
+}
+
+/*
+[numthreads(32,1,1)]
+void backwards_pass_ReLU_biases_Adam(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= weights_row_size)
+        return;
+
+    float d_bias = 0;
+    for (unsigned int i = 0; i < input_column_size; ++i)
+    {
+        const int d_index = i * weights_row_size + id.x;
+        const float d_value = output[d_index] > 0.0f ? d_values[d_index] : 0.0f;
+        d_bias += d_value;
+    }
+
+    Adam_optimizer(id.x, d_bias, biases, biases_momentum, biases_cache);
 }
 
 [numthreads(32,1,1)]
@@ -228,12 +303,6 @@ void backwards_pass_linear_biases_Adam(uint3 id : SV_DispatchThreadID)
         d_bias += d_values[i * weights_row_size + id.x];
     }
 
-    //Adam update
-    biases_momentum[id.x] = beta_1 * biases_momentum[id.x] + (1 - beta_1) * d_bias;
-    const float bias_momentum_corrected = biases_momentum[id.x] / (1 - pow(beta_1, iteration + 1));
-
-    biases_cache[id.x] = beta_2 * biases_cache[id.x] + (1 - beta_2) * pow(d_bias, 2);
-    const float bias_cash_corrected = biases_cache[id.x] / (1 - pow(beta_2, iteration + 1));
-
-    biases[id.x] += -learning_rate * bias_momentum_corrected / (sqrt(bias_cash_corrected) + epsilon);
+    Adam_optimizer(id.x, d_bias, biases, biases_momentum, biases_cache);
 }
+*/

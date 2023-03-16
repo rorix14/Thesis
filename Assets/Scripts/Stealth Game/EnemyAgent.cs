@@ -21,44 +21,82 @@ namespace Stealth_Game
         [SerializeField] private MeshFilter viewMeshFilter;
         private Mesh _viewMesh;
         private float _viewStepAngleSize;
-        private Vector3[] _viewPoints;
+        private Vector3[] _vertices;
+        private int[] _triangles;
+
+        private bool _isDead;
 
         // cached variables
         private int _currentWaypointIndex;
         private float _timeSinceArriveAtWaypoints = Mathf.Infinity;
         private float _sqrViewRadius;
-
         private Vector3 _initPosition;
         private Quaternion _initRotation;
+        private Renderer _renderer;
+        private Collider _collider;
 
+        public Vector3[] ViewPoints { get; private set; }
         public float ViewRadius => viewRadius;
         public float ViewAngle => viewAngle;
 
         private void Awake()
         {
             _sqrViewRadius = viewRadius * viewRadius;
-            
+
             int stepCount = Mathf.RoundToInt(viewAngle * meshResolution);
             _viewStepAngleSize = viewAngle / stepCount;
-            _viewPoints = new Vector3[stepCount + 1];
-            
+            ViewPoints = new Vector3[stepCount + 1];
+
+            int vertexCount = ViewPoints.Length + 1;
+            _vertices = new Vector3[vertexCount];
+            _triangles = new int[(vertexCount - 2) * 3];
+
             _viewMesh = new Mesh { name = "View Mesh" };
             viewMeshFilter.mesh = _viewMesh;
 
             var transform1 = transform;
             _initPosition = transform1.position;
             _initRotation = transform1.rotation;
+
+            _renderer = GetComponent<Renderer>();
+            _collider = GetComponent<Collider>();
         }
 
         public void UpdateEnemy()
         {
+            if (_isDead) return;
+
             PatrolBehaviour();
             DrawFieldOfView();
             _timeSinceArriveAtWaypoints += Time.fixedDeltaTime;
         }
 
+        public void KillAgent()
+        {
+            if (_isDead) return;
+
+            _isDead = true;
+            transform.position = Vector3.up;
+            for (int i = 0; i < ViewPoints.Length; i++)
+            {
+                ViewPoints[i] = Vector3.up;
+            }
+
+            _viewMesh.Clear();
+
+            _renderer.enabled = false;
+            _collider.enabled = false;
+
+            foreach (Transform child in transform)
+            {
+                child.gameObject.SetActive(false);
+            }
+        }
+
         public bool CanSeeTarget(Vector3 targetPosition)
         {
+            if (_isDead) return false;
+
             var dirToPlayer = targetPosition - transform.position;
 
             if (dirToPlayer.sqrMagnitude > _sqrViewRadius) return false;
@@ -86,43 +124,42 @@ namespace Stealth_Game
                 agentMaxSpeed * patrolSpeedFraction * Time.deltaTime);
             transform.position = agentPosition;
 
-            var lookRotation = Quaternion.LookRotation(CurrentWaypoint - agentPosition);
+            var direction = CurrentWaypoint - agentPosition;
+            if (direction == Vector3.zero) return;
+
+            var lookRotation = Quaternion.LookRotation(direction);
             transform.rotation =
                 Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
         }
 
         private Vector3 CurrentWaypoint => patrolPath.GetWaypoint(_currentWaypointIndex);
-        
+
         private void DrawFieldOfView()
         {
-            for (int i = 0; i < _viewPoints.Length; i++)
+            int lenght = ViewPoints.Length;
+            _vertices[0] = Vector3.zero;
+            for (int i = 0; i < lenght; i++)
             {
                 float angle = transform.eulerAngles.y - viewAngle / 2 + _viewStepAngleSize * i;
-                _viewPoints[i] = ViewCast(angle);
-            }
+                var viewPoint = ViewCast(angle);
+                ViewPoints[i] = viewPoint;
 
-            int vertexCount = _viewPoints.Length + 1;
-            Vector3[] vertices = new Vector3[vertexCount];
-            int[] triangles = new int[(vertexCount - 2) * 3];
-            vertices[0] = Vector3.zero;
-            for (int i = 0; i < vertexCount - 1; i++)
-            {
-                vertices[i + 1] = transform.InverseTransformPoint(_viewPoints[i]);
+                _vertices[i + 1] = transform.InverseTransformPoint(viewPoint);
 
-                if (i >= vertexCount - 2) continue;
+                if (i >= lenght - 1) continue;
 
                 int index = i * 3;
-                triangles[index] = 0;
-                triangles[index + 1] = i + 1;
-                triangles[index + 2] = i + 2;
+                _triangles[index] = 0;
+                _triangles[index + 1] = i + 1;
+                _triangles[index + 2] = i + 2;
             }
-            
+
             _viewMesh.Clear();
-            _viewMesh.vertices = vertices;
-            _viewMesh.triangles = triangles;
+            _viewMesh.vertices = _vertices;
+            _viewMesh.triangles = _triangles;
             _viewMesh.RecalculateNormals();
         }
-        
+
         private Vector3 ViewCast(float globalAngle)
         {
             var direction = DirFromAngle(globalAngle, true);
@@ -130,7 +167,7 @@ namespace Stealth_Game
                 ? hit.point
                 : transform.position + direction * viewRadius;
         }
-        
+
         private Vector3 DirFromAngle(float angleInDegrees, bool angleIsGlobal)
         {
             if (!angleIsGlobal)
@@ -138,14 +175,24 @@ namespace Stealth_Game
 
             return new Vector3(Mathf.Sin(angleInDegrees * Mathf.Deg2Rad), 0, Mathf.Cos(angleInDegrees * Mathf.Deg2Rad));
         }
-        
+
         public void ResetAgent()
         {
             var transformRef = transform;
             transformRef.position = _initPosition;
             transformRef.rotation = _initRotation;
 
+            DrawFieldOfView();
             _currentWaypointIndex = 0;
+            _isDead = false;
+
+            _renderer.enabled = true;
+            _collider.enabled = true;
+
+            foreach (Transform child in transformRef)
+            {
+                child.gameObject.SetActive(true);
+            }
         }
     }
 }

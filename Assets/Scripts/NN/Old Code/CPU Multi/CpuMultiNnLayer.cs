@@ -41,6 +41,9 @@ namespace NN.CPU_Multi
             };
         }
 
+        private int _inputRow;
+        private int _outputRow;
+        
         public override void Forward(float[,] input)
         {
             Inputs = input;
@@ -54,12 +57,15 @@ namespace NN.CPU_Multi
 
                 _matrixDotProductJob.Inputs = _inputs;
                 _matrixDotProductJob.Output = _output;
+                
+                _inputRow = Inputs.GetLength(1);
+                _outputRow = Output.GetLength(1);
             }
-            
+
             for (int i = 0; i < _inputs.Length; i++)
             {
-                var y = i % Inputs.GetLength(1);
-                _inputs[i] = Inputs[(i + Inputs.GetLength(1) - y) / Inputs.GetLength(1) - 1, y];
+                var y = i % _inputRow;
+                _inputs[i] = Inputs[(i + _inputRow - y) / _inputRow - 1, y];
             }
             
             var matrixDotProductJobHandle = _matrixDotProductJob.Schedule(_output.Length, 64);
@@ -67,8 +73,8 @@ namespace NN.CPU_Multi
            
             for (int i = 0; i < _output.Length; i++)
             {
-                var y = i % Output.GetLength(1);
-                Output[(i + Output.GetLength(1) - y) / Output.GetLength(1) - 1, y] = _output[i];
+                var y = i % _outputRow;
+                Output[(i + _outputRow - y) / _outputRow - 1, y] = _output[i];
             }
         }
 
@@ -86,6 +92,7 @@ namespace NN.CPU_Multi
             public void Execute(int index)
             {
                 var y = index % WeightsRowSize;
+                // x can also be x = index / WeightsRowSize, but it relies in int rounding 
                 var x = (index + WeightsRowSize - y) / WeightsRowSize - 1;
                 var result = 0f;
                 for (int i = 0; i < InputRowSize; i++)

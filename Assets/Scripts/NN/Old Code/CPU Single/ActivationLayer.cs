@@ -43,7 +43,35 @@ namespace NN.CPU_Single
             }
         }
     }
+    
+    public class ActivationTanh : ActivationFunction
+    {
+        public override void Forward(float[,] inputs)
+        {
+            Output = new float[inputs.GetLength(0), inputs.GetLength(1)];
+            for (int i = 0; i < inputs.GetLength(0); i++)
+            {
+                for (int j = 0; j < inputs.GetLength(1); j++)
+                {
+                    var input = inputs[i, j];
+                    Output[i, j] = (Mathf.Exp(input) - Mathf.Exp(-input)) / (Mathf.Exp(input) + Mathf.Exp(-input));
+                }
+            }
+        }
 
+        public override void Backward(float[,] dValues)
+        {
+            DInputs = NnMath.CopyMatrix(dValues);
+            for (int i = 0; i < dValues.GetLength(0); i++)
+            {
+                for (int j = 0; j < dValues.GetLength(1); j++)
+                {
+                    DInputs[i, j] *= 1 - Output[i, j] * Output[i, j];
+                }
+            }
+        }
+    }
+    
     public class ActivationLinear : ActivationFunction
     {
         public override void Forward(float[,] inputs)

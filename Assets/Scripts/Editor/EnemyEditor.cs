@@ -21,7 +21,7 @@ namespace Editor
             foreach (var t in targets)
             {
                 var enemy = (EnemyAgent)t;
-                Gizmos.color = Color.white;
+                Handles.color = Color.white;
                 var transform = enemy.transform;
                 var position = transform.position;
                 Handles.DrawWireArc(position, Vector3.up, transform.forward, 360, enemy.ViewRadius);

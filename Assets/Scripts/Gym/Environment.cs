@@ -20,25 +20,36 @@ namespace Gym
             }
         }
 
+        [SerializeField] private Vector4 levelSizeMaxMin;
         [SerializeField] protected int episodeLength;
         protected int EpisodeLengthIndex;
-        protected float[] CurrentObservation;
+        protected int ObservationLenght;
+        protected T[] ActionLookup;
         protected List<Transform> AllEnvTransforms;
-        
+
+        private Vector2 levelSIzeRange;
         private List<IResettable> _resettables;
 
-        public int GetObservationSize => CurrentObservation.Length;
+        public int GetObservationSize => ObservationLenght;
+        public int GetNumberOfActions => ActionLookup.Length;
 
         protected virtual void Awake()
         {
             AllEnvTransforms = new List<Transform>();
             _resettables = new List<IResettable>();
             GetAllChildrenByRecursion(transform);
+
+            levelSIzeRange = new Vector2(levelSizeMaxMin.x - levelSizeMaxMin.y, levelSizeMaxMin.z - levelSizeMaxMin.w);
+            // float[] myArray = { 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            // for (int i = 0; i < myArray.Length; i++)
+            // {
+            //     print(2.0f * (myArray[i] - (2)) / 8 - 1.0f);
+            // }
         }
 
-        //TODO: Test with returning a tuple, allocating in the heap, might be faster then coping structs 
-        public abstract StepInfo Step(T action);
-        
+        //TODO: Test with returning a tuple, allocating in the heap, might be faster then copying structs 
+        public abstract StepInfo Step(int action);
+
         public virtual float[] ResetEnv()
         {
             EpisodeLengthIndex = 0;
@@ -47,7 +58,7 @@ namespace Gym
                 resettable.ResetAgent();
             }
 
-            return CurrentObservation;
+            return null;
         }
 
         public void Close()
@@ -56,6 +67,19 @@ namespace Gym
             // this way we can load new "levels" without creating a new environment class,
             // loading could be done by adding a new function in this class
             Destroy(gameObject);
+        }
+
+        protected float NormalizePosition(float value, bool isX)
+        {
+            float range = levelSIzeRange.y;
+            float min = levelSizeMaxMin.w;
+            if (isX)
+            {
+                range = levelSIzeRange.x;
+                min = levelSizeMaxMin.y;
+            }
+
+            return 2.0f * (value - min) / range - 1.0f;
         }
 
         private void GetAllChildrenByRecursion(Transform aParent)
@@ -68,7 +92,7 @@ namespace Gym
                 {
                     _resettables.Add(resettable);
                 }
-                
+
                 GetAllChildrenByRecursion(child);
             }
         }
