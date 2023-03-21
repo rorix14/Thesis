@@ -1,11 +1,6 @@
 // TODO: see if the math NN library needs to be in this name space
-
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using NN.CPU_Single;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
 
 namespace NN
@@ -24,6 +19,8 @@ namespace NN
         public float[,] DInputs;
         private readonly float[,] _weights;
         private readonly float[,] _biases;
+
+        private bool _isFirst;
 
         // Compute buffer variables
         private readonly ComputeShader _shader;
@@ -56,12 +53,13 @@ namespace NN
         private ComputeBuffer _biasesMomentumBuffer;
         private ComputeBuffer _biasesCacheBuffer;
 
-        public NetworkLayer(int nInputs, int nNeurons, ActivationFunction activationFunction, ComputeShader shader)
+        public NetworkLayer(int nInputs, int nNeurons, ActivationFunction activationFunction, ComputeShader shader, bool isFirst=false)
         {
             // neural networks standard init
             //Random.InitState(42);
             _weights = new float[nInputs, nNeurons];
             _biases = new float[1, nNeurons];
+            _isFirst = isFirst;
 
             for (int i = 0; i < _weights.GetLength(1); i++)
             {
@@ -191,15 +189,17 @@ namespace NN
             _shader.SetFloat("beta_2_corrected", beta2Corrected);
 
             _dValuesBuffer.SetData(dValues);
-            _shader.Dispatch(_kernelHandleInputsBackward, _threadGroupXInputsBackward,
-                _threadGroupYInputsBackward, 1);
 
+            if (!_isFirst)
+            {
+                _shader.Dispatch(_kernelHandleInputsBackward, _threadGroupXInputsBackward,
+                    _threadGroupYInputsBackward, 1);
+                _dInputsBuffer.GetData(DInputs);
+            }
+            
             _shader.Dispatch(_kernelHandleWeightsBiasesBackward, _threadGroupXWeightsBackward,
                 _threadGroupYWeightsBackward, 1);
-            //TODO: this might be faster if done in a unity job, since it is just using the x group
             //_shader.Dispatch(_kernelHandleBiasesBackward, _threadGroupXBiasesBackward, 1, 1);
-
-            _dInputsBuffer.GetData(DInputs);
         }
 
         public void SetOptimizerVariables(float beta1, float beta2, float epsilon)

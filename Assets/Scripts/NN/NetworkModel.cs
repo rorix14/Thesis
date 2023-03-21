@@ -1,4 +1,3 @@
-using System;
 using NN.CPU_Single;
 using UnityEngine;
 
@@ -7,7 +6,7 @@ namespace NN
     public class NetworkModel
     {
         private readonly NetworkLayer[] _layers;
-        private readonly NetworkLoss _lossFunction;
+        public readonly NetworkLoss _lossFunction;
         private readonly float _learningRate;
         private readonly float _decay;
         private float _currentLearningRate;
@@ -115,6 +114,12 @@ namespace NN
             {
                 _layers[i].CopyLayer(otherModel._layers[i]);
             }
+        }
+
+        public void SetLossParams(float[] parameters)
+        {
+            var msePrio = (MeanSquaredErrorPrioritized)_lossFunction;
+            msePrio?.SetLossExternalParameters(parameters);
         }
 
         public void Dispose()

@@ -8,6 +8,7 @@ using Gym;
 using NN;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = System.Random;
 
 namespace TestGround
 {
@@ -28,7 +29,7 @@ namespace TestGround
         // DQN specific variables
         protected ModelDQN _DQN;
         protected float _epsilon;
-        
+
         private WindowGraph _graphReward;
         private WindowGraph _graphLoss;
 
@@ -71,7 +72,7 @@ namespace TestGround
             _epsilon = 1.0f;
             Time.timeScale = simulationSpeed;
         }
-        
+
         private void FixedUpdate()
         {
             if (_episodeIndex >= numberOfEpisodes)
@@ -103,6 +104,8 @@ namespace TestGround
             _lossPerEpisode[_episodeIndex] = _DQN.SampleLoss();
             _currentSate = _env.ResetEnv();
             ++_episodeIndex;
+
+            // could clamp epsilon value with a max function in order to have a min exploration value
             _epsilon = 1.0f / (float)Math.Sqrt(_episodeIndex + 1);
         }
 
@@ -129,7 +132,7 @@ namespace TestGround
 
             print("Average Reward: " + rewardSum / _rewardsOverTime.Count);
             print("Average Loss: " + lossSum / _lossPerEpisode.Count);
-            
+
             var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
             _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
             _graphLoss = Instantiate(windowGraphPrefab, layoutGroup.transform);
@@ -139,14 +142,14 @@ namespace TestGround
         private IEnumerator ShowGraphs()
         {
             yield return new WaitForSeconds(0.1f);
-            
+
             _graphReward.SetGraph(null, _rewardsOverTime, GraphType.LineGraph,
                 "Rewards per Episode", "episodes", "rewards");
-            
+
             _graphLoss.SetGraph(null, _lossPerEpisode, GraphType.LineGraph,
                 "Loss per Episode", "episodes", "loss");
         }
-        
+
         private void OnDestroy()
         {
             Time.timeScale = 1;

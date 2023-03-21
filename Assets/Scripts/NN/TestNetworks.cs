@@ -24,22 +24,22 @@ namespace NN
 
             var layers = new NetworkLayer[]
             {
-                new NetworkLayer(x.GetLength(1), 128, ActivationFunction.Tanh, Instantiate(shader)),
+                new NetworkLayer(x.GetLength(1), 128, ActivationFunction.Tanh, Instantiate(shader), true),
                 new NetworkLayer(128, 128, ActivationFunction.Tanh, Instantiate(shader)),
                 new NetworkLayer(128, 1, ActivationFunction.Linear, Instantiate(shader))
             };
             var model = new NetworkModel(layers, new MeanSquaredError(Instantiate(shader)));
 
-            //const int epochs = 1000;
+            const int epochs = 1000;
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            //model.Train(epochs, x, y, 99);
+            model.Train(epochs, x, y, 99);
 
             stopwatch.Stop();
             model.Dispose();
-            //print("(GPU compute) Took: " + stopwatch.ElapsedMilliseconds + " ms");
+            print("(GPU compute) Took: " + stopwatch.ElapsedMilliseconds + " ms");
 
             //TestBuffer();
             //LookUpArrayVsSwitch(1000);

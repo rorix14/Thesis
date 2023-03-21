@@ -30,12 +30,13 @@ namespace Algorithms.RL
         protected readonly NetworkModel _networkModel;
         protected readonly NetworkModel _targetModel;
         private readonly int _numberOfActions;
-        private readonly int _maxExperienceSize;
+        protected readonly int _maxExperienceSize;
         protected readonly int _minExperienceSize;
         protected readonly int _batchSize;
         protected readonly float _gamma;
 
         protected readonly List<Experience> _experiences;
+        protected int _lastExperiencePosition;
 
         // cached variables
         protected readonly float[,] _nextStates;
@@ -57,6 +58,7 @@ namespace Algorithms.RL
             _gamma = gamma;
 
             _experiences = new List<Experience>(maxExperienceSize);
+            _lastExperiencePosition = 0;
 
             _nextStates = new float[batchSize, stateSize];
             _currentStates = new float[batchSize, stateSize];
@@ -83,13 +85,17 @@ namespace Algorithms.RL
             return Random.Range(0, _numberOfActions);
         }
 
-        public void AddExperience(float[] currentState, int action, float reward, bool done, float[] nextState)
+        public virtual void AddExperience(float[] currentState, int action, float reward, bool done, float[] nextState)
         {
             var experience = new Experience(currentState, action, reward, done, nextState);
-            _experiences.Add(experience);
-            if (_experiences.Count >= _maxExperienceSize)
+            if (_experiences.Count < _maxExperienceSize)
             {
-                _experiences.RemoveAt(0);
+                _experiences.Add(experience);
+            }
+            else
+            {
+                _experiences[_lastExperiencePosition] = experience;
+                _lastExperiencePosition = (_lastExperiencePosition + 1) % _maxExperienceSize;
             }
         }
 
@@ -172,8 +178,8 @@ namespace Algorithms.RL
             for (int i = 0; i < sampleSize; i++)
             {
                 int maxIndex = 0;
-                float maxValue = float.MinValue;
-                for (int j = 0; j < matrix.GetLength(1); j++)
+                float maxValue =  matrix[i, 0];
+                for (int j = 1; j < matrix.GetLength(1); j++)
                 {
                     var currentVal = matrix[i, j];
                     if (maxValue > currentVal) continue;

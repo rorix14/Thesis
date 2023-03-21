@@ -4,6 +4,20 @@ namespace NN.CPU_Single
 {
     public static class NnMath
     {
+        public static float ArrayMax(float[] valueArray)
+        {
+            float num = valueArray[0];
+            for (int i = 1; i < valueArray.Length; i++)
+            {
+                var currentVal = valueArray[i];
+                if (num > currentVal) continue;
+
+                num = currentVal;
+            }
+
+            return num;
+        }
+
         public static float ArrayMean(float[] arr)
         {
             float result = 0;
@@ -30,7 +44,7 @@ namespace NN.CPU_Single
 
             return copyMat;
         }
-        
+
         public static void CopyMatrix(float[,] inMat, float[,] matToCopy)
         {
             for (int i = 0; i < matToCopy.GetLength(0); i++)
@@ -92,13 +106,13 @@ namespace NN.CPU_Single
         {
             float u;
             float s;
-            
+
             do
             {
                 u = 2.0f * Random.value - 1.0f;
                 var v = 2.0f * Random.value - 1.0f;
                 s = u * u + v * v;
-            } while (s >= 1.0f); 
+            } while (s >= 1.0f);
 
             var std = u * Mathf.Sqrt(-2.0f * Mathf.Log(s) / s);
 

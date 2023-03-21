@@ -1,6 +1,5 @@
 using NN;
 using NN.CPU_Single;
-using UnityEngine;
 
 namespace Algorithms.RL
 {
@@ -20,7 +19,6 @@ namespace Algorithms.RL
 
             RandomBatch();
 
-            // TODO: test this implementation, see if the target values match
             MaxByRow(_networkModel.Predict(_nextStates));
             var targetPredictions = _targetModel.Predict(_nextStates);
 

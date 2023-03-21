@@ -5,8 +5,8 @@ namespace NN
     public abstract class NetworkLoss
     {
         public float[,] DInputs;
-
-        private float[] _sampleLosses;
+        public float[] SampleLosses;
+        
         protected readonly ComputeShader Shader;
         protected int KernelHandleForwardLoss;
         private int _threadGroupXForward;
@@ -31,13 +31,13 @@ namespace NN
             _backwardInit = false;
         }
         
-        public float Calculate(float[,] output, float[,] yTrue)
+        public virtual float Calculate(float[,] output, float[,] yTrue)
         {
             if (!_forwardInit)
             {
                 InitBuffers(output, yTrue);
 
-                _sampleLosses = new float[yTrue.GetLength(0)];
+                SampleLosses = new float[yTrue.GetLength(0)];
 
                 Shader.GetKernelThreadGroupSizes(KernelHandleForwardLoss, out var threadSizeX, out _, out _);
                 _threadGroupXForward = Mathf.CeilToInt(yTrue.GetLength(0) / (float)threadSizeX);
@@ -56,18 +56,18 @@ namespace NN
             
             //TODO: this might be faster if done in a unity job, since it is just using the x group
             Shader.Dispatch(KernelHandleForwardLoss, _threadGroupXForward, 1, 1);
-            _sampleLossesBuffer.GetData(_sampleLosses);
+            _sampleLossesBuffer.GetData(SampleLosses);
 
             float result = 0;
-            foreach (var t in _sampleLosses)
+            foreach (var t in SampleLosses)
             {
                 result += t;
             }
 
-            return result / _sampleLosses.Length;
+            return result / SampleLosses.Length;
         }
 
-        public void Backward(float[,] output, float[,] yTrue)
+        public virtual void Backward(float[,] output, float[,] yTrue)
         {
             if (!_backwardInit)
             {
@@ -107,7 +107,7 @@ namespace NN
             _yTrueBuffer = new ComputeBuffer(yTrue.Length, sizeof(float));
         }
         
-        public void Dispose()
+        public virtual void Dispose()
         {
             _yTrueBuffer?.Dispose();
             _sampleLossesBuffer?.Dispose();
@@ -122,6 +122,36 @@ namespace NN
         {
             KernelHandleForwardLoss = Shader.FindKernel("forward_pass_MSE_loss");
             KernelHandleBackwardLoss = Shader.FindKernel("backwards_pass_MSE_loss");
+        }
+    }
+
+    public class MeanSquaredErrorPrioritized : NetworkLoss
+    {
+        private ComputeBuffer _sampleWeightsBuffer;
+        private bool _inLearningCycle;
+        public MeanSquaredErrorPrioritized(ComputeShader shader) : base(shader)
+        {
+            KernelHandleForwardLoss = Shader.FindKernel("forward_pass_MSE_prioritized_loss");
+            KernelHandleBackwardLoss = Shader.FindKernel("backwards_pass_MSE_prioritized_loss");
+        }
+
+        public void SetLossExternalParameters(float[] parameters)
+        {
+            if (_sampleWeightsBuffer == null)
+            {
+                _sampleWeightsBuffer = new ComputeBuffer(parameters.Length, sizeof(float));
+                Shader.SetBuffer(KernelHandleForwardLoss, "sample_weights", _sampleWeightsBuffer);
+                Shader.SetBuffer(KernelHandleBackwardLoss, "sample_weights", _sampleWeightsBuffer);
+            }
+            
+            _sampleWeightsBuffer.SetData(parameters);
+            _inLearningCycle = true;
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            _sampleWeightsBuffer?.Dispose();
         }
     }
 }

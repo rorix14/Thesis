@@ -4,17 +4,23 @@ using UnityEngine;
 
 namespace Algorithms.RL
 {
-    public class NStepDQN : ModelDQN
+    public class ModelNStepDQN : ModelDQN
     {
         private readonly int _nStep;
+        private readonly float[] _storedNStepGammas;
 
-        public NStepDQN(int nStep, NetworkModel networkModel, NetworkModel targetModel, int numberOfActions,
+        public ModelNStepDQN(int nStep, NetworkModel networkModel, NetworkModel targetModel, int numberOfActions,
             int stateSize,
             int maxExperienceSize = 10000, int minExperienceSize = 100, int batchSize = 32, float gamma = 0.99f) : base(
             networkModel, targetModel, numberOfActions, stateSize, maxExperienceSize, minExperienceSize, batchSize,
             gamma)
         {
             _nStep = nStep <= 0 ? 1 : nStep;
+            _storedNStepGammas = new float[_nStep + 1];
+            for (int i = 0; i < _nStep + 1; i++)
+            {
+                _storedNStepGammas[i] = Mathf.Pow(_gamma, i);
+            }
         }
 
         public override void Train()
@@ -33,14 +39,14 @@ namespace Algorithms.RL
                 var rewardSum = 0.0f;
                 for (int j = 0; j < _nStep; j++)
                 {
-                    var nStepExperience = _experiences[batchIndex + j];
-                    rewardSum += Mathf.Pow(_gamma, j) * nStepExperience.Reward;
+                    var nStepExperience = _experiences[(batchIndex + j) % _experiences.Count];
+                    rewardSum += _storedNStepGammas[j] * nStepExperience.Reward;
 
                     if (nStepExperience.Done) break;
-                    
+
                     if (j == _nStep - 1)
                     {
-                        rewardSum += Mathf.Pow(_gamma, _nStep) * _nextQ[i].value;
+                        rewardSum += _storedNStepGammas[_nStep] * _nextQ[i].value;
                     }
                 }
 
@@ -52,7 +58,6 @@ namespace Algorithms.RL
 
         protected override void RandomBatch()
         {
-            Debug.Log("Random Batch in n-step");
             for (int i = 0; i < _batchSize; i++)
             {
                 _batchIndexes[i] = -1;
@@ -61,7 +66,8 @@ namespace Algorithms.RL
             var iterations = 0;
             do
             {
-                var index = Random.Range(0, _experiences.Count - _nStep);
+                // this works as intended if the AddExperience function is called before 
+                var index = Random.Range(0, _experiences.Count - _nStep + _lastExperiencePosition) % _experiences.Count;
                 var hasIndex = false;
 
                 for (int i = 0; i < iterations + 1; i++)
@@ -76,7 +82,7 @@ namespace Algorithms.RL
 
                 _batchIndexes[iterations] = index;
 
-                var experienceNext = _experiences[index + _nStep];
+                var experienceNext = _experiences[(index + _nStep) % _experiences.Count];
                 var experienceCurrent = _experiences[index];
                 for (int i = 0; i < experienceNext.CurrentState.Length; i++)
                 {

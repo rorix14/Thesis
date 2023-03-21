@@ -16,6 +16,9 @@
 #pragma kernel forward_pass_MSE_loss
 #pragma kernel backwards_pass_MSE_loss
 
+#pragma kernel forward_pass_MSE_prioritized_loss
+#pragma kernel backwards_pass_MSE_prioritized_loss
+
 unsigned int input_column_size;
 unsigned int input_row_size;
 unsigned int weights_row_size;
@@ -64,6 +67,25 @@ void forward_pass_MSE_loss(uint3 id : SV_DispatchThreadID)
     }
 
     sample_losses[id.x] = result / weights_row_size;
+}
+
+StructuredBuffer<float> sample_weights;
+
+[numthreads(32,1, 1)]
+void forward_pass_MSE_prioritized_loss(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size)
+        return;
+
+    float result = 0;
+    for (unsigned int i = 0; i < weights_row_size; ++i)
+    {
+        const int index = id.x * weights_row_size + i;
+        const float error = y_true[index] - output[index];
+        result += error * error;
+    }
+
+    sample_losses[id.x] = result * sample_weights[id.x] / weights_row_size;
 }
 
 StructuredBuffer<float> d_values;
@@ -142,6 +164,17 @@ void backwards_pass_MSE_loss(uint3 id : SV_DispatchThreadID)
     d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) / weights_row_size / input_column_size;
 }
 
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_MSE_prioritized_loss(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= weights_row_size)
+        return;
+
+    const int index = id.x * weights_row_size + id.y;
+    d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) * sample_weights[id.x] / weights_row_size /
+        input_column_size;
+}
+
 ////////// Functions used for Tanh layers ///////////////
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
@@ -159,7 +192,7 @@ void forward_pass_Tanh(uint3 id : SV_DispatchThreadID)
 
     const float exp_pos = exp(result);
     const float exp_neg = exp(-result);
-    
+
     output[id.x * weights_row_size + id.y] = (exp_pos - exp_neg) / (exp_pos + exp_neg);
 }
 
