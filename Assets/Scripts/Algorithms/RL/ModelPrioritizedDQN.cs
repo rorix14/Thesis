@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Diagnostics;
 using NN;
 using NN.CPU_Single;
 using UnityEngine;
@@ -12,7 +14,6 @@ namespace Algorithms.RL
         private readonly float[] _priorities;
         private readonly float[] _probabilities;
         private readonly float[] _sampleWeights;
-        private readonly float[] _samplePriorities;
         private int _counter;
 
         public ModelPrioritizedDQN(NetworkModel networkModel, NetworkModel targetModel,
@@ -28,14 +29,15 @@ namespace Algorithms.RL
             _priorities = new float[maxExperienceSize];
             _probabilities = new float[maxExperienceSize];
             _sampleWeights = new float[batchSize];
-            _samplePriorities = new float[batchSize];
             _counter = 0;
+
+            //_alpha = 0f;
         }
 
         public override void AddExperience(float[] currentState, int action, float reward, bool done, float[] nextState)
         {
             var experience = new Experience(currentState, action, reward, done, nextState);
-            float maxPriority = NnMath.ArrayMax(_priorities);
+            var maxPriority = NnMath.ArrayMax(_priorities);
 
             if (_experiences.Count < _maxExperienceSize)
             {
@@ -49,7 +51,6 @@ namespace Algorithms.RL
 
             _priorities[_lastExperiencePosition] = maxPriority;
             _lastExperiencePosition = (_lastExperiencePosition + 1) % _maxExperienceSize;
-            _counter++;
         }
 
         public override void Train()
@@ -60,24 +61,30 @@ namespace Algorithms.RL
             UpdateBeta();
             RandomBatch();
 
-            MaxByRow(_targetModel.Predict(_nextStates));
+            MaxByRow(_networkModel.Predict(_nextStates));
+            var targetPredictions = _targetModel.Predict(_nextStates);
             NnMath.CopyMatrix(_yTarget, _networkModel.Predict(_currentStates));
             for (int i = 0; i < _nextQ.Length; i++)
             {
                 var experience = _experiences[_batchIndexes[i]];
                 _yTarget[i, experience.Action] =
-                    experience.Done ? experience.Reward : experience.Reward + _gamma * _nextQ[i].value;
+                    experience.Done
+                        ? experience.Reward
+                        : experience.Reward + _gamma * targetPredictions[i, _nextQ[i].index];
             }
+            
+            // MaxByRow(_targetModel.Predict(_nextStates));
+            // NnMath.CopyMatrix(_yTarget, _networkModel.Predict(_currentStates));
+            // for (int i = 0; i < _nextQ.Length; i++)
+            // {
+            //     var experience = _experiences[_batchIndexes[i]];
+            //     _yTarget[i, experience.Action] =
+            //         experience.Done ? experience.Reward : experience.Reward + _gamma * _nextQ[i].value;
+            // }
 
             _networkModel.SetLossParams(_sampleWeights);
+            UpdatePriorities(_networkModel.Loss(_yTarget));
             
-            // TODO: This can just return the sample losses instead of the loss mean
-            _networkModel.Loss(_yTarget);
-            
-            // TODO: compare speed of this function with a manual copy
-            _networkModel._lossFunction.SampleLosses.CopyTo(_samplePriorities, 0);
-            
-            UpdatePriorities();
             _networkModel.Update(_yTarget);
         }
 
@@ -93,39 +100,29 @@ namespace Algorithms.RL
                 prioritiesSum += priority;
             }
 
-            
+            var totalProbability = 0.0f;
             for (int i = 0; i < totalExperiences; i++)
             {
                 _probabilities[i] /= prioritiesSum;
+                totalProbability += _probabilities[i];
             }
-
-            prioritiesSum = 0;
-            for (int i = 0; i < totalExperiences; i++)
-            {
-                prioritiesSum += _probabilities[i];
-            }
-
+            
             for (int i = 0; i < _batchSize; i++)
             {
-                // index could be a random number within the range of 0 and experience size
-                var index = -1;
-                var cutoff = Random.value;
-                while (cutoff > 0)
+                var batchIndex = -1;
+                var cutoff = Random.Range(1e-20f, totalProbability - 1e-5f);
+                while (cutoff > 0.0)
                 {
-                   
-                    index++;
-                    if(index < 0 || index >= _experiences.Count)
-                        Debug.Log("Wrong index: " + index + ", in a max of: " + (_experiences.Count - 1) + ", probability sum: " + prioritiesSum);
-                    cutoff -= _probabilities[index];
+                    batchIndex++;
+                    cutoff -= _probabilities[batchIndex];
                 }
-
                 
-                _batchIndexes[i] = index;
-                var experience = _experiences[index];
+                _batchIndexes[i] = batchIndex;
+                var experience = _experiences[batchIndex];
                 for (int j = 0; j < experience.CurrentState.Length; j++)
                 {
-                    _nextStates[i, j] = experience.NextState[i];
-                    _currentStates[i, j] = experience.CurrentState[i];
+                    _nextStates[i, j] = experience.NextState[j];
+                    _currentStates[i, j] = experience.CurrentState[j];
                 }
             }
 
@@ -148,15 +145,16 @@ namespace Algorithms.RL
 
         private void UpdateBeta()
         {
+            _counter++;
             var value = _initialBeta + _counter * (1.0f - _initialBeta) / 100000;
             _beta = 1.0f < value ? 1.0f : value;
         }
 
-        private void UpdatePriorities()
+        private void UpdatePriorities(float[] samplePriorities)
         {
             for (int i = 0; i < _batchSize; i++)
             {
-                _priorities[_batchIndexes[i]] = _samplePriorities[i] + 1e-5f;
+                _priorities[_batchIndexes[i]] = samplePriorities[i] + 1e-5f;
             }
         }
     }

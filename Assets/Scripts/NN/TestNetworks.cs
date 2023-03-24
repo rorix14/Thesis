@@ -35,7 +35,7 @@ namespace NN
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            model.Train(epochs, x, y, 99);
+            //model.Train(epochs, x, y, 99);
 
             stopwatch.Stop();
             model.Dispose();
@@ -43,6 +43,45 @@ namespace NN
 
             //TestBuffer();
             //LookUpArrayVsSwitch(1000);
+            Test(100000);
+        }
+
+        private void Test(int iterations)
+        {
+            var numbers = new float[50, 50];
+            var probs = new int[8];
+            var collected = new int[8];
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            for (int k = 0; k < iterations; k++)
+            {
+                for (int i = 0; i < numbers.GetLength(0); i++)
+                {
+                    for (int j = 0; j < numbers.GetLength(1); j++)
+                    {
+                        numbers[i, j] = Random.value;
+                    }
+                }    
+            }
+            stopwatch.Stop();
+            print("Copy Took: " + stopwatch.ElapsedMilliseconds + " ms");
+            
+            stopwatch.Restart();
+            for (int k = 0; k < iterations; k++)
+            {
+                int rowSize = numbers.GetLength(1);
+                int columnSize = numbers.GetLength(0);
+                for (int i = 0; i < columnSize; i++)
+                {
+                    for (int j = 0; j < rowSize; j++)
+                    {
+                        numbers[i, j] = Random.value;
+                    }
+                }
+            }
+            stopwatch.Stop();
+            print("Manual Copy Took: " + stopwatch.ElapsedMilliseconds + " ms");
         }
 
         // Parallel for is only better then single for loop at a size of > 20,000. The tests had two assignments being made inside the for loops
@@ -89,7 +128,7 @@ namespace NN
             testShader.SetBuffer(kernelIndexA, "buffer", valueBuffer);
             testShader.SetBuffer(kernelIndexA, "read_buffer", maxBuffer);
             testShader.SetInt("row_size", y);
-            
+
             valueBuffer.SetData(valueMatrix);
             int groupX = Mathf.CeilToInt(x / (float)32);
 
@@ -203,7 +242,7 @@ namespace NN
             var tt_1 = new float[4];
 
             testShader.SetInt("row_size", 4);
-            
+
             int kernelIndexA = testShader.FindKernel("KernelA");
             testShader.SetBuffer(kernelIndexA, "buffer", buffer);
             testShader.SetBuffer(kernelIndexA, "read_buffer", readBuffer);

@@ -82,10 +82,12 @@ void forward_pass_MSE_prioritized_loss(uint3 id : SV_DispatchThreadID)
     {
         const int index = id.x * weights_row_size + i;
         const float error = y_true[index] - output[index];
+        //result += abs(error);
         result += error * error;
     }
 
-    sample_losses[id.x] = result * sample_weights[id.x] / weights_row_size;
+    //TODO: try it without j division;
+    sample_losses[id.x] = result / weights_row_size;
 }
 
 StructuredBuffer<float> d_values;
@@ -171,8 +173,7 @@ void backwards_pass_MSE_prioritized_loss(uint3 id : SV_DispatchThreadID)
         return;
 
     const int index = id.x * weights_row_size + id.y;
-    d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) * sample_weights[id.x] / weights_row_size /
-        input_column_size;
+    d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) * sample_weights[id.x] / weights_row_size / input_column_size;
 }
 
 ////////// Functions used for Tanh layers ///////////////

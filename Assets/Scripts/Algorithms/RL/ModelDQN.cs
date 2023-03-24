@@ -11,11 +11,11 @@ namespace Algorithms.RL
     {
         protected struct Experience
         {
-            public readonly float[] CurrentState;
-            public readonly int Action;
-            public readonly float Reward;
-            public readonly bool Done;
-            public readonly float[] NextState;
+            public float[] CurrentState;
+            public int Action;
+            public float Reward;
+            public bool Done;
+            public float[] NextState;
 
             public Experience(float[] currentState, int action, float reward, bool done, float[] nextState)
             {
@@ -30,6 +30,7 @@ namespace Algorithms.RL
         protected readonly NetworkModel _networkModel;
         protected readonly NetworkModel _targetModel;
         private readonly int _numberOfActions;
+        private readonly int _stateLenght;
         protected readonly int _maxExperienceSize;
         protected readonly int _minExperienceSize;
         protected readonly int _batchSize;
@@ -52,6 +53,7 @@ namespace Algorithms.RL
             _networkModel = networkModel;
             _targetModel = targetModel;
             _numberOfActions = numberOfActions;
+            _stateLenght = stateSize;
             _maxExperienceSize = maxExperienceSize;
             _minExperienceSize = minExperienceSize;
             _batchSize = batchSize;
@@ -77,8 +79,8 @@ namespace Algorithms.RL
                 {
                     _predictSate[0, i] = state[i];
                 }
-                
-                MaxByRow( _networkModel.Predict(_predictSate));
+
+                MaxByRow(_networkModel.Predict(_predictSate), true);
                 return _nextQ[0].index;
             }
 
@@ -122,7 +124,15 @@ namespace Algorithms.RL
         {
             // Because all variables have been initialized in the train function there is no need to do it here
             // basically this gives the loss for the previous batch 
-            return _networkModel.Loss(_yTarget);
+            var sampleLosses = _networkModel.Loss(_yTarget);
+            float loss = 0;
+            foreach (var t in sampleLosses)
+            {
+                loss += t;
+            }
+
+            loss /= sampleLosses.Length;
+            return loss;
         }
 
         public void SetTargetModel()
@@ -138,18 +148,14 @@ namespace Algorithms.RL
 
         protected virtual void RandomBatch()
         {
-            for (int i = 0; i < _batchSize; i++)
+            var iteration = 0;
+            while (iteration < _batchSize)
             {
-                _batchIndexes[i] = -1;
-            }
-
-            var iterations = 0;
-            do
-            {
+                _batchIndexes[iteration] = -1;
                 var index = Random.Range(0, _experiences.Count);
                 var hasIndex = false;
 
-                for (int i = 0; i < iterations + 1; i++)
+                for (int i = 0; i < iteration + 1; i++)
                 {
                     if (_batchIndexes[i] != index) continue;
 
@@ -159,27 +165,27 @@ namespace Algorithms.RL
 
                 if (hasIndex) continue;
 
-                _batchIndexes[iterations] = index;
-                
+                _batchIndexes[iteration] = index;
+
                 var experience = _experiences[index];
-                for (int i = 0; i < experience.CurrentState.Length; i++)
+                for (int i = 0; i < _stateLenght; i++)
                 {
-                    _nextStates[iterations, i] = experience.NextState[i];
-                    _currentStates[iterations, i] = experience.CurrentState[i];
+                    _nextStates[iteration, i] = experience.NextState[i];
+                    _currentStates[iteration, i] = experience.CurrentState[i];
                 }
 
-                ++iterations;
-            } while (iterations < _batchSize);
+                ++iteration;
+            }
         }
 
         protected void MaxByRow(float[,] matrix, bool firstRow = false)
         {
-            int sampleSize = firstRow ? 1 : matrix.GetLength(0);
+            int sampleSize = firstRow ? 1 : _batchSize;
             for (int i = 0; i < sampleSize; i++)
             {
                 int maxIndex = 0;
-                float maxValue =  matrix[i, 0];
-                for (int j = 1; j < matrix.GetLength(1); j++)
+                float maxValue = matrix[i, 0];
+                for (int j = 1; j < _numberOfActions; j++)
                 {
                     var currentVal = matrix[i, j];
                     if (maxValue > currentVal) continue;
@@ -191,7 +197,7 @@ namespace Algorithms.RL
                 _nextQ[i] = (maxIndex, maxValue);
             }
         }
-        
+
         // Consider using jobs if batch size and action number is very large 
 /*
         private struct IndexToValue

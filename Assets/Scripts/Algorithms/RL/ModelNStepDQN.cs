@@ -23,6 +23,58 @@ namespace Algorithms.RL
             }
         }
 
+        public override void AddExperience(float[] currentState, int action, float reward, bool done, float[] nextState)
+        {
+            var experience = new Experience(currentState, action, reward, done, nextState);
+            int experienceContainerSize = _experiences.Count;
+
+            if (experienceContainerSize < _maxExperienceSize)
+            {
+                _experiences.Add(experience);
+            }
+            else
+            {
+                _experiences[_lastExperiencePosition] = experience;
+            }
+
+            // int batchIndex = _batchIndexes[i];
+            // var rewardSum = 0.0f;
+            // for (int j = 0; j < _nStep; j++)
+            // {
+            //     var nStepExperience = _experiences[(batchIndex + j) % _experiences.Count];
+            //     rewardSum += _storedNStepGammas[j] * nStepExperience.Reward;
+            //
+            //     if (nStepExperience.Done) break;
+            //
+            //     if (j == _nStep - 1)
+            //     {
+            //         rewardSum += _storedNStepGammas[_nStep] * _nextQ[i].value;
+            //     }
+            // }
+
+            if (experienceContainerSize >= _nStep)
+            {
+                var newExperience = new Experience();
+                
+                // TODO: Does not work if number is negative
+                int startingIndex = (_lastExperiencePosition - _nStep) % _maxExperienceSize;
+                for (int i = 0; i < _nStep; i++)
+                {
+                    var nStepExperience = _experiences[(startingIndex + i) % _maxExperienceSize];
+                    newExperience.Done = nStepExperience.Done;
+                    
+                    if (nStepExperience.Done) break;
+
+                    newExperience.Reward = _storedNStepGammas[i] * nStepExperience.Reward;
+                    newExperience.NextState = nStepExperience.CurrentState;
+                }
+
+                _experiences[startingIndex] = newExperience;
+            }
+
+            _lastExperiencePosition = (_lastExperiencePosition + 1) % _maxExperienceSize;
+        }
+
         public override void Train()
         {
             if (_experiences.Count < _minExperienceSize)
@@ -58,19 +110,15 @@ namespace Algorithms.RL
 
         protected override void RandomBatch()
         {
-            for (int i = 0; i < _batchSize; i++)
+            var iteration = 0;
+            while (iteration < _batchSize)
             {
-                _batchIndexes[i] = -1;
-            }
-
-            var iterations = 0;
-            do
-            {
+                _batchIndexes[iteration] = -1;
                 // this works as intended if the AddExperience function is called before 
                 var index = Random.Range(0, _experiences.Count - _nStep + _lastExperiencePosition) % _experiences.Count;
                 var hasIndex = false;
 
-                for (int i = 0; i < iterations + 1; i++)
+                for (int i = 0; i < iteration + 1; i++)
                 {
                     if (_batchIndexes[i] != index) continue;
 
@@ -80,18 +128,18 @@ namespace Algorithms.RL
 
                 if (hasIndex) continue;
 
-                _batchIndexes[iterations] = index;
+                _batchIndexes[iteration] = index;
 
                 var experienceNext = _experiences[(index + _nStep) % _experiences.Count];
                 var experienceCurrent = _experiences[index];
                 for (int i = 0; i < experienceNext.CurrentState.Length; i++)
                 {
-                    _nextStates[iterations, i] = experienceNext.CurrentState[i];
-                    _currentStates[iterations, i] = experienceCurrent.CurrentState[i];
+                    _nextStates[iteration, i] = experienceNext.CurrentState[i];
+                    _currentStates[iteration, i] = experienceCurrent.CurrentState[i];
                 }
 
-                ++iterations;
-            } while (iterations < _batchSize);
+                ++iteration;
+            }
         }
     }
 }

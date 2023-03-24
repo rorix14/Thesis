@@ -56,7 +56,7 @@ namespace NN
         public NetworkLayer(int nInputs, int nNeurons, ActivationFunction activationFunction, ComputeShader shader, bool isFirst=false)
         {
             // neural networks standard init
-            //Random.InitState(42);
+            Random.InitState(42);
             _weights = new float[nInputs, nNeurons];
             _biases = new float[1, nNeurons];
             _isFirst = isFirst;
