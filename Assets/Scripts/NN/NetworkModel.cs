@@ -29,7 +29,7 @@ namespace NN
             _beta2 = beta2;
             _bata1Corrected = 1.0f;
             _bata2Corrected = 1.0f;
-            
+
             foreach (var networkLayer in layers)
             {
                 networkLayer.SetOptimizerVariables(beta1, beta2, epsilon);
@@ -47,7 +47,7 @@ namespace NN
             return _layers[_layers.Length - 1].Output;
         }
 
-        public void Update(float[,] yTarget)
+        public float[,] Update(float[,] yTarget)
         {
             if (_decay > 0)
             {
@@ -65,6 +65,8 @@ namespace NN
             {
                 _layers[j].Backward(_layers[j + 1].DInputs, _currentLearningRate, _bata1Corrected, _bata2Corrected);
             }
+
+            return _layers[0].DInputs;
         }
 
         // Made to be used in supervised learning problems
@@ -84,13 +86,15 @@ namespace NN
                 if (i % printEvery == 0)
                 {
                     _lossFunction.Calculate(_layers[_layers.Length - 1].Output, yTarget);
+
                     float loss = 0;
                     foreach (var t in _lossFunction.SampleLosses)
                     {
                         loss += t;
                     }
+
                     loss /= _lossFunction.SampleLosses.Length;
-                    
+
                     var accuracy = 0.0f;
                     for (int j = 0; j < yTarget.GetLength(0); j++)
                     {
@@ -130,7 +134,7 @@ namespace NN
             var msePrio = (MeanSquaredErrorPrioritized)_lossFunction;
             msePrio?.SetLossExternalParameters(parameters);
         }
-
+        
         public void Dispose()
         {
             _lossFunction.Dispose();

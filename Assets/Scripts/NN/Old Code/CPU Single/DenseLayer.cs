@@ -41,10 +41,12 @@ namespace NN.CPU_Single
             Inputs = inputs;
 
             Output = NnMath.MatrixDotProduct(Inputs, Weights);
+            int outputColumnSize = Output.GetLength(0);
+            
             for (int i = 0; i < Output.GetLength(1); i++)
             {
                 var neuronBias = Biases[0, i];
-                for (int j = 0; j < Output.GetLength(0); j++)
+                for (int j = 0; j < outputColumnSize; j++)
                 {
                     Output[j, i] += neuronBias;
                 }

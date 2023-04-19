@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Algorithms;
 using NN.CPU_Single;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UIElements;
 using Random = UnityEngine.Random;
 
 namespace NN
@@ -30,7 +32,7 @@ namespace NN
             };
             var model = new NetworkModel(layers, new MeanSquaredError(Instantiate(shader)));
 
-            const int epochs = 1000;
+            const int epochs = 100;
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -39,11 +41,81 @@ namespace NN
 
             stopwatch.Stop();
             model.Dispose();
-            print("(GPU compute) Took: " + stopwatch.ElapsedMilliseconds + " ms");
+            //print("(GPU compute) Took: " + stopwatch.ElapsedMilliseconds + " ms");
 
             //TestBuffer();
             //LookUpArrayVsSwitch(1000);
-            Test(100000);
+            //Test(100000);
+
+            float[] arr = new float[] { 1f, 2f, 3f, 4f, 5f, 6f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f };
+            float[] arr2 = new float[] { 1f, 2f, 3f, 4f, 5f, 6f};
+            //float[] arr = new float[] { 0.05f, 0.1f, 0.15f, 0.15f, 0.3f, 0.25f};
+            // float[] arr = new float[(int)(10000 / 0.6f)];
+            // float[] arr2 = new float[10000];
+            // for (int i = 0; i < 10000; i++)
+            // {
+            //     var value = Random.value * Random.value;
+            //     arr[i] = value;
+            //     arr2[i] = value;
+            // }
+
+            SumTree st = new SumTree(arr.Length);
+            int[] per = new int[epochs];
+            int[] per2 = new int[epochs];
+            // int[] per = new int[arr.Length];
+            // int[] per2 = new int[arr.Length];
+
+            var total = 0f;
+            for (int i = 0; i < arr.Length; i++)
+            {
+                total += arr[i];
+                st.UpdateValue(i, arr[i]);
+            }
+
+            var totalTest = st.Total();
+            //print("Total tree: " + st.Total() + ", total count: " + total);
+            // for (int i = 0; i < epochs; i++)
+            // {
+            //     var random = Random.Range(0.0f, totalTest);
+            //
+            //     var index = -1;
+            //     var cutoff = random;
+            //     while (cutoff >= 0.0f)
+            //     {
+            //         index++;
+            //         cutoff -= arr2[index];
+            //
+            //         if (index >= arr2.Length - 1) break;
+            //     }
+            //
+            //     var sample = st.Sample(random, out _);
+            //     //st.Sample(Random.Range(0.0f, totalTest));
+            //     per[i] = sample;
+            //     per2[i] = index;
+            //     //per[sample]++;
+            //     //per2[index]++;
+            //
+            //     //print("Value: " + random + ", sum tree: " + per[i] + ", uniform: " + per2[i]);
+            // }
+
+            var minus = -1f;
+            print(arr.Length);
+            var ind = -1;
+            var test = totalTest - minus;
+            while (test >= 0.0f)
+            {
+                ind++;
+                test -= arr2[ind];
+
+                if (ind >= arr2.Length - 1) break;
+            }
+
+            print("sum tree: " + st.Sample(totalTest - minus, out _) + ", uniform: " + ind);
+            for (int i = 0; i < 15; i++)
+            {
+                //print("sum tree: " + per[i] + ", uniform: " + per2[i]);
+                //print("sum tree: " + per[i] / (float)epochs + ", uniform: " + per2[i] / (float)epochs);
+            }
         }
 
         private void Test(int iterations)
@@ -62,11 +134,12 @@ namespace NN
                     {
                         numbers[i, j] = Random.value;
                     }
-                }    
+                }
             }
+
             stopwatch.Stop();
             print("Copy Took: " + stopwatch.ElapsedMilliseconds + " ms");
-            
+
             stopwatch.Restart();
             for (int k = 0; k < iterations; k++)
             {
@@ -80,6 +153,7 @@ namespace NN
                     }
                 }
             }
+
             stopwatch.Stop();
             print("Manual Copy Took: " + stopwatch.ElapsedMilliseconds + " ms");
         }

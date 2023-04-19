@@ -2,6 +2,170 @@ using UnityEngine;
 
 namespace NN
 {
+    // This class uses a single thread, this is because DQN uses small batch sizes, the matrix parameters are of size 32x10
+    // For smaller sizes single thread is faster, if matrices get bigger consider jobs first,
+    // and for larger values use the old class with compute shaders
+    public abstract class NetworkLoss
+    {
+        public float[,] DInputs;
+        public float[] SampleLosses;
+        protected int _columnSize;
+        protected int _rowSize;
+
+        protected readonly ComputeShader Shader;
+
+        private bool _forwardInit;
+        protected bool _backwardInit;
+
+        protected NetworkLoss(ComputeShader shader)
+        {
+            Shader = shader;
+        }
+
+        public virtual void Calculate(float[,] output, float[,] yTrue)
+        {
+            if (!_forwardInit)
+            {
+                SampleLosses = new float[yTrue.GetLength(0)];
+                _columnSize = output.GetLength(0);
+                _rowSize = output.GetLength(1);
+
+                _forwardInit = true;
+            }
+
+            for (int i = 0; i < _columnSize; i++)
+            {
+                var result = 0.0f;
+                for (int j = 0; j < _rowSize; j++)
+                {
+                    float error = yTrue[i, j] - output[i, j];
+                    result += error * error;
+                }
+
+                SampleLosses[i] = result / _rowSize;
+            }
+        }
+
+        public virtual void Backward(float[,] output, float[,] yTrue)
+        {
+            if (!_backwardInit)
+            {
+                DInputs = new float[output.GetLength(0), output.GetLength(1)];
+                _columnSize = output.GetLength(0);
+                _rowSize = output.GetLength(1);
+
+                _backwardInit = true;
+            }
+
+            for (int i = 0; i < _columnSize; i++)
+            {
+                for (int j = 0; j < _rowSize; j++)
+                {
+                    DInputs[i, j] = -2.0f * (yTrue[i, j] - output[i, j]) / _rowSize / _columnSize;
+                }
+            }
+        }
+
+        public virtual void Dispose()
+        {
+        }
+    }
+
+    public class NoLoss : NetworkLoss
+    {
+        public NoLoss(ComputeShader shader) : base(shader)
+        {
+        }
+
+        public override void Calculate(float[,] output, float[,] yTrue)
+        {
+        }
+
+        public override void Backward(float[,] output, float[,] yTrue)
+        {
+            DInputs = yTrue;
+        }
+    }
+
+    public class MeanSquaredError : NetworkLoss
+    {
+        public MeanSquaredError(ComputeShader shader) : base(shader)
+        {
+        }
+    }
+
+    public class MeanSquaredErrorPrioritized : NetworkLoss
+    {
+        private float[] _sampleWeights;
+
+        public MeanSquaredErrorPrioritized(ComputeShader shader) : base(shader)
+        {
+        }
+
+        public void SetLossExternalParameters(float[] parameters)
+        {
+            _sampleWeights = parameters;
+            // _sampleWeights ??= new float[parameters.Length];
+            // for (int i = 0; i < parameters.Length; i++)
+            // {
+            //     _sampleWeights[i] = parameters[i];
+            // }
+        }
+
+        public override void Backward(float[,] output, float[,] yTrue)
+        {
+            if (!_backwardInit)
+            {
+                DInputs = new float[output.GetLength(0), output.GetLength(1)];
+                _columnSize = output.GetLength(0);
+                _rowSize = output.GetLength(1);
+
+                _backwardInit = true;
+            }
+
+            for (int i = 0; i < _columnSize; i++)
+            {
+                float sampleWeight = _sampleWeights[i];
+                for (int j = 0; j < _rowSize; j++)
+                {
+                    DInputs[i, j] = -2.0f * (yTrue[i, j] - output[i, j]) * sampleWeight / _rowSize / _columnSize;
+                }
+            }
+        }
+    }
+}
+
+/*
+// Job class just for reference
+       private TestJobsFor _testJob;
+        private NativeArray<float> _yTrueJob;
+        private NativeArray<float> _outputJob;
+        private NativeArray<float> _sampleLossesJob;
+
+        [BurstCompile]
+        private struct TestJobsFor : IJobParallelFor
+        {
+            [ReadOnly] public NativeArray<float> YTrue;
+            [ReadOnly] public NativeArray<float> Output;
+            [WriteOnly] public NativeArray<float> SampleLossesJob;
+
+            public int ColumnSize;
+            public int RowSize;
+
+            public void Execute(int index)
+            {
+                SampleLossesJob[index] = -2.0f * (YTrue[index] - Output[index]) / RowSize / ColumnSize;
+            }
+        }
+*/
+
+/*
+
+// Old class for reference, uses compute shader, fully functional
+ using UnityEngine;
+
+namespace NN
+{
     public abstract class NetworkLoss
     {
         public float[,] DInputs;
@@ -54,7 +218,6 @@ namespace NN
             _outputBuffer.SetData(output);
             _yTrueBuffer.SetData(yTrue);
             
-            //TODO: this might be faster if done in a unity job, since it is just using the x group
             Shader.Dispatch(KernelHandleForwardLoss, _threadGroupXForward, 1, 1);
             _sampleLossesBuffer.GetData(SampleLosses);
         }
@@ -147,3 +310,4 @@ namespace NN
         }
     }
 }
+*/
