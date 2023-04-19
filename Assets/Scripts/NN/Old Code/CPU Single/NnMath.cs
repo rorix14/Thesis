@@ -47,9 +47,10 @@ namespace NN.CPU_Single
 
         public static void CopyMatrix(float[,] inMat, float[,] matToCopy)
         {
+            int matRowSize = matToCopy.GetLength(1);
             for (int i = 0; i < matToCopy.GetLength(0); i++)
             {
-                for (int j = 0; j < matToCopy.GetLength(1); j++)
+                for (int j = 0; j < matRowSize; j++)
                 {
                     inMat[i, j] = matToCopy[i, j];
                 }

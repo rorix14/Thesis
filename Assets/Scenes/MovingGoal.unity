@@ -662,7 +662,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 10
+  simulationSpeed: 15
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
 --- !u!114 &845216471
@@ -701,14 +701,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 845216469}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b395153931b86c8438218e8c887a3318, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 3
+  simulationSpeed: 13
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   stepNumber: 3
@@ -726,7 +726,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 10
+  simulationSpeed: 12
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
 --- !u!114 &845216475
@@ -736,14 +736,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 845216469}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 504273b729618d84faa4ccf06c7e2111, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 10
+  simulationSpeed: 7
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
 --- !u!1 &905310493

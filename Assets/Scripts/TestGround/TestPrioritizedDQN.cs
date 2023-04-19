@@ -12,7 +12,7 @@ namespace TestGround
 
             var updateLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.Tanh, Instantiate(shader)),
+                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.Tanh, Instantiate(shader), true),
                 new NetworkLayer(128, 128, ActivationFunction.Tanh, Instantiate(shader)),
                 new NetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
             };
@@ -20,7 +20,7 @@ namespace TestGround
 
             var targetLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.Tanh, Instantiate(shader)),
+                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.Tanh, Instantiate(shader), true),
                 new NetworkLayer(128, 128, ActivationFunction.Tanh, Instantiate(shader)),
                 new NetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
             };
@@ -34,6 +34,5 @@ namespace TestGround
             _epsilon = 1.0f;
             Time.timeScale = simulationSpeed;
         }
-        
     }
 }

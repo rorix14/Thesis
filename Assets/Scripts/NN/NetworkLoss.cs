@@ -31,7 +31,7 @@ namespace NN
             _backwardInit = false;
         }
         
-        public virtual float Calculate(float[,] output, float[,] yTrue)
+        public virtual void Calculate(float[,] output, float[,] yTrue)
         {
             if (!_forwardInit)
             {
@@ -57,14 +57,6 @@ namespace NN
             //TODO: this might be faster if done in a unity job, since it is just using the x group
             Shader.Dispatch(KernelHandleForwardLoss, _threadGroupXForward, 1, 1);
             _sampleLossesBuffer.GetData(SampleLosses);
-
-            float result = 0;
-            foreach (var t in SampleLosses)
-            {
-                result += t;
-            }
-
-            return result / SampleLosses.Length;
         }
 
         public virtual void Backward(float[,] output, float[,] yTrue)
@@ -140,7 +132,7 @@ namespace NN
             if (_sampleWeightsBuffer == null)
             {
                 _sampleWeightsBuffer = new ComputeBuffer(parameters.Length, sizeof(float));
-                Shader.SetBuffer(KernelHandleForwardLoss, "sample_weights", _sampleWeightsBuffer);
+                //Shader.SetBuffer(KernelHandleForwardLoss, "sample_weights", _sampleWeightsBuffer);
                 Shader.SetBuffer(KernelHandleBackwardLoss, "sample_weights", _sampleWeightsBuffer);
             }
             

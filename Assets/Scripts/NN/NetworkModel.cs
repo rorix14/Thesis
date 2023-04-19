@@ -6,7 +6,7 @@ namespace NN
     public class NetworkModel
     {
         private readonly NetworkLayer[] _layers;
-        public readonly NetworkLoss _lossFunction;
+        private readonly NetworkLoss _lossFunction;
         private readonly float _learningRate;
         private readonly float _decay;
         private float _currentLearningRate;
@@ -50,7 +50,9 @@ namespace NN
         public void Update(float[,] yTarget)
         {
             if (_decay > 0)
+            {
                 _currentLearningRate = _learningRate * (1.0f / (1.0f + _decay * _iteration));
+            }
 
             ++_iteration;
             _bata1Corrected *= _beta1;
@@ -81,8 +83,14 @@ namespace NN
 
                 if (i % printEvery == 0)
                 {
-                    var loss = _lossFunction.Calculate(_layers[_layers.Length - 1].Output, yTarget);
-
+                    _lossFunction.Calculate(_layers[_layers.Length - 1].Output, yTarget);
+                    float loss = 0;
+                    foreach (var t in _lossFunction.SampleLosses)
+                    {
+                        loss += t;
+                    }
+                    loss /= _lossFunction.SampleLosses.Length;
+                    
                     var accuracy = 0.0f;
                     for (int j = 0; j < yTarget.GetLength(0); j++)
                     {
@@ -102,9 +110,10 @@ namespace NN
             }
         }
 
-        public float Loss(float[,] yTarget)
+        public float[] Loss(float[,] yTarget)
         {
-            return _lossFunction.Calculate(_layers[_layers.Length - 1].Output, yTarget);
+            _lossFunction.Calculate(_layers[_layers.Length - 1].Output, yTarget);
+            return _lossFunction.SampleLosses;
         }
 
         public void CopyModel(NetworkModel otherModel)
