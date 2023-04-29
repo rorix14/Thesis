@@ -52,8 +52,9 @@ namespace NN
                 case ActivationFunction.ReLu:
                     _kernelHandleBiasesBackward = _shader.FindKernel("backwards_pass_ReLU_biases_Adam");
                     break;
-                // case ActivationFunction.Tanh:
-                //     break;
+                 case ActivationFunction.Tanh:
+                     _kernelHandleBiasesBackward = _shader.FindKernel("backwards_pass_Tanh_biases_Adam");
+                     break;
                 case ActivationFunction.Linear:
                     _kernelHandleBiasesBackward = _shader.FindKernel("backwards_pass_linear_biases_Adam");
                     break;

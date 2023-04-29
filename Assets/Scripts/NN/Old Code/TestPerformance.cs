@@ -63,7 +63,7 @@ namespace NN
             // }
 
             var runtime = RunCPUSingleBackwards(x, y, epochs, layers);
-            //print("(cpu single) took: " + runtime + " ms");
+            print("(cpu single) took: " + runtime + " ms");
 
             //print("GPU single took: " + RunCPUSingle(test, epochs, layers) + " ms");
 

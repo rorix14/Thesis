@@ -11,11 +11,9 @@ namespace Algorithms.RL
         private readonly float _alpha;
         private readonly float _initialBeta;
         private float _beta;
-        private readonly float[] _priorities;
         private readonly float[] _sampleWeights;
         private int _counter;
 
-        private float _prioritiesSum;
         private float _maxPriority;
         private int _maxPriorityIndex;
         private float _maxWeight;
@@ -32,17 +30,15 @@ namespace Algorithms.RL
             _alpha = alpha;
             _beta = beta;
             _initialBeta = beta;
-            _priorities = new float[maxExperienceSize];
             _sampleWeights = new float[batchSize];
             _counter = 0;
             //_alpha = 0f;
 
-            _prioritiesSum = 0.0f;
             _maxPriority = 1.0f;
             _maxPriorityIndex = 0;
 
             _sumTree = new SumTree(maxExperienceSize);
-            //_sumTree = new SumTree((int)(maxExperienceSize / 0.6f));
+            // _sumTree.UpdateValue(0, 1.0f);
         }
 
         public override void AddExperience(float[] currentState, int action, float reward, bool done, float[] nextState)
@@ -52,18 +48,14 @@ namespace Algorithms.RL
             if (_experiences.Count < _maxExperienceSize)
             {
                 _experiences.Add(experience);
-                _prioritiesSum += _maxPriority;
             }
             else
             {
                 _experiences[_lastExperiencePosition] = experience;
-                // might not be needed
-                _prioritiesSum += _maxPriority - _priorities[_lastExperiencePosition];
             }
 
             _sumTree.UpdateValue(_lastExperiencePosition, _maxPriority);
-
-            _priorities[_lastExperiencePosition] = _maxPriority;
+            //_sumTree.UpdateValue(_lastExperiencePosition, _sumTree.MaxValue());
             _lastExperiencePosition = (_lastExperiencePosition + 1) % _maxExperienceSize;
         }
 
@@ -111,36 +103,20 @@ namespace Algorithms.RL
             var totalExperiences = _experiences.Count;
 
             // if indexes can be repeated, then a multi threaded version might be faster
-            //var total = _prioritiesSum;
             var total = _sumTree.Total();
             _maxWeight = 0.0f;
             for (int i = 0; i < _batchSize; i++)
             {
-                var ran = Random.Range(0.0f, total);
-                // var batchIndex = -1;
-                // var cutoff = ran;
-                // while (cutoff >= 0.0f)
-                // {
-                //     batchIndex++;
-                //     cutoff -= _priorities[batchIndex];
-                //
-                //     if (batchIndex >= totalExperiences - 1) break;
-                // }
-
-                // Can just use the total function of the sum tree 
-
-                var randomValue = ran;
-                var batchIndex = _sumTree.Sample(randomValue, out var priority);
-
+                //var total = _sumTree.Total();
+                var batchIndex = _sumTree.Sample(Random.Range(0.0f, total), out var priority);
+                
                 if (batchIndex >= totalExperiences)
                 {
-                    // Debug.Log("Value: " + tt + ", lenght: " + totalExperiences + ", index: " + batchIndexx +
-                    //           ", Total: " + total + ", random: " + randomValue + ", last value: " + _priorities[totalExperiences - 1]);
                     batchIndex = totalExperiences - 1;
                     priority = _sumTree.Get(batchIndex);
                 }
-
-
+                //_sumTree.UpdateValue(batchIndex, 1e-5f);
+                
                 _batchIndexes[i] = batchIndex;
                 var experience = _experiences[batchIndex];
                 for (int j = 0; j < _stateLenght; j++)
@@ -149,7 +125,6 @@ namespace Algorithms.RL
                     _currentStates[i, j] = experience.CurrentState[j];
                 }
 
-                //var weight = Mathf.Pow(totalExperiences * (_priorities[batchIndex] / _prioritiesSum), -_beta);
                 var weight = Mathf.Pow(totalExperiences * (priority / total), -_beta);
 
                 _sampleWeights[i] = weight;
@@ -175,9 +150,6 @@ namespace Algorithms.RL
                 var priority = Mathf.Pow(samplePriorities[i] + 1e-5f, _alpha);
                 var priorityIndex = _batchIndexes[i];
 
-                _prioritiesSum += priority - _priorities[priorityIndex];
-                _priorities[priorityIndex] = priority;
-
                 _sumTree.UpdateValue(priorityIndex, priority);
 
                 if (_maxPriority >= priority) continue;
@@ -186,20 +158,59 @@ namespace Algorithms.RL
                 _maxPriorityIndex = priorityIndex;
             }
 
-            //TODO: Might be useful to have a max tree, to find the max instead  
-            if (Math.Abs(_priorities[_maxPriorityIndex] - _maxPriority) == 0.0f) return;
+            if (Math.Abs(_sumTree.Get(_maxPriorityIndex) - _maxPriority) == 0.0f) return;
 
-            _maxPriority = 0.0f;
-            _prioritiesSum = 0.0f;
-            for (int i = 0; i < _experiences.Count; i++)
+            var totalExperiences = _experiences.Count;
+
+            // _maxPriority = 0.0f;
+            // for (int i = 0; i < _experiences.Count; i++)
+            // {
+            //     var priority = _sumTree.Get(i);
+            //
+            //     if (_maxPriority > priority) continue;
+            //
+            //     _maxPriority = priority;
+            //     _maxPriorityIndex = i;
+            // }
+
+            var leftMax = float.MinValue;
+            var rightMax = leftMax;
+            var mid = totalExperiences / 2;
+            var leftIndex = 0;
+            var rightIndex = 0;
+            for (int i = 0; i < mid; i++)
             {
-                var priority = _priorities[i];
-                _prioritiesSum += priority;
+                var priorityLeft = _sumTree.Get(i);
+                var priorityRight = _sumTree.Get(i + mid);
 
-                if (_maxPriority > priority) continue;
+                if (leftMax < priorityLeft)
+                {
+                    leftMax = priorityLeft;
+                    leftIndex = i;
+                }
 
-                _maxPriority = priority;
-                _maxPriorityIndex = i;
+                if (!(rightMax < priorityRight)) continue;
+                
+                rightMax = priorityRight;
+                rightIndex = i + mid;
+            }
+
+            var lastValue = _sumTree.Get(totalExperiences - 1);
+            if (rightMax < lastValue)
+            {
+                rightMax = lastValue;
+                rightIndex = totalExperiences - 1;
+            }
+
+            if (leftMax > rightMax)
+            {
+                _maxPriority = leftMax;
+                _maxPriorityIndex = leftIndex;
+            }
+            else
+            {
+                _maxPriority = rightMax;
+                _maxPriorityIndex = rightIndex;
             }
         }
     }

@@ -2,7 +2,6 @@
 
 using NN.CPU_Single;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace NN
 {
@@ -10,6 +9,7 @@ namespace NN
     {
         ReLu,
         Tanh,
+        Softmax,
         Linear
     }
 
@@ -18,25 +18,26 @@ namespace NN
         // Neural network variables
         public float[,] Output;
         public float[,] DInputs;
-        protected float[,] _weights;
-        protected float[,] _biases;
+        protected readonly float[,] _weights;
+        protected readonly float[,] _biases;
 
-        protected ActivationFunction _activationFunction;
+        protected readonly ActivationFunction _activationFunction;
 
-        protected bool _isFirstLayer;
-        protected bool _forwardInitialized;
-        protected bool _backwardInitialized;
+        private readonly bool _isFirstLayer;
+        private bool _forwardInitialized;
+        private bool _backwardInitialized;
+        private readonly int _headNumber;
 
         // Compute buffer variables
-        protected ComputeShader _shader;
+        protected readonly ComputeShader _shader;
 
         private ComputeBuffer _inputBuffer;
         protected ComputeBuffer _outputBuffer;
-        protected ComputeBuffer _weightsBuffer;
-        protected ComputeBuffer _biasesBuffer;
+        private readonly ComputeBuffer _weightsBuffer;
+        protected readonly ComputeBuffer _biasesBuffer;
 
         // forward only variables
-        protected int _kernelHandleForward;
+        protected readonly int _kernelHandleForward;
         private int _threadGroupXOutputForward;
         private int _threadGroupYOutputForward;
 
@@ -44,8 +45,8 @@ namespace NN
         protected ComputeBuffer _dValuesBuffer;
         private ComputeBuffer _dInputsBuffer;
 
-        protected int _kernelHandleInputsBackward;
-        protected int _kernelHandleWeightsBiasesBackward;
+        protected readonly int _kernelHandleInputsBackward;
+        protected readonly int _kernelHandleWeightsBiasesBackward;
 
         private int _threadGroupXInputsBackward;
         private int _threadGroupYInputsBackward;
@@ -57,12 +58,12 @@ namespace NN
         private ComputeBuffer _weightsCacheBuffer;
         protected ComputeBuffer _biasesMomentumBuffer;
         protected ComputeBuffer _biasesCacheBuffer;
-        
+
         public NetworkLayer(int nInputs, int nNeurons, ActivationFunction activationFunction, ComputeShader shader,
-            bool isFirstLayer = false, float paramsRange = 4.0f, float paramsCoefficient = 0.01f)
+            bool isFirstLayer = false, float paramsRange = 4.0f, float paramsCoefficient = 0.01f, int headNumber = 1)
         {
             // Seed used to better reproduce results, usual seeds are 42, 50, 34
-            Random.InitState(34);
+            Random.InitState(42);
             // neural networks standard init
             _weights = new float[nInputs, nNeurons];
             _biases = new float[1, nNeurons];
@@ -73,13 +74,15 @@ namespace NN
                 _biases[0, i] = paramsCoefficient * NnMath.RandomGaussian(-paramsRange, paramsRange);
                 for (int j = 0; j < _weights.GetLength(0); j++)
                 {
-                    _weights[j, i] = paramsCoefficient * NnMath.RandomGaussian(-paramsRange, paramsRange); //* Random.value;
+                    _weights[j, i] =
+                        paramsCoefficient * NnMath.RandomGaussian(-paramsRange, paramsRange); //* Random.value;
                 }
             }
 
             // compute shader variables
             _shader = shader;
             _activationFunction = activationFunction;
+            _headNumber = headNumber;
             switch (activationFunction)
             {
                 case ActivationFunction.ReLu:
@@ -91,6 +94,14 @@ namespace NN
                     _kernelHandleForward = _shader.FindKernel("forward_pass_Tanh");
                     _kernelHandleInputsBackward = _shader.FindKernel("backwards_pass_Tanh_inputs");
                     _kernelHandleWeightsBiasesBackward = _shader.FindKernel("backwards_pass_Tanh_weights_biases_Adam");
+                    break;
+                case ActivationFunction.Softmax:
+                    _kernelHandleForward = _shader.FindKernel("forward_pass_softmax");
+                    _kernelHandleInputsBackward = _shader.FindKernel("backwards_pass_softmax_inputs");
+                    _kernelHandleWeightsBiasesBackward =
+                        _shader.FindKernel("backwards_pass_softmax_weights_biases_Adam");
+                    _shader.SetInt("head_number", headNumber);
+                    _shader.SetInt("distribution_lenght", nNeurons / headNumber);
                     break;
                 case ActivationFunction.Linear:
                     _kernelHandleForward = _shader.FindKernel("forward_pass_linear");
@@ -191,7 +202,9 @@ namespace NN
 
             _shader.GetKernelThreadGroupSizes(_kernelHandleForward, out var threadSizeX, out var threadSizeY, out _);
             _threadGroupXOutputForward = Mathf.CeilToInt(Output.GetLength(0) / (float)threadSizeX);
-            _threadGroupYOutputForward = Mathf.CeilToInt(Output.GetLength(1) / (float)threadSizeY);
+            _threadGroupYOutputForward = _activationFunction == ActivationFunction.Softmax
+                ? Mathf.CeilToInt(_headNumber / (float)threadSizeY)
+                : Mathf.CeilToInt(Output.GetLength(1) / (float)threadSizeY);
 
             _shader.SetBuffer(_kernelHandleForward, "weights", _weightsBuffer);
             _shader.SetBuffer(_kernelHandleForward, "biases", _biasesBuffer);
@@ -225,7 +238,7 @@ namespace NN
                 _shader.SetBuffer(_kernelHandleInputsBackward, "output", _outputBuffer);
                 _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "output", _outputBuffer);
             }
-            
+
             _dValuesBuffer = new ComputeBuffer(dValues.Length, sizeof(float));
             _dInputsBuffer = new ComputeBuffer(DInputs.Length, sizeof(float));
 

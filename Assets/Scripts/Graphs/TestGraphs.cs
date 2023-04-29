@@ -6,7 +6,7 @@ using NN;
 using NN.CPU_Single;
 using UnityEngine;
 using ActivationFunction = NN.ActivationFunction;
-using Random = Unity.Mathematics.Random;
+using Random = UnityEngine.Random;
 
 namespace Graphs
 {
@@ -21,26 +21,26 @@ namespace Graphs
             //var (x, y) = GenerateClassSample();
 
             var preds = new List<float>(y.Length);
-            
+
             var layers = new NetworkLayer[]
             {
                 new NetworkLayer(x.GetLength(1), 64, ActivationFunction.ReLu, Instantiate(shader)),
                 new NetworkLayer(64, 64, ActivationFunction.ReLu, Instantiate(shader)),
                 new NetworkLayer(64, 1, ActivationFunction.Linear, Instantiate(shader))
             };
-            
+
             var model = new NetworkModel(layers, new MeanSquaredError(Instantiate(shader)));
 
-            const int epochs = 1000;
+            //const int epochs = 1000;
 
             // model.Train(epochs, x, y, 999);
             //var tt = model.Predict(x);
             model.Dispose();
 
-            var tt = RunCPUSingle(x, y, epochs);
-             foreach (var pred in tt)
-                 preds.Add(pred);
-            
+            // var tt = RunCPUSingle(x, y, epochs);
+            //  foreach (var pred in tt)
+            //      preds.Add(pred);
+
             // foreach (var pred in y)
             // {
             //     preds.Add(pred);
@@ -50,10 +50,65 @@ namespace Graphs
             //     }
             // }
 
+            var dist = new List<float> { 0f, 0f, 0f, 0f, 0f, 0f };
+            var gamma = 0.99f;
+            var reward = 3f;
+            var support = new float[] { -10f, -5f, 0f, 5f, 10f };
+            var delta = (10f + 10f) / 4;
+            preds = new List<float> { 0.15f, 0.1f, 0.5f, 0.1f, 0.15f, 0f };
+            // for (int i = 0; i < 5; i++)
+            // {
+            //     var v = reward + support[i] * gamma;
+            //     var tz = Mathf.Clamp(v, -10f, 10f);
+            //     var b = (tz + 10f) / delta;
+            //     var l = (int)b;
+            //     var u = Mathf.CeilToInt(b);
+            //
+            //     if (l == u)
+            //     {
+            //         dist[l] += preds[i];
+            //     }
+            //     else
+            //     {
+            //         dist[l] += preds[i] * (u - b);
+            //         dist[u] += preds[i] * (b - l);
+            //     }
+            // }
+            var b =  Mathf.RoundToInt((reward + 10f) / delta);
+            b = Mathf.Clamp(b, 0, 4);
+            var m = new float[6];
+            preds.CopyTo(m);
+            var j = 1;
+            for (int i = b; i > 0; i--)
+            {
+                m[i] += Mathf.Pow(gamma, j) * m[i - 1];
+                j++;
+            }
+            j = 1;
+            for (int i = b; i < 4; i++)
+            {
+                m[i] += Mathf.Pow(gamma, j) * m[i + 1];
+                j++;
+            }
+            var sum = 0f;
+            for (int i = 0; i < 5; i++)
+            {
+                sum += m[i];
+            }
+            for (int i = 0; i < 5; i++)
+            {
+                m[i] /= sum;
+            }
             
+            for (int i = 0; i < 6; i++)
+            {
+                //print("pred: " + preds[i] + ", dist: " + dist[i]);
+                print("pred: " + preds[i] + ", m: " + m[i]);
+            }
+
             var graph = FindObjectOfType<WindowGraph>();
             if (graph)
-                graph.SetGraph(new List<float>(), preds, GraphType.LineGraph, "Sin Wave", "Frequency", "Amplitude");
+                graph.SetGraph(new List<float>(), preds, GraphType.BarGraph, "Sin Wave", "Frequency", "Amplitude");
         }
 
         private IEnumerator RunEverySecond(WindowGraph graph)
@@ -133,7 +188,7 @@ namespace Graphs
                 new DenseLayer(128, 1),
                 new ActivationLinear()
             };
-            
+
             var mse = new LossFunctionMeanSquaredError();
             var Adam = new OptimizerAdam(0.005f, 1e-3f);
 
@@ -164,7 +219,7 @@ namespace Graphs
                     print("(cpu) At " + i + ", loss: " + mse.Calculate(layers[layers.Length - 1].Output, dataY) +
                           ", accuracy: " + accuracy / dataY.GetLength(0));
                 }
-                
+
                 mse.Backward(layers[layers.Length - 1].Output, dataY);
                 layers[layers.Length - 1].Backward(mse.DInputs);
                 for (int j = layers.Length - 2; j >= 0; j--)

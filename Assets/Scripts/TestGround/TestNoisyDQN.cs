@@ -5,7 +5,6 @@ using UnityEngine;
 namespace TestGround
 {
     public class TestNoisyDQN : TestDQN
-    
     {
         [SerializeField] protected ComputeShader noisyShader;
         protected override void Start()

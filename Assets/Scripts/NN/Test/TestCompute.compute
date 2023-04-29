@@ -1,6 +1,8 @@
 #pragma kernel KernelA
 #pragma kernel KernelB
 #pragma kernel Max
+#pragma kernel forward_pass_softmax
+#pragma kernel forward_pass_linear
 
 RWStructuredBuffer<float> buffer;
 RWStructuredBuffer<float> read_buffer;
@@ -10,7 +12,7 @@ unsigned int row_size;
 void Max(uint3 id : SV_DispatchThreadID)
 {
     float max = 0.0f;
-    for (int i = 0; i < row_size; ++i)
+    for (unsigned int i = 0; i < row_size; ++i)
     {
         const float current_val = buffer[id.x * row_size + i];
         if (max > current_val) continue;
@@ -62,6 +64,71 @@ void KernelB(uint3 id : SV_DispatchThreadID)
 void test_function(const int index, RWStructuredBuffer<float> b_1, const RWStructuredBuffer<int> b_2)
 {
     b_1[index] = b_2[index] + 6;
+}
+
+StructuredBuffer<float> input;
+StructuredBuffer<float> weights;
+StructuredBuffer<float> biases;
+RWStructuredBuffer<float> output;
+
+unsigned int input_column_size;
+unsigned int input_row_size;
+unsigned int weights_row_size;
+unsigned int head_number;
+unsigned int distribution_lenght;
+
+[numthreads(8,8,1)]
+void forward_pass_linear(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= weights_row_size)
+        return;
+
+    const int input_column_index = id.x * input_row_size;
+    float result = 0;
+    for (unsigned int i = 0; i < input_row_size; ++i)
+    {
+        result += input[input_column_index + i] * weights[i * weights_row_size + id.y];
+    }
+
+    output[id.x * weights_row_size + id.y] = result + biases[id.y];
+}
+
+[numthreads(8,8,1)]
+void forward_pass_softmax(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= head_number)
+        return;
+
+    const int current_distribution = distribution_lenght * id.y;
+    const int start_index = id.x * weights_row_size + current_distribution;
+
+    float sum = 0.0f;
+    float max_value = -3.4028235E+38f;
+    for (unsigned int i = 0; i < distribution_lenght; ++i)
+    {
+        //const int input_column_index = id.x * input_row_size;
+        // result = 0.0f;
+        // for (unsigned int k = 0; k < input_row_size; ++k)
+        // {
+        //     result += input[input_column_index + k] * weights[k * weights_row_size + current_distribution + i];
+        // }
+        // result += biases[current_distribution + i];
+        
+        //output[start_index + i] = result; 
+        //max_value = max(max_value, result);
+        max_value = max(max_value, output[start_index + i]);
+    }
+    for (unsigned int j = 0; j < distribution_lenght; ++j)
+    {
+        const int index = start_index + j;
+        const float result = exp(output[index] - max_value);
+        output[index] = result;
+        sum += result;
+    }
+    for (unsigned int m = 0; m < distribution_lenght; ++m)
+    {
+        output[start_index + m] /= sum;
+    }
 }
 
 
