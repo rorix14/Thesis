@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using System.Diagnostics;
+using System;
 using NN;
 using NN.CPU_Single;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Algorithms.RL
 {
@@ -11,10 +11,14 @@ namespace Algorithms.RL
         private readonly float _alpha;
         private readonly float _initialBeta;
         private float _beta;
-        private readonly float[] _priorities;
-        private readonly float[] _probabilities;
         private readonly float[] _sampleWeights;
         private int _counter;
+
+        private float _maxPriority;
+        private int _maxPriorityIndex;
+        private float _maxWeight;
+
+        private readonly SumTree _sumTree;
 
         public ModelPrioritizedDQN(NetworkModel networkModel, NetworkModel targetModel,
             int numberOfActions,
@@ -26,30 +30,32 @@ namespace Algorithms.RL
             _alpha = alpha;
             _beta = beta;
             _initialBeta = beta;
-            _priorities = new float[maxExperienceSize];
-            _probabilities = new float[maxExperienceSize];
             _sampleWeights = new float[batchSize];
             _counter = 0;
-
             //_alpha = 0f;
+
+            _maxPriority = 1.0f;
+            _maxPriorityIndex = 0;
+
+            _sumTree = new SumTree(maxExperienceSize);
+            // _sumTree.UpdateValue(0, 1.0f);
         }
 
         public override void AddExperience(float[] currentState, int action, float reward, bool done, float[] nextState)
         {
             var experience = new Experience(currentState, action, reward, done, nextState);
-            var maxPriority = NnMath.ArrayMax(_priorities);
 
             if (_experiences.Count < _maxExperienceSize)
             {
                 _experiences.Add(experience);
-                maxPriority = maxPriority > 0 ? maxPriority : 1;
             }
             else
             {
                 _experiences[_lastExperiencePosition] = experience;
             }
 
-            _priorities[_lastExperiencePosition] = maxPriority;
+            _sumTree.UpdateValue(_lastExperiencePosition, _maxPriority);
+            //_sumTree.UpdateValue(_lastExperiencePosition, _sumTree.MaxValue());
             _lastExperiencePosition = (_lastExperiencePosition + 1) % _maxExperienceSize;
         }
 
@@ -61,30 +67,34 @@ namespace Algorithms.RL
             UpdateBeta();
             RandomBatch();
 
-            MaxByRow(_networkModel.Predict(_nextStates));
-            var targetPredictions = _targetModel.Predict(_nextStates);
-            NnMath.CopyMatrix(_yTarget, _networkModel.Predict(_currentStates));
-            for (int i = 0; i < _nextQ.Length; i++)
-            {
-                var experience = _experiences[_batchIndexes[i]];
-                _yTarget[i, experience.Action] =
-                    experience.Done
-                        ? experience.Reward
-                        : experience.Reward + _gamma * targetPredictions[i, _nextQ[i].index];
-            }
-            
-            // MaxByRow(_targetModel.Predict(_nextStates));
+            // MaxByRow(_networkModel.Predict(_nextStates));
+            // var targetPredictions = _targetModel.Predict(_nextStates);
             // NnMath.CopyMatrix(_yTarget, _networkModel.Predict(_currentStates));
             // for (int i = 0; i < _nextQ.Length; i++)
             // {
             //     var experience = _experiences[_batchIndexes[i]];
             //     _yTarget[i, experience.Action] =
-            //         experience.Done ? experience.Reward : experience.Reward + _gamma * _nextQ[i].value;
+            //         experience.Done
+            //             ? experience.Reward
+            //             : experience.Reward + _gamma * targetPredictions[i, _nextQ[i].index];
             // }
+
+
+            //TODO: could do loss and priority update in this loop
+            MaxByRow(_targetModel.Predict(_nextStates));
+            NnMath.CopyMatrix(_yTarget, _networkModel.Predict(_currentStates));
+            for (int i = 0; i < _batchSize; i++)
+            {
+                _sampleWeights[i] /= _maxWeight;
+
+                var experience = _experiences[_batchIndexes[i]];
+                _yTarget[i, experience.Action] =
+                    experience.Done ? experience.Reward : experience.Reward + _gamma * _nextQ[i].value;
+            }
 
             _networkModel.SetLossParams(_sampleWeights);
             UpdatePriorities(_networkModel.Loss(_yTarget));
-            
+
             _networkModel.Update(_yTarget);
         }
 
@@ -92,54 +102,36 @@ namespace Algorithms.RL
         {
             var totalExperiences = _experiences.Count;
 
-            var prioritiesSum = 0.0f;
-            for (int i = 0; i < totalExperiences; i++)
-            {
-                var priority = Mathf.Pow(_priorities[i], _alpha);
-                _probabilities[i] = priority;
-                prioritiesSum += priority;
-            }
-
-            var totalProbability = 0.0f;
-            for (int i = 0; i < totalExperiences; i++)
-            {
-                _probabilities[i] /= prioritiesSum;
-                totalProbability += _probabilities[i];
-            }
-            
+            // if indexes can be repeated, then a multi threaded version might be faster
+            var total = _sumTree.Total();
+            _maxWeight = 0.0f;
             for (int i = 0; i < _batchSize; i++)
             {
-                var batchIndex = -1;
-                var cutoff = Random.Range(1e-20f, totalProbability - 1e-5f);
-                while (cutoff > 0.0)
+                //var total = _sumTree.Total();
+                var batchIndex = _sumTree.Sample(Random.Range(0.0f, total), out var priority);
+                
+                if (batchIndex >= totalExperiences)
                 {
-                    batchIndex++;
-                    cutoff -= _probabilities[batchIndex];
+                    batchIndex = totalExperiences - 1;
+                    priority = _sumTree.Get(batchIndex);
                 }
+                //_sumTree.UpdateValue(batchIndex, 1e-5f);
                 
                 _batchIndexes[i] = batchIndex;
                 var experience = _experiences[batchIndex];
-                for (int j = 0; j < experience.CurrentState.Length; j++)
+                for (int j = 0; j < _stateLenght; j++)
                 {
                     _nextStates[i, j] = experience.NextState[j];
                     _currentStates[i, j] = experience.CurrentState[j];
                 }
-            }
 
-            var maxWeight = float.MinValue;
-            for (int i = 0; i < _batchSize; i++)
-            {
-                var weight = Mathf.Pow(totalExperiences * _probabilities[_batchIndexes[i]], -_beta);
+                var weight = Mathf.Pow(totalExperiences * (priority / total), -_beta);
+
                 _sampleWeights[i] = weight;
 
-                if (maxWeight > weight) continue;
+                if (_maxWeight > weight) continue;
 
-                maxWeight = weight;
-            }
-
-            for (int i = 0; i < _batchSize; i++)
-            {
-                _sampleWeights[i] /= maxWeight;
+                _maxWeight = weight;
             }
         }
 
@@ -154,7 +146,71 @@ namespace Algorithms.RL
         {
             for (int i = 0; i < _batchSize; i++)
             {
-                _priorities[_batchIndexes[i]] = samplePriorities[i] + 1e-5f;
+                //TODO: should do serious tests to see if this works better than the sqrt of the sample priorities
+                var priority = Mathf.Pow(samplePriorities[i] + 1e-5f, _alpha);
+                var priorityIndex = _batchIndexes[i];
+
+                _sumTree.UpdateValue(priorityIndex, priority);
+
+                if (_maxPriority >= priority) continue;
+
+                _maxPriority = priority;
+                _maxPriorityIndex = priorityIndex;
+            }
+
+            if (Math.Abs(_sumTree.Get(_maxPriorityIndex) - _maxPriority) == 0.0f) return;
+
+            var totalExperiences = _experiences.Count;
+
+            // _maxPriority = 0.0f;
+            // for (int i = 0; i < _experiences.Count; i++)
+            // {
+            //     var priority = _sumTree.Get(i);
+            //
+            //     if (_maxPriority > priority) continue;
+            //
+            //     _maxPriority = priority;
+            //     _maxPriorityIndex = i;
+            // }
+
+            var leftMax = float.MinValue;
+            var rightMax = leftMax;
+            var mid = totalExperiences / 2;
+            var leftIndex = 0;
+            var rightIndex = 0;
+            for (int i = 0; i < mid; i++)
+            {
+                var priorityLeft = _sumTree.Get(i);
+                var priorityRight = _sumTree.Get(i + mid);
+
+                if (leftMax < priorityLeft)
+                {
+                    leftMax = priorityLeft;
+                    leftIndex = i;
+                }
+
+                if (!(rightMax < priorityRight)) continue;
+                
+                rightMax = priorityRight;
+                rightIndex = i + mid;
+            }
+
+            var lastValue = _sumTree.Get(totalExperiences - 1);
+            if (rightMax < lastValue)
+            {
+                rightMax = lastValue;
+                rightIndex = totalExperiences - 1;
+            }
+
+            if (leftMax > rightMax)
+            {
+                _maxPriority = leftMax;
+                _maxPriorityIndex = leftIndex;
+            }
+            else
+            {
+                _maxPriority = rightMax;
+                _maxPriorityIndex = rightIndex;
             }
         }
     }

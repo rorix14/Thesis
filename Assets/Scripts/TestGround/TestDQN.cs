@@ -32,6 +32,9 @@ namespace TestGround
 
         private WindowGraph _graphReward;
         private WindowGraph _graphLoss;
+        
+        // private Stopwatch _stopwatch;
+        // private List<long> _times;
 
         private void Awake()
         {
@@ -43,6 +46,9 @@ namespace TestGround
                 _rewardsOverTime.Add(0f);
                 _lossPerEpisode.Add(0f);
             }
+            
+            // _stopwatch = new Stopwatch();
+            // _times = new List<long>(1000000);
         }
 
         protected virtual void Start()
@@ -88,8 +94,12 @@ namespace TestGround
             var stepInfo = _env.Step(action);
 
             _DQN.AddExperience(_currentSate, action, stepInfo.Reward, stepInfo.Done, stepInfo.Observation);
+            
+            //_stopwatch.Restart();
             _DQN.Train();
-
+            //_stopwatch.Stop();
+            //_times.Add(_stopwatch.ElapsedMilliseconds);
+            
             if (_totalIteration % targetNetworkCopyPeriod == 0)
             {
                 _DQN.SetTargetModel();
@@ -107,6 +117,7 @@ namespace TestGround
 
             // could clamp epsilon value with a max function in order to have a min exploration value
             _epsilon = 1.0f / (float)Math.Sqrt(_episodeIndex + 1);
+            //_epsilon = 0.0f;
         }
 
         private void PlotTrainingData()
@@ -129,10 +140,18 @@ namespace TestGround
                 //     _lossPerEpisode[i] = 1.0f;
                 // }
             }
+            
+            // float timeSum = 0.0f;
+            // foreach (var time in _times)
+            // {
+            //     timeSum += time;
+            // }
+
 
             print("Average Reward: " + rewardSum / _rewardsOverTime.Count);
             print("Average Loss: " + lossSum / _lossPerEpisode.Count);
-
+            //print("Average Time: " + timeSum / _times.Count);
+            
             var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
             _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
             _graphLoss = Instantiate(windowGraphPrefab, layoutGroup.transform);

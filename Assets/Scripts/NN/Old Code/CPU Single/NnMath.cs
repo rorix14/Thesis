@@ -4,6 +4,10 @@ namespace NN.CPU_Single
 {
     public static class NnMath
     {
+        public static float Sign(float value)
+        {
+            return value >= 0.0f ? 1f : -1f;
+        }
         public static float ArrayMax(float[] valueArray)
         {
             float num = valueArray[0];
@@ -59,12 +63,15 @@ namespace NN.CPU_Single
 
         public static float[,] MatrixDotProduct(float[,] mat1, float[,] mat2)
         {
-            var output = new float[mat1.GetLength(0), mat2.GetLength(1)];
+            var mat1ColumnSize = mat1.GetLength(0);
+            var mat2RowSize = mat2.GetLength(1);
+            
+            var output = new float[mat1ColumnSize, mat2RowSize];
             for (int i = 0; i < mat2.GetLength(0); i++)
             {
-                for (int j = 0; j < mat2.GetLength(1); j++)
+                for (int j = 0; j < mat2RowSize; j++)
                 {
-                    for (int k = 0; k < mat1.GetLength(0); k++)
+                    for (int k = 0; k < mat1ColumnSize; k++)
                     {
                         output[k, j] += mat1[k, i] * mat2[i, j];
                     }
@@ -119,6 +126,8 @@ namespace NN.CPU_Single
 
             var mean = (minValue + maxValue) / 2.0f;
             var sigma = (maxValue - mean) / 3.0f;
+            
+            // TODO: use custom made clamp function so it does not convert numbers into floats
             return Mathf.Clamp(std * sigma + mean, minValue, maxValue);
         }
 

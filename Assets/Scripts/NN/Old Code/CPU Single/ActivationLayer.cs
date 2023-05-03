@@ -16,10 +16,13 @@ namespace NN.CPU_Single
         {
             Inputs = inputs;
             // TODO: there is no need to allocate memory for the output every time we do a forward pass, sizes will remain the same
-            Output = new float[Inputs.GetLength(0), Inputs.GetLength(1)];
-            for (int i = 0; i < Inputs.GetLength(0); i++)
+            var inputsColumnSize = Inputs.GetLength(0);
+            var inputsRowSize = Inputs.GetLength(1);
+            
+            Output = new float[inputsColumnSize, inputsRowSize];
+            for (int i = 0; i < inputsColumnSize; i++)
             {
-                for (int j = 0; j < Inputs.GetLength(1); j++)
+                for (int j = 0; j < inputsRowSize; j++)
                 {
                     Output[i, j] = Inputs[i, j] <= 0 ? 0 : Inputs[i, j];
                 }
@@ -54,7 +57,9 @@ namespace NN.CPU_Single
                 for (int j = 0; j < inputs.GetLength(1); j++)
                 {
                     var input = inputs[i, j];
-                    Output[i, j] = (Mathf.Exp(input) - Mathf.Exp(-input)) / (Mathf.Exp(input) + Mathf.Exp(-input));
+                    float exPos = Mathf.Exp(input);
+                    float expNeg = Mathf.Exp(-input);
+                    Output[i, j] = (exPos - expNeg) / (exPos + expNeg);
                 }
             }
         }

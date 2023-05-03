@@ -7,7 +7,6 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
 
 namespace NN
@@ -30,7 +29,7 @@ namespace NN
             };
             var model = new NetworkModel(layers, new MeanSquaredError(Instantiate(shader)));
 
-            const int epochs = 1000;
+            //const int epochs = 1000;
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -43,50 +42,142 @@ namespace NN
 
             //TestBuffer();
             //LookUpArrayVsSwitch(1000);
-            Test(100000);
+            //Test(100000);
+            var res = -1 * (0.9f * Mathf.Log(0.5f) + 0.1f * Mathf.Log(0.5f));
+            print(res);
         }
 
         private void Test(int iterations)
         {
-            var numbers = new float[50, 50];
-            var probs = new int[8];
-            var collected = new int[8];
+            Random.InitState(42);
+            var single = 51;
+            var headNumber = 10;
+            var x = 32;
+            var y = 128;
+            var k = single * headNumber;
+
+            var input = new float[x, y];
+            var weights = new float[y, k];
+            var biases = new float[1, k];
+            var outputs = new float[x, k];
+
+            for (int i = 0; i < k; i++)
+            {
+                biases[0, i] = Random.value;
+            }
+            for (int i = 0; i < y; i++)
+            {
+                for (int j = 0; j < k; j++)
+                {
+                    weights[i, j] = Random.value;
+                }
+            }
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < y; j++)
+                {
+                    input[i, j] = Random.value;
+                }
+            }
+
+            var testShader = Instantiate(test_shader);
+            testShader.SetInt("input_column_size", x);
+            testShader.SetInt("input_row_size", y);
+            testShader.SetInt("weights_row_size", k);
+            testShader.SetInt("head_number", headNumber);
+            testShader.SetInt("distribution_lenght", single);
+            var inputBuffer = new ComputeBuffer(input.Length, sizeof(float));
+            var weightsBuffer = new ComputeBuffer(weights.Length, sizeof(float));
+            var biasesBuffer = new ComputeBuffer(biases.Length, sizeof(float));
+            var outputsBuffer = new ComputeBuffer(outputs.Length, sizeof(float));
+            inputBuffer.SetData(input);
+            weightsBuffer.SetData(weights);
+            biasesBuffer.SetData(biases);
+            outputsBuffer.SetData(outputs);
+            int kernelIndex1 = testShader.FindKernel("forward_pass_linear");
+            int kernelIndex2 = testShader.FindKernel("forward_pass_softmax");
+            testShader.SetBuffer(kernelIndex1, "input", inputBuffer);
+            testShader.SetBuffer(kernelIndex1, "weights", weightsBuffer);
+            testShader.SetBuffer(kernelIndex1, "biases", biasesBuffer);
+            testShader.SetBuffer(kernelIndex1, "output", outputsBuffer);  
+            testShader.SetBuffer(kernelIndex2, "output", outputsBuffer);
+            var groupX = Mathf.CeilToInt(x / 8f);
+            var groupY1 = Mathf.CeilToInt(k / 8f);
+            var groupY2 = Mathf.CeilToInt(headNumber / 8f);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            for (int k = 0; k < iterations; k++)
-            {
-                for (int i = 0; i < numbers.GetLength(0); i++)
-                {
-                    for (int j = 0; j < numbers.GetLength(1); j++)
-                    {
-                        numbers[i, j] = Random.value;
-                    }
-                }    
-            }
+            testShader.Dispatch(kernelIndex1, groupX, groupY1, 1);
+            testShader.Dispatch(kernelIndex2, groupX, groupY2, 1);
+            outputsBuffer.GetData(outputs);
             stopwatch.Stop();
-            print("Copy Took: " + stopwatch.ElapsedMilliseconds + " ms");
+            print(stopwatch.ElapsedTicks);
             
-            stopwatch.Restart();
-            for (int k = 0; k < iterations; k++)
+            inputBuffer.Dispose();
+            weightsBuffer.Dispose();
+            biasesBuffer.Dispose();
+            outputsBuffer.Dispose();
+
+            var sum1 = 0f;
+            var sum2 = 0f;
+            for (int i = 0; i < single; i++)
             {
-                int rowSize = numbers.GetLength(1);
-                int columnSize = numbers.GetLength(0);
-                for (int i = 0; i < columnSize; i++)
+                sum1 += outputs[0, i];
+                sum2 += outputs[0, k - single + i];
+            }
+
+            print("sum 1: " + sum1 + ", sum2: " + sum2);
+
+            stopwatch.Restart();
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < headNumber; j++)
                 {
-                    for (int j = 0; j < rowSize; j++)
+                    float maxValue = float.MinValue;
+                    sum1 = 0;
+                    for (int l = 0; l < single; l++)
                     {
-                        numbers[i, j] = Random.value;
+                        var result = 0f;
+                        for (int m = 0; m < y; m++)
+                        {
+                            result += input[i, m] * weights[m, l];
+                        }
+                        result += biases[0, l];
+                        outputs[i, j * single + l] = result;
+                        if (maxValue > result) continue;
+                        maxValue = result;
+                    }
+                    for (int l = 0; l < single; l++)
+                    {
+                        var indexY = j * single + l;
+                        var res = Mathf.Exp( outputs[i, indexY] - maxValue);
+                        outputs[i, indexY] = res;
+                        sum1 += res;
+                    }
+                    for (int l = 0; l < single; l++)
+                    {
+                        outputs[i, j * single + l] /= sum1;
                     }
                 }
             }
             stopwatch.Stop();
-            print("Manual Copy Took: " + stopwatch.ElapsedMilliseconds + " ms");
+            print(stopwatch.ElapsedTicks);
+            
+            sum1 = 0f;
+            sum2 = 0f;
+            for (int i = 0; i < single; i++)
+            {
+                sum1 += outputs[0, i];
+                sum2 += outputs[0, k - single + i];
+            }
+
+            print("sum 1: " + sum1 + ", sum2: " + sum2);
         }
 
+        // Tests the max calculation of a matrix, compares times of: c# multithreading, single thread, jobs, compute shader
         // Parallel for is only better then single for loop at a size of > 20,000. The tests had two assignments being made inside the for loops
         // test ray casting multi and single
-        private void LookUpArrayVsSwitch(int iterations)
+        private void CompareTimes(int iterations)
         {
             long parallel = 0;
             long single = 0;

@@ -9,6 +9,11 @@
 #pragma kernel backwards_pass_Tanh_inputs
 #pragma kernel backwards_pass_Tanh_weights_biases_Adam
 
+#pragma kernel forward_pass_softmax
+//#pragma kernel forward_pass_softmax_normalize
+#pragma kernel backwards_pass_softmax_inputs
+#pragma kernel backwards_pass_softmax_weights_biases_Adam
+
 #pragma kernel forward_pass_linear
 #pragma kernel backwards_pass_linear_inputs
 #pragma kernel backwards_pass_linear_weights_biases_Adam
@@ -28,7 +33,7 @@ RWStructuredBuffer<float> weights;
 RWStructuredBuffer<float> biases;
 RWStructuredBuffer<float> output;
 
-// TODO: should see if a MATRIX_THREAD_COUNT_Y of 1 is faster, as inputs and outputs might just have the size of 1
+//TODO: should see if a MATRIX_THREAD_COUNT_Y of 1 is faster, as inputs and outputs might just have the size of 1
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
@@ -38,10 +43,11 @@ void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
         return;
 
     //dot product
+    const int input_column_index = id.x * input_row_size;
     float result = 0;
     for (unsigned int i = 0; i < input_row_size; ++i)
     {
-        result += input[id.x * input_row_size + i] * weights[i * weights_row_size + id.y];
+        result += input[input_column_index + i] * weights[i * weights_row_size + id.y];
     }
     result += biases[id.y];
 
@@ -99,13 +105,15 @@ void backwards_pass_ReLU_inputs(uint3 id : SV_DispatchThreadID)
     if (id.x >= input_column_size || id.y >= input_row_size)
         return;
 
+    const int d_column_index = id.x * weights_row_size;
+    const int weight_column_index = id.y * weights_row_size;
     float d_input = 0;
     for (unsigned int i = 0; i < weights_row_size; ++i)
     {
-        const int d_index = id.x * weights_row_size + i;
+        const int d_index = d_column_index + i;
         const float d_value = output[d_index] > 0.0f ? d_values[d_index] : 0.0f;
 
-        d_input += d_value * weights[id.y * weights_row_size + i];
+        d_input += d_value * weights[weight_column_index + i];
     }
 
     d_inputs[id.x * input_row_size + id.y] = d_input;
@@ -173,7 +181,8 @@ void backwards_pass_MSE_prioritized_loss(uint3 id : SV_DispatchThreadID)
         return;
 
     const int index = id.x * weights_row_size + id.y;
-    d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) * sample_weights[id.x] / weights_row_size / input_column_size;
+    d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) * sample_weights[id.x] / weights_row_size /
+        input_column_size;
 }
 
 ////////// Functions used for Tanh layers ///////////////
@@ -184,10 +193,11 @@ void forward_pass_Tanh(uint3 id : SV_DispatchThreadID)
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
 
+    const int input_column_index = id.x * input_row_size;
     float result = 0;
     for (unsigned int i = 0; i < input_row_size; ++i)
     {
-        result += input[id.x * input_row_size + i] * weights[i * weights_row_size + id.y];
+        result += input[input_column_index + i] * weights[i * weights_row_size + id.y];
     }
     result += biases[id.y];
 
@@ -203,13 +213,16 @@ void backwards_pass_Tanh_inputs(uint3 id : SV_DispatchThreadID)
     if (id.x >= input_column_size || id.y >= input_row_size)
         return;
 
+    const int d_column_index = id.x * weights_row_size;
+    const int weight_column_index = id.y * weights_row_size;
     float d_input = 0;
     for (unsigned int i = 0; i < weights_row_size; ++i)
     {
-        const int d_index = id.x * weights_row_size + i;
-        const float d_value = (1 - output[d_index] * output[d_index]) * d_values[d_index];
+        const int d_index = d_column_index + i;
+        const float output_value = output[d_index];
+        const float d_value = (1 - output_value * output_value) * d_values[d_index];
 
-        d_input += d_value * weights[id.y * weights_row_size + i];
+        d_input += d_value * weights[weight_column_index + i];
     }
 
     d_inputs[id.x * input_row_size + id.y] = d_input;
@@ -226,9 +239,87 @@ void backwards_pass_Tanh_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
     for (unsigned int i = 0; i < input_column_size; ++i)
     {
         const int d_index = i * weights_row_size + id.y;
-        const float d_value = (1 - output[d_index] * output[d_index]) * d_values[d_index];
-        d_bias += d_value;
+        const float output_value = output[d_index];
+        const float d_value = (1 - output_value * output_value) * d_values[d_index];
 
+        d_bias += d_value;
+        d_weight += input[i * input_row_size + id.x] * d_value;
+    }
+
+    const float weight_index = id.x * weights_row_size + id.y;
+    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache);
+
+    if (id.x != 0) return;
+
+    Adam_optimizer(id.y, d_bias, biases, biases_momentum, biases_cache);
+}
+
+////////// Functions used for Softmax layers ///////////////
+
+unsigned int head_number;
+unsigned int distribution_lenght;
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void forward_pass_softmax(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= head_number)
+        return;
+
+    const int current_distribution = distribution_lenght * id.y;
+    const int start_index = id.x * weights_row_size + current_distribution;
+
+    float sum = 0.0f;
+    float max_value = -3.402823466e+38f;
+    for (unsigned int i = 0; i < distribution_lenght; ++i)
+    {
+        max_value = max(max_value, output[start_index + i]);
+    }
+
+    for (unsigned int j = 0; j < distribution_lenght; ++j)
+    {
+        const int index = start_index + j;
+        const float result = exp(output[index] - max_value);
+        output[index] = result;
+        sum += result;
+    }
+    for (unsigned int m = 0; m < distribution_lenght; ++m)
+    {
+        output[start_index + m] /= sum;
+    }
+}
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_softmax_inputs(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= input_row_size)
+        return;
+
+    const int d_column_index = id.x * weights_row_size;
+    const int weight_column_index = id.y * weights_row_size;
+    float d_input = 0;
+    for (unsigned int i = 0; i < weights_row_size; ++i)
+    {
+        const int d_index = d_column_index + i;
+        const float d_value = output[d_index] - d_values[d_index];
+        d_input += d_value * weights[weight_column_index + i];
+    }
+
+    d_inputs[id.x * input_row_size + id.y] = d_input;
+}
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_softmax_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_row_size || id.y >= weights_row_size)
+        return;
+
+    float d_weight = 0;
+    float d_bias = 0;
+    for (unsigned int i = 0; i < input_column_size; ++i)
+    {
+        const int d_index = i * weights_row_size + id.y;
+        const float d_value = output[d_index] - d_values[d_index];
+        d_bias += d_value;
         d_weight += input[i * input_row_size + id.x] * d_value;
     }
 
@@ -248,10 +339,11 @@ void forward_pass_linear(uint3 id : SV_DispatchThreadID)
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
 
+    const int input_column_index = id.x * input_row_size;
     float result = 0;
     for (unsigned int i = 0; i < input_row_size; ++i)
     {
-        result += input[id.x * input_row_size + i] * weights[i * weights_row_size + id.y];
+        result += input[input_column_index + i] * weights[i * weights_row_size + id.y];
     }
 
     output[id.x * weights_row_size + id.y] = result + biases[id.y];
@@ -263,10 +355,12 @@ void backwards_pass_linear_inputs(uint3 id : SV_DispatchThreadID)
     if (id.x >= input_column_size || id.y >= input_row_size)
         return;
 
+    const int d_column_index = id.x * weights_row_size;
+    const int weight_column_index = id.y * weights_row_size;
     float d_input = 0;
     for (unsigned int i = 0; i < weights_row_size; ++i)
     {
-        d_input += d_values[id.x * weights_row_size + i] * weights[id.y * weights_row_size + i];
+        d_input += d_values[d_column_index + i] * weights[weight_column_index + i];
     }
 
     d_inputs[id.x * input_row_size + id.y] = d_input;

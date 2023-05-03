@@ -5,6 +5,7 @@ using NN.CPU_Multi;
 using NN.CPU_Single;
 using NN.GPU_Compute;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace NN
 {
@@ -24,12 +25,23 @@ namespace NN
         {
             var (x, y) = GenerateSinSample();
 
+            var test = new float[x.GetLength(0), x.GetLength(1)];
+            for (int i = 0; i < test.GetLength(0); i++)
+            {
+                for (int j = 0; j < test.GetLength(1); j++)
+                {
+                    test[i, j] = x[i, j];
+                }
+            }
+
             var layers = new BaseLayer[]
             {
-                new DenseLayer(x.GetLength(1), 128),
+                new DenseLayer(test.GetLength(1), 128),
                 new ActivationTanh(),
                 new DenseLayer(128, 128),
                 new ActivationTanh(),
+                //new DenseLayer(64, 64),
+                //new ActivationReLu(),
                 new DenseLayer(128, 1),
                 new ActivationLinear()
             };
@@ -53,13 +65,13 @@ namespace NN
             var runtime = RunCPUSingleBackwards(x, y, epochs, layers);
             print("(cpu single) took: " + runtime + " ms");
 
-            //print("GPU single took: " + RunCPUSingle(x, epochs, layers) + " ms");
-            
+            //print("GPU single took: " + RunCPUSingle(test, epochs, layers) + " ms");
+
             //runtime = RunCPUMulti(x, epochs, layers);
-           // print("CPU multi took: " + RunCPUMulti(x, epochs, layers) + " ms");
+            //print("CPU multi took: " + RunCPUMulti(test, epochs, layers) + " ms");
 
             //runtime = RunGPUCompute(x, epochs, layers);
-            //print("GPU compute took: " + RunGPUCompute(x, epochs, layers) + " ms");
+            //print("GPU compute took: " + RunGPUCompute(test, epochs, layers) + " ms");
         }
 
         private long RunCPUSingleBackwards(float[,] dataX, float[,] dataY, int epochs, params BaseLayer[] layers)

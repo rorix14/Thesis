@@ -59,15 +59,14 @@ namespace NN.GPU_Compute
                 _shader.SetBuffer(_kernelHandle, "input", _inputBuffer);
                 _shader.SetBuffer(_kernelHandle, "output", _outputBuffer);
                 _shader.SetInt(_tt, Inputs.GetLength(0));
+                
+                _weightsBuffer.SetData(Weights);
+                _biasesBuffer.SetData(Biases);
             }
 
             // Weights and Biases only need to be sent if we are training, as they keep changing 
             _inputBuffer.SetData(Inputs);
-            _weightsBuffer.SetData(Weights);
-            _biasesBuffer.SetData(Biases);
-
             _shader.Dispatch(_kernelHandle, _threadGroupX, _threadGroupY, 1);
-
             _outputBuffer.GetData(Output);
         }
 

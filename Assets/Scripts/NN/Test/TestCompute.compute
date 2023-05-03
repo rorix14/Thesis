@@ -1,0 +1,134 @@
+#pragma kernel KernelA
+#pragma kernel KernelB
+#pragma kernel Max
+#pragma kernel forward_pass_softmax
+#pragma kernel forward_pass_linear
+
+RWStructuredBuffer<float> buffer;
+RWStructuredBuffer<float> read_buffer;
+unsigned int row_size;
+
+[numthreads(32, 1, 1)]
+void Max(uint3 id : SV_DispatchThreadID)
+{
+    float max = 0.0f;
+    for (unsigned int i = 0; i < row_size; ++i)
+    {
+        const float current_val = buffer[id.x * row_size + i];
+        if (max > current_val) continue;
+
+        max = current_val;
+    }
+
+    read_buffer[id.x] = max;
+}
+
+[numthreads(8, 8, 1)]
+void KernelA(uint3 id : SV_DispatchThreadID)
+{
+    //buffer[id.x] += -3;
+    if (id.y >= row_size)
+        return;
+    
+    if(id.x != 0) return;
+    read_buffer[id.y] = exp(-0.54689f);
+}
+
+void test_function(const int index, RWStructuredBuffer<float> b_1, const RWStructuredBuffer<int> b_2);
+
+[numthreads(8, 8, 1)]
+void KernelB(uint3 id : SV_DispatchThreadID)
+{
+    // //buffer[id.x] += 2;
+    // //read_buffer[id.x] = buffer[id.x] * 2;
+    //
+    // if(id.x > 3 || id.y > 0) return;
+    // //read_buffer[id.x] = 4;
+    // for (int i = 0; i < 4; ++i)
+    // {
+    //     InterlockedAdd(read_buffer[i], 1);
+    //     //InterlockedAdd(buffer[0], 1);
+    //    //read_buffer[i] += 1;
+    // }
+    //
+    // buffer[0] = 5;
+    // GroupMemoryBarrierWithGroupSync();
+    // buffer[1] = buffer[0] * buffer[15];
+    // // const float tt = -0.54442121213476;
+    // // buffer[0] = tt * tt * tt * tt * tt * tt;
+    // // buffer[1] = pow(tt, 6);
+    // read_buffer[0] = 4;
+    // test_function(0, buffer, read_buffer);
+}
+
+void test_function(const int index, RWStructuredBuffer<float> b_1, const RWStructuredBuffer<int> b_2)
+{
+    b_1[index] = b_2[index] + 6;
+}
+
+StructuredBuffer<float> input;
+StructuredBuffer<float> weights;
+StructuredBuffer<float> biases;
+RWStructuredBuffer<float> output;
+
+unsigned int input_column_size;
+unsigned int input_row_size;
+unsigned int weights_row_size;
+unsigned int head_number;
+unsigned int distribution_lenght;
+
+[numthreads(8,8,1)]
+void forward_pass_linear(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= weights_row_size)
+        return;
+
+    const int input_column_index = id.x * input_row_size;
+    float result = 0;
+    for (unsigned int i = 0; i < input_row_size; ++i)
+    {
+        result += input[input_column_index + i] * weights[i * weights_row_size + id.y];
+    }
+
+    output[id.x * weights_row_size + id.y] = result + biases[id.y];
+}
+
+[numthreads(8,8,1)]
+void forward_pass_softmax(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= head_number)
+        return;
+
+    const int current_distribution = distribution_lenght * id.y;
+    const int start_index = id.x * weights_row_size + current_distribution;
+
+    float sum = 0.0f;
+    float max_value = -3.4028235E+38f;
+    for (unsigned int i = 0; i < distribution_lenght; ++i)
+    {
+        //const int input_column_index = id.x * input_row_size;
+        // result = 0.0f;
+        // for (unsigned int k = 0; k < input_row_size; ++k)
+        // {
+        //     result += input[input_column_index + k] * weights[k * weights_row_size + current_distribution + i];
+        // }
+        // result += biases[current_distribution + i];
+        
+        //output[start_index + i] = result; 
+        //max_value = max(max_value, result);
+        max_value = max(max_value, output[start_index + i]);
+    }
+    for (unsigned int j = 0; j < distribution_lenght; ++j)
+    {
+        const int index = start_index + j;
+        const float result = exp(output[index] - max_value);
+        output[index] = result;
+        sum += result;
+    }
+    for (unsigned int m = 0; m < distribution_lenght; ++m)
+    {
+        output[start_index + m] /= sum;
+    }
+}
+
+

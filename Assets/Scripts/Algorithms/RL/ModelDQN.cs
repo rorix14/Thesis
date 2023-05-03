@@ -29,8 +29,8 @@ namespace Algorithms.RL
 
         protected readonly NetworkModel _networkModel;
         protected readonly NetworkModel _targetModel;
-        private readonly int _numberOfActions;
-        private readonly int _stateLenght;
+        protected readonly int _numberOfActions;
+        protected readonly int _stateLenght;
         protected readonly int _maxExperienceSize;
         protected readonly int _minExperienceSize;
         protected readonly int _batchSize;
@@ -45,7 +45,7 @@ namespace Algorithms.RL
         protected readonly int[] _batchIndexes;
         protected readonly (int index, float value)[] _nextQ;
         protected readonly float[,] _yTarget;
-        private readonly float[,] _predictSate;
+        protected float[,] _predictSate;
 
         public ModelDQN(NetworkModel networkModel, NetworkModel targetModel, int numberOfActions, int stateSize,
             int maxExperienceSize = 10000, int minExperienceSize = 100, int batchSize = 32, float gamma = 0.99f)
@@ -70,12 +70,13 @@ namespace Algorithms.RL
             _predictSate = new float[1, stateSize];
         }
 
-        public int EpsilonGreedySample(float[] state, float eps = 0.1f)
+        public virtual int EpsilonGreedySample(float[] state, float eps = 0.1f)
         {
             var probability = Random.value;
+            //if (_experiences.Count >= _minExperienceSize && probability > eps)
             if (probability > eps)
             {
-                for (int i = 0; i < state.Length; i++)
+                for (int i = 0; i < _stateLenght; i++)
                 {
                     _predictSate[0, i] = state[i];
                 }
@@ -103,14 +104,13 @@ namespace Algorithms.RL
 
         public virtual void Train()
         {
-            if (_experiences.Count < _minExperienceSize)
-                return;
+            if (_experiences.Count < _minExperienceSize) return;
 
             RandomBatch();
 
             MaxByRow(_targetModel.Predict(_nextStates));
             NnMath.CopyMatrix(_yTarget, _networkModel.Predict(_currentStates));
-            for (int i = 0; i < _nextQ.Length; i++)
+            for (int i = 0; i < _batchSize; i++)
             {
                 var experience = _experiences[_batchIndexes[i]];
                 _yTarget[i, experience.Action] =
@@ -120,10 +120,12 @@ namespace Algorithms.RL
             _networkModel.Update(_yTarget);
         }
 
-        public float SampleLoss()
+        public virtual float SampleLoss()
         {
             // Because all variables have been initialized in the train function there is no need to do it here
             // basically this gives the loss for the previous batch 
+            if (_experiences.Count < _minExperienceSize) return 0.0f;
+
             var sampleLosses = _networkModel.Loss(_yTarget);
             float loss = 0;
             foreach (var t in sampleLosses)
@@ -135,12 +137,12 @@ namespace Algorithms.RL
             return loss;
         }
 
-        public void SetTargetModel()
+        public virtual void SetTargetModel()
         {
             _networkModel.CopyModel(_targetModel);
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             _networkModel.Dispose();
             _targetModel.Dispose();
