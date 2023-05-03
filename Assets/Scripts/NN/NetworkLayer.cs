@@ -40,6 +40,8 @@ namespace NN
         protected readonly int _kernelHandleForward;
         private int _threadGroupXOutputForward;
         private int _threadGroupYOutputForward;
+        private readonly int _kernelHandleForward2;
+        private int _threadGroupYOutputForward2;
 
         //backwards variables
         protected ComputeBuffer _dValuesBuffer;
@@ -96,12 +98,11 @@ namespace NN
                     _kernelHandleWeightsBiasesBackward = _shader.FindKernel("backwards_pass_Tanh_weights_biases_Adam");
                     break;
                 case ActivationFunction.Softmax:
-                    _kernelHandleForward = _shader.FindKernel("forward_pass_softmax");
+                    _kernelHandleForward = _shader.FindKernel("forward_pass_linear");
+                    _kernelHandleForward2 = _shader.FindKernel("forward_pass_softmax");
                     _kernelHandleInputsBackward = _shader.FindKernel("backwards_pass_softmax_inputs");
                     _kernelHandleWeightsBiasesBackward =
                         _shader.FindKernel("backwards_pass_softmax_weights_biases_Adam");
-                    _shader.SetInt("head_number", headNumber);
-                    _shader.SetInt("distribution_lenght", nNeurons / headNumber);
                     break;
                 case ActivationFunction.Linear:
                     _kernelHandleForward = _shader.FindKernel("forward_pass_linear");
@@ -129,6 +130,12 @@ namespace NN
 
             _inputBuffer.SetData(inputs);
             _shader.Dispatch(_kernelHandleForward, _threadGroupXOutputForward, _threadGroupYOutputForward, 1);
+
+            if (_activationFunction == ActivationFunction.Softmax)
+            {
+                _shader.Dispatch(_kernelHandleForward2, _threadGroupXOutputForward, _threadGroupYOutputForward2, 1);
+            }
+
             _outputBuffer.GetData(Output);
         }
 
@@ -202,9 +209,7 @@ namespace NN
 
             _shader.GetKernelThreadGroupSizes(_kernelHandleForward, out var threadSizeX, out var threadSizeY, out _);
             _threadGroupXOutputForward = Mathf.CeilToInt(Output.GetLength(0) / (float)threadSizeX);
-            _threadGroupYOutputForward = _activationFunction == ActivationFunction.Softmax
-                ? Mathf.CeilToInt(_headNumber / (float)threadSizeY)
-                : Mathf.CeilToInt(Output.GetLength(1) / (float)threadSizeY);
+            _threadGroupYOutputForward = Mathf.CeilToInt(Output.GetLength(1) / (float)threadSizeX);
 
             _shader.SetBuffer(_kernelHandleForward, "weights", _weightsBuffer);
             _shader.SetBuffer(_kernelHandleForward, "biases", _biasesBuffer);
@@ -213,6 +218,14 @@ namespace NN
             _outputBuffer = new ComputeBuffer(Output.Length, sizeof(float));
             _shader.SetBuffer(_kernelHandleForward, "input", _inputBuffer);
             _shader.SetBuffer(_kernelHandleForward, "output", _outputBuffer);
+
+            if (_activationFunction == ActivationFunction.Softmax)
+            {
+                _threadGroupYOutputForward2 = Mathf.CeilToInt(_headNumber / (float)threadSizeY);
+                _shader.SetInt("head_number", _headNumber);
+                _shader.SetInt("distribution_lenght", _weights.GetLength(1) / _headNumber);
+                _shader.SetBuffer(_kernelHandleForward2, "output", _outputBuffer);
+            }
 
             _forwardInitialized = true;
         }

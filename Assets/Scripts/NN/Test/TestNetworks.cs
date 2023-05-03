@@ -42,7 +42,9 @@ namespace NN
 
             //TestBuffer();
             //LookUpArrayVsSwitch(1000);
-            Test(100000);
+            //Test(100000);
+            var res = -1 * (0.9f * Mathf.Log(0.5f) + 0.1f * Mathf.Log(0.5f));
+            print(res);
         }
 
         private void Test(int iterations)

@@ -14,7 +14,7 @@ namespace NN
 
         protected readonly ComputeShader Shader;
 
-        private bool _forwardInit;
+        protected bool _forwardInit;
         protected bool _backwardInit;
 
         protected NetworkLoss(ComputeShader shader)
@@ -104,12 +104,7 @@ namespace NN
 
         public void SetLossExternalParameters(float[] parameters)
         {
-            _sampleWeights = parameters;
-            // _sampleWeights ??= new float[parameters.Length];
-            // for (int i = 0; i < parameters.Length; i++)
-            // {
-            //     _sampleWeights[i] = parameters[i];
-            // }
+            
         }
 
         public override void Backward(float[,] output, float[,] yTrue)
@@ -131,6 +126,55 @@ namespace NN
                     DInputs[i, j] = -2.0f * (yTrue[i, j] - output[i, j]) * sampleWeight / _rowSize / _columnSize;
                 }
             }
+        }
+    }
+
+    public class CategoricalCrossEntropy : NetworkLoss
+    {
+        private readonly float _minimum;
+        private readonly float _maximum;
+        
+        public CategoricalCrossEntropy(ComputeShader shader) : base(shader)
+        {
+            _minimum = 1e-7f;
+            _maximum = 1f - _minimum;
+        }
+        
+        public override void Calculate(float[,] output, float[,] yTrue)
+        {
+            if (!_forwardInit)
+            {
+                SampleLosses = new float[yTrue.GetLength(0)];
+                _columnSize = output.GetLength(0);
+                _rowSize = output.GetLength(1);
+
+                _forwardInit = true;
+            }
+
+            for (int i = 0; i < _columnSize; i++)
+            {
+                var result = 0.0f;
+                for (int j = 0; j < _rowSize; j++)
+                {
+                    var outputValue = output[i, j];
+                    if (outputValue < _minimum)
+                    {
+                        outputValue = _minimum;
+                    }
+                    else if (outputValue > _maximum)
+                    {
+                        outputValue = _maximum;
+                    }
+                    
+                    result += yTrue[i, j] * Mathf.Log(outputValue);
+                }
+
+                SampleLosses[i] = result / _rowSize * -1f;
+            }
+        }
+        public override void Backward(float[,] output, float[,] yTrue)
+        {
+            DInputs = yTrue;
         }
     }
 }

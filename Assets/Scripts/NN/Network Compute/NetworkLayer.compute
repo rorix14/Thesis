@@ -268,27 +268,17 @@ void forward_pass_softmax(uint3 id : SV_DispatchThreadID)
     const int current_distribution = distribution_lenght * id.y;
     const int start_index = id.x * weights_row_size + current_distribution;
 
-    float result;
     float sum = 0.0f;
     float max_value = -3.402823466e+38f;
     for (unsigned int i = 0; i < distribution_lenght; ++i)
     {
-        const int input_column_index = id.x * input_row_size;
-        result = 0.0f;
-        for (unsigned int k = 0; k < input_row_size; ++k)
-        {
-            result += input[input_column_index + k] * weights[k * weights_row_size + current_distribution + i];
-        }
-        result += biases[i];
-        
-        output[start_index + i] = result;
-        max_value = max(max_value, result);
+        max_value = max(max_value, output[start_index + i]);
     }
 
     for (unsigned int j = 0; j < distribution_lenght; ++j)
     {
         const int index = start_index + j;
-        result = exp(output[index] - max_value);
+        const float result = exp(output[index] - max_value);
         output[index] = result;
         sum += result;
     }

@@ -49,6 +49,7 @@ namespace Graphs
             //         print(pred);
             //     }
             // }
+            // distributional 
 
             var dist = new List<float> { 0f, 0f, 0f, 0f, 0f, 0f };
             var gamma = 0.99f;
@@ -56,54 +57,54 @@ namespace Graphs
             var support = new float[] { -10f, -5f, 0f, 5f, 10f };
             var delta = (10f + 10f) / 4;
             preds = new List<float> { 0.15f, 0.1f, 0.5f, 0.1f, 0.15f, 0f };
+            for (int i = 0; i < 5; i++)
+            {
+                var v = reward + support[i] * gamma;
+                var tz = Mathf.Clamp(v, -10f, 10f);
+                var b = (tz + 10f) / delta;
+                var l = (int)b;
+                var u = Mathf.CeilToInt(b);
+            
+                if (l == u)
+                {
+                    dist[l] += preds[i];
+                }
+                else
+                {
+                    dist[l] += preds[i] * (u - b);
+                    dist[u] += preds[i] * (b - l);
+                }
+            }
+            // var b =  Mathf.RoundToInt((reward + 10f) / delta);
+            // b = Mathf.Clamp(b, 0, 4);
+            // var m = new float[6];
+            // preds.CopyTo(m);
+            // var j = 1;
+            // for (int i = b; i > 0; i--)
+            // {
+            //     m[i] += Mathf.Pow(gamma, j) * m[i - 1];
+            //     j++;
+            // }
+            // j = 1;
+            // for (int i = b; i < 4; i++)
+            // {
+            //     m[i] += Mathf.Pow(gamma, j) * m[i + 1];
+            //     j++;
+            // }
+            // var sum = 0f;
             // for (int i = 0; i < 5; i++)
             // {
-            //     var v = reward + support[i] * gamma;
-            //     var tz = Mathf.Clamp(v, -10f, 10f);
-            //     var b = (tz + 10f) / delta;
-            //     var l = (int)b;
-            //     var u = Mathf.CeilToInt(b);
-            //
-            //     if (l == u)
-            //     {
-            //         dist[l] += preds[i];
-            //     }
-            //     else
-            //     {
-            //         dist[l] += preds[i] * (u - b);
-            //         dist[u] += preds[i] * (b - l);
-            //     }
+            //     sum += m[i];
             // }
-            var b =  Mathf.RoundToInt((reward + 10f) / delta);
-            b = Mathf.Clamp(b, 0, 4);
-            var m = new float[6];
-            preds.CopyTo(m);
-            var j = 1;
-            for (int i = b; i > 0; i--)
-            {
-                m[i] += Mathf.Pow(gamma, j) * m[i - 1];
-                j++;
-            }
-            j = 1;
-            for (int i = b; i < 4; i++)
-            {
-                m[i] += Mathf.Pow(gamma, j) * m[i + 1];
-                j++;
-            }
-            var sum = 0f;
-            for (int i = 0; i < 5; i++)
-            {
-                sum += m[i];
-            }
-            for (int i = 0; i < 5; i++)
-            {
-                m[i] /= sum;
-            }
+            // for (int i = 0; i < 5; i++)
+            // {
+            //     m[i] /= sum;
+            // }
             
             for (int i = 0; i < 6; i++)
             {
-                //print("pred: " + preds[i] + ", dist: " + dist[i]);
-                print("pred: " + preds[i] + ", m: " + m[i]);
+                print("pred: " + preds[i] + ", dist: " + dist[i]);
+                //print("pred: " + preds[i] + ", m: " + m[i]);
             }
 
             var graph = FindObjectOfType<WindowGraph>();
