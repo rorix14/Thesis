@@ -11,9 +11,10 @@ namespace Algorithms.RL
         private readonly float _vMin;
         private readonly float _vMax;
         private readonly float _supportDelta;
-        
+
         public DistributionalDQN(NetworkModel networkModel, NetworkModel targetModel, int numberOfActions,
-            int stateSize, int supportSize, float vMin, float vMax ,int maxExperienceSize = 10000, int minExperienceSize = 100, int batchSize = 32,
+            int stateSize, int supportSize, float vMin, float vMax, int maxExperienceSize = 10000,
+            int minExperienceSize = 100, int batchSize = 32,
             float gamma = 0.9f) : base(networkModel, targetModel, numberOfActions, stateSize, maxExperienceSize,
             minExperienceSize, batchSize, gamma)
         {
@@ -21,7 +22,7 @@ namespace Algorithms.RL
             _vMin = vMin;
             _vMax = vMax;
             _supportDelta = (vMax - vMin) / (supportSize - 1);
-            
+
             _support = new float[supportSize];
             for (int i = 0; i < supportSize; i++)
             {
@@ -50,13 +51,13 @@ namespace Algorithms.RL
                     {
                         qValue += predicted[0, startIndex + j] * _support[j];
                     }
-                    
-                    if(maxQ > qValue) continue;
+
+                    if (maxQ > qValue) continue;
 
                     maxQ = qValue;
                     maxIndex = i;
                 }
-                
+
                 return maxIndex;
             }
 
@@ -68,15 +69,75 @@ namespace Algorithms.RL
             if (_experiences.Count < _minExperienceSize) return;
 
             RandomBatch();
-            
-            MaxByRow(_targetModel.Predict(_nextStates));
+
+            var targetPrediction = _targetModel.Predict(_nextStates);
+            GetQValues(targetPrediction);
             NnMath.CopyMatrix(_yTarget, _networkModel.Predict(_currentStates));
+
+            DistributionProjection(targetPrediction);
+
+            _networkModel.Update(_yTarget);
         }
 
-
-        private void DistributionProjection()
+        private void GetQValues(float[,] mat)
         {
-            
+            for (int i = 0; i < _batchSize; i++)
+            {
+                var maxValue = float.MinValue;
+                var maxIndex = 0;
+                for (int j = 0; j < _numberOfActions; j++)
+                {
+                    var startIndex = i * _supportSize;
+                    var qValue = 0f;
+                    for (int k = 0; k < _supportSize; k++)
+                    {
+                        qValue += mat[0, startIndex + j] * _support[j];
+                    }
+
+                    if (maxValue > qValue) continue;
+
+                    maxValue = qValue;
+                    maxIndex = i;
+                }
+
+                _nextQ[i] = (maxIndex, maxValue);
+            }
+        }
+
+        private void DistributionProjection(float[,] mat)
+        {
+            var distributions = new float[_batchSize, _supportSize];
+            for (int i = 0; i < _batchSize; i++)
+            {
+                var experience = _experiences[_batchIndexes[i]];
+                var startIndex = _nextQ[i].index * _supportSize;
+
+                for (int j = 0; j < _supportSize; j++)
+                {
+                    var value = experience.Done ? experience.Reward : experience.Reward + _support[j] * _gamma;
+                    var tz = Mathf.Clamp(value, _vMin, _vMax);
+                    var b = (tz - _vMin) / _supportDelta;
+                    var lower = (int)b;
+                    var upper = Mathf.CeilToInt(b);
+
+                    var distributionIndex = startIndex + j;
+                    if (lower == upper)
+                    {
+                        distributions[i, lower] += mat[i, distributionIndex];
+                    }
+                    else
+                    {
+                        distributions[i, lower] += mat[i, distributionIndex] * (upper - b);
+                        distributions[i, upper] += mat[i, distributionIndex] * (b - lower);
+                    }
+                }
+
+                var actionIndex = experience.Action * _supportSize;
+                for (int j = 0; j < _supportSize; j++)
+                {
+                    _yTarget[i, actionIndex + j] = distributions[i, j];
+                }
+            }
         }
     }
 }
