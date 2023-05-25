@@ -108,15 +108,17 @@ namespace Algorithms.RL
             for (int i = 0; i < _batchSize; i++)
             {
                 //var total = _sumTree.Total();
+                //var batchIndex = _sumTree.Sample(Random.Range(1e-5f, total), out var priority);
                 var batchIndex = _sumTree.Sample(Random.Range(0.0f, total), out var priority);
-                
+
                 if (batchIndex >= totalExperiences)
                 {
+                    // TODO: batchIndex = (_maxExperienceSize + _lastExperiencePosition - 1) % _maxExperienceSize;
                     batchIndex = totalExperiences - 1;
                     priority = _sumTree.Get(batchIndex);
                 }
-                //_sumTree.UpdateValue(batchIndex, 1e-5f);
-                
+                //_sumTree.UpdateValue(batchIndex, 0f);
+
                 _batchIndexes[i] = batchIndex;
                 var experience = _experiences[batchIndex];
                 for (int j = 0; j < _stateLenght; j++)
@@ -173,45 +175,31 @@ namespace Algorithms.RL
             //     _maxPriorityIndex = i;
             // }
 
-            var leftMax = float.MinValue;
-            var rightMax = leftMax;
             var mid = totalExperiences / 2;
-            var leftIndex = 0;
-            var rightIndex = 0;
+            _maxPriority = float.MinValue;
+            _maxPriorityIndex = 0;
             for (int i = 0; i < mid; i++)
             {
                 var priorityLeft = _sumTree.Get(i);
                 var priorityRight = _sumTree.Get(i + mid);
 
-                if (leftMax < priorityLeft)
+                if (_maxPriority < priorityLeft)
                 {
-                    leftMax = priorityLeft;
-                    leftIndex = i;
+                    _maxPriority = priorityLeft;
+                    _maxPriorityIndex = i;
                 }
 
-                if (!(rightMax < priorityRight)) continue;
-                
-                rightMax = priorityRight;
-                rightIndex = i + mid;
+                if (_maxPriority > priorityRight) continue;
+
+                _maxPriority = priorityRight;
+                _maxPriorityIndex = i + mid;
             }
 
             var lastValue = _sumTree.Get(totalExperiences - 1);
-            if (rightMax < lastValue)
-            {
-                rightMax = lastValue;
-                rightIndex = totalExperiences - 1;
-            }
+            if (_maxPriority > lastValue) return;
 
-            if (leftMax > rightMax)
-            {
-                _maxPriority = leftMax;
-                _maxPriorityIndex = leftIndex;
-            }
-            else
-            {
-                _maxPriority = rightMax;
-                _maxPriorityIndex = rightIndex;
-            }
+            _maxPriority = lastValue;
+            _maxPriorityIndex = totalExperiences - 1;
         }
     }
 }

@@ -300,7 +300,7 @@ void backwards_pass_softmax_inputs(uint3 id : SV_DispatchThreadID)
     for (unsigned int i = 0; i < weights_row_size; ++i)
     {
         const int d_index = d_column_index + i;
-        const float d_value = output[d_index] - d_values[d_index];
+        const float d_value = (output[d_index] - d_values[d_index]) / input_column_size;
         d_input += d_value * weights[weight_column_index + i];
     }
 
@@ -318,7 +318,7 @@ void backwards_pass_softmax_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
     for (unsigned int i = 0; i < input_column_size; ++i)
     {
         const int d_index = i * weights_row_size + id.y;
-        const float d_value = output[d_index] - d_values[d_index];
+        const float d_value = (output[d_index] - d_values[d_index]) / input_column_size;
         d_bias += d_value;
         d_weight += input[i * input_row_size + id.x] * d_value;
     }

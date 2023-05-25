@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Algorithms;
 using NN.CPU_Single;
 using Unity.Burst;
 using Unity.Collections;
@@ -43,8 +44,25 @@ namespace NN
             //TestBuffer();
             //LookUpArrayVsSwitch(1000);
             //Test(100000);
-            var res = -1 * (0.9f * Mathf.Log(0.5f) + 0.1f * Mathf.Log(0.5f));
-            print(res);
+            //Test2(1000000);
+        }
+
+        private void Test2(int it)
+        {
+            var arr = new float[] { 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.3f, 0.0f, 0.2f, 0.0f };
+            SumTree sumTree = new SumTree(arr.Length, arr);
+
+            var test = new int[arr.Length];
+            for (int i = 0; i < it; i++)
+            {
+                var ran = Random.Range(0.0f, sumTree.Total());
+                test[sumTree.Sample(ran, out var t)]++;
+            }
+
+            for (int i = 0; i < arr.Length; i++)
+            {
+                print(test[i] / (float)it);
+            }
         }
 
         private void Test(int iterations)
@@ -65,6 +83,7 @@ namespace NN
             {
                 biases[0, i] = Random.value;
             }
+
             for (int i = 0; i < y; i++)
             {
                 for (int j = 0; j < k; j++)
@@ -72,6 +91,7 @@ namespace NN
                     weights[i, j] = Random.value;
                 }
             }
+
             for (int i = 0; i < x; i++)
             {
                 for (int j = 0; j < y; j++)
@@ -99,7 +119,7 @@ namespace NN
             testShader.SetBuffer(kernelIndex1, "input", inputBuffer);
             testShader.SetBuffer(kernelIndex1, "weights", weightsBuffer);
             testShader.SetBuffer(kernelIndex1, "biases", biasesBuffer);
-            testShader.SetBuffer(kernelIndex1, "output", outputsBuffer);  
+            testShader.SetBuffer(kernelIndex1, "output", outputsBuffer);
             testShader.SetBuffer(kernelIndex2, "output", outputsBuffer);
             var groupX = Mathf.CeilToInt(x / 8f);
             var groupY1 = Mathf.CeilToInt(k / 8f);
@@ -112,7 +132,7 @@ namespace NN
             outputsBuffer.GetData(outputs);
             stopwatch.Stop();
             print(stopwatch.ElapsedTicks);
-            
+
             inputBuffer.Dispose();
             weightsBuffer.Dispose();
             biasesBuffer.Dispose();
@@ -142,27 +162,31 @@ namespace NN
                         {
                             result += input[i, m] * weights[m, l];
                         }
+
                         result += biases[0, l];
                         outputs[i, j * single + l] = result;
                         if (maxValue > result) continue;
                         maxValue = result;
                     }
+
                     for (int l = 0; l < single; l++)
                     {
                         var indexY = j * single + l;
-                        var res = Mathf.Exp( outputs[i, indexY] - maxValue);
+                        var res = Mathf.Exp(outputs[i, indexY] - maxValue);
                         outputs[i, indexY] = res;
                         sum1 += res;
                     }
+
                     for (int l = 0; l < single; l++)
                     {
                         outputs[i, j * single + l] /= sum1;
                     }
                 }
             }
+
             stopwatch.Stop();
             print(stopwatch.ElapsedTicks);
-            
+
             sum1 = 0f;
             sum2 = 0f;
             for (int i = 0; i < single; i++)

@@ -55,8 +55,7 @@ namespace TestGround
 
             DuellingNetwork targetModel = new DuellingNetwork(inputTargetModel, valueTargetModel, advantageTargetModel);
 
-            _DQN = new DuellingDQN(updateModel, targetModel, _env.GetNumberOfActions,
-                _env.GetObservationSize);
+            _DQN = new DuellingDQN(updateModel, targetModel, _env.GetNumberOfActions, _env.GetObservationSize);
 
             _DQN.SetTargetModel();
 

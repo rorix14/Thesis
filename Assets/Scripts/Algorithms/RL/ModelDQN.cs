@@ -44,7 +44,7 @@ namespace Algorithms.RL
         protected readonly float[,] _currentStates;
         protected readonly int[] _batchIndexes;
         protected readonly (int index, float value)[] _nextQ;
-        protected readonly float[,] _yTarget;
+        protected float[,] _yTarget;
         protected float[,] _predictSate;
 
         public ModelDQN(NetworkModel networkModel, NetworkModel targetModel, int numberOfActions, int stateSize,
@@ -180,7 +180,7 @@ namespace Algorithms.RL
             }
         }
 
-        protected void MaxByRow(float[,] matrix, bool firstRow = false)
+        protected virtual void MaxByRow(float[,] matrix, bool firstRow = false)
         {
             int sampleSize = firstRow ? 1 : _batchSize;
             for (int i = 0; i < sampleSize; i++)

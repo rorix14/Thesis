@@ -8,7 +8,8 @@ namespace Algorithms.RL
     {
         private readonly int _nStep;
         private readonly float[] _storedNStepGammas;
-        private readonly int[] _nStepIndexes;
+        private readonly Experience[] _nStepBuffer;
+        private int _lastNStepPosition;
 
         public ModelNStepDQN(int nStep, NetworkModel networkModel, NetworkModel targetModel, int numberOfActions,
             int stateSize,
@@ -18,17 +19,35 @@ namespace Algorithms.RL
         {
             _nStep = nStep <= 0 ? 1 : nStep;
             _storedNStepGammas = new float[_nStep + 1];
+            _nStepBuffer = new Experience[nStep];
             for (int i = 0; i < _nStep + 1; i++)
             {
                 _storedNStepGammas[i] = Mathf.Pow(_gamma, i);
             }
 
-            _nStepIndexes = new int[nStep - 1];
         }
 
         public override void AddExperience(float[] currentState, int action, float reward, bool done, float[] nextState)
         {
-            var experience = new Experience(currentState, action, reward, done, nextState);
+            _nStepBuffer[_lastNStepPosition] = new Experience(currentState, action, reward, done, nextState);
+            _lastNStepPosition = (_lastNStepPosition + 1) % _nStep;
+            
+            var experience = _nStepBuffer[_lastNStepPosition];
+            if (experience.CurrentState == null) return;
+            
+            if (!experience.Done)
+            {
+                for (int i = 1; i < _nStep; i++)
+                {
+                    var nStepExperience = _nStepBuffer[(_lastNStepPosition + i) % _nStep];
+                    experience.Done = nStepExperience.Done;
+                    experience.NextState = nStepExperience.NextState;
+                    experience.Reward += _storedNStepGammas[i] * nStepExperience.Reward;
+
+                    if (nStepExperience.Done) break;
+                }
+            }
+            
             if (_experiences.Count < _maxExperienceSize)
             {
                 _experiences.Add(experience);
@@ -39,33 +58,6 @@ namespace Algorithms.RL
             }
 
             _lastExperiencePosition = (_lastExperiencePosition + 1) % _maxExperienceSize;
-
-            if (_experiences.Count < _nStep) return;
-            
-            int startingIndex = (_maxExperienceSize + _lastExperiencePosition - _nStep) % _maxExperienceSize;
-            var newExperience = new Experience
-            {
-                CurrentState = _experiences[startingIndex].CurrentState,
-                Action = _experiences[startingIndex].Action
-            };
-            
-            for (int i = 0; i < _nStep; i++)
-            {
-                var nStepExperience = _experiences[(startingIndex + i) % _maxExperienceSize];
-                newExperience.Done = nStepExperience.Done;
-                newExperience.NextState = nStepExperience.NextState;
-                newExperience.Reward += _storedNStepGammas[i] * nStepExperience.Reward;
-
-                if (nStepExperience.Done) break;
-            }
-
-            _experiences[startingIndex] = newExperience;
-            
-            // Cannot put this in the above loop because that loop breaks if Done is true, but we still can't chose those indexes
-            for (int i = 1; i < _nStep; i++)
-            {
-                _nStepIndexes[i - 1] = (startingIndex + i) % _maxExperienceSize;
-            }
         }
 
         public override void Train()
@@ -89,52 +81,8 @@ namespace Algorithms.RL
 
             _networkModel.Update(_yTarget);
         }
-
-        protected override void RandomBatch()
-        {
-            var nStepIndexesLenght = _nStepIndexes.Length;
-            var iteration = 0;
-            while (iteration < _batchSize)
-            {
-                _batchIndexes[iteration] = -1;
-
-                // this works as intended if the AddExperience function is called before 
-                var index = Random.Range(0, _experiences.Count);
-                var hasIndex = false;
-
-                for (int i = 0; i < nStepIndexesLenght; i++)
-                {
-                    if (index != _nStepIndexes[i]) continue;
-
-                    hasIndex = true;
-                    break;
-                }
-
-                for (int i = 0; i < iteration + 1; i++)
-                {
-                    if (_batchIndexes[i] != index) continue;
-
-                    hasIndex = true;
-                    break;
-                }
-
-                if (hasIndex) continue;
-
-                _batchIndexes[iteration] = index;
-
-                var experience = _experiences[index];
-                for (int i = 0; i < _stateLenght; i++)
-                {
-                    _nextStates[iteration, i] = experience.NextState[i];
-                    _currentStates[iteration, i] = experience.CurrentState[i];
-                }
-
-                ++iteration;
-            }
-        }
     }
 }
-
 
 /*
 // Old code for reference

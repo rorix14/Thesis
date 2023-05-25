@@ -8,6 +8,21 @@ namespace NN.CPU_Single
         {
             return value >= 0.0f ? 1f : -1f;
         }
+
+        public static float Clamp(float value, float min, float max)
+        {
+            if (value < min)
+            {
+                value = min;
+            }
+            else if(value > max)
+            {
+                value = max;
+            }
+
+            return value;
+        }
+        
         public static float ArrayMax(float[] valueArray)
         {
             float num = valueArray[0];
