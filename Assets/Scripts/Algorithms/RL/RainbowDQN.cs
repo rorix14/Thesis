@@ -54,6 +54,16 @@ namespace Algorithms.RL
         private readonly SumTree _sumTree;
         private readonly float[] _sampleLosses;
 
+        //Cashed variables 
+        private readonly int _inputNumberOfNeurons;
+        private readonly float[] _predictNextAdvantageMean;
+        private readonly float[] _predictAdvantageMean;
+        private readonly float[] _targetAdvantageMean;
+        private readonly float[] _qTargetDistribution;
+        private readonly float[] _unProjectedTargetDist;
+        private float[,] _dValueFinal;
+        private float[,] _dAdvantageFinal;
+
         public RainbowDQN(DuellingNetwork network, DuellingNetwork target, int numberOfActions, int stateSize,
             int nStep, int supportSize, float vMin, float vMax, float beta = 0.4f, float alpha = 0.6f,
             int maxExperienceSize = 10000, int minExperienceSize = 100, int batchSize = 32, float gamma = 0.99f) : base(
@@ -81,7 +91,9 @@ namespace Algorithms.RL
             _duellingDerivative = 1.0f - 1.0f / numberOfActions;
             _dValue = new float[batchSize, supportSize];
             _dAdvantage = new float[batchSize, numberOfActions * supportSize];
-            _dInput = new float[batchSize, 128];
+            //TODO: Make this not a magic number, can have model class have a shape variable where it has all the sizes
+            _inputNumberOfNeurons = 128;
+            _dInput = new float[batchSize, _inputNumberOfNeurons];
 
             //N-Step
             _nStep = nStep <= 0 ? 1 : nStep;
@@ -91,7 +103,7 @@ namespace Algorithms.RL
             {
                 _storedNStepGammas[i] = Mathf.Pow(_gamma, i);
             }
-            
+
             //PER
             _alpha = alpha;
             _beta = beta;
@@ -105,6 +117,13 @@ namespace Algorithms.RL
 
             //Noisy 
             _predictSate = new float[batchSize, stateSize];
+
+            //Cashed
+            _predictNextAdvantageMean = new float[supportSize];
+            _predictAdvantageMean = new float[supportSize];
+            _targetAdvantageMean = new float[supportSize];
+            _unProjectedTargetDist = new float[supportSize];
+            _qTargetDistribution = new float[supportSize];
         }
 
         public override int EpsilonGreedySample(float[] state, float eps = 0.1f)
@@ -121,28 +140,27 @@ namespace Algorithms.RL
             _valuePredict = _duellingNetwork.ValueModel.Predict(_inputPredict);
             _advantagePredict = _duellingNetwork.AdvantageModel.Predict(_inputPredict);
 
-            var advantageMeans = new float[_supportSize];
             for (int i = 0; i < _supportSize; i++)
             {
+                _predictAdvantageMean[i] = 0.0f;
                 for (int j = 0; j < _numberOfActions; j++)
                 {
-                    advantageMeans[i] += _advantagePredict[0, j * _supportSize + i];
+                    _predictAdvantageMean[i] += _advantagePredict[0, j * _supportSize + i];
                 }
 
-                advantageMeans[i] /= _numberOfActions;
+                _predictAdvantageMean[i] /= _numberOfActions;
             }
 
             var maxQValue = float.MinValue;
             var mMaxQIndex = 0;
-            var qDistribution = new float[_supportSize * _numberOfActions];
             for (int i = 0; i < _numberOfActions; i++)
             {
                 var maxValue = float.MinValue;
                 var startIndex = _supportSize * i;
                 for (int j = 0; j < _supportSize; j++)
                 {
-                    var value = _valuePredict[0, j] + (_advantagePredict[0, startIndex + j] - advantageMeans[j]);
-                    qDistribution[startIndex + j] = value;
+                    var value = _valuePredict[0, j] + (_advantagePredict[0, startIndex + j] - _predictAdvantageMean[j]);
+                    _qTargetDistribution[j] = value;
 
                     if (maxValue > value) continue;
                     maxValue = value;
@@ -151,17 +169,15 @@ namespace Algorithms.RL
                 var expSum = 0.0f;
                 for (int j = 0; j < _supportSize; j++)
                 {
-                    var result = Mathf.Exp(qDistribution[startIndex + j] - maxValue);
-                    qDistribution[startIndex + j] = result;
+                    var result = Mathf.Exp(_qTargetDistribution[j] - maxValue);
+                    _qTargetDistribution[j] = result;
                     expSum += result;
                 }
 
                 var qValue = 0f;
                 for (int j = 0; j < _supportSize; j++)
                 {
-                    var result = qDistribution[startIndex + j] / expSum;
-                    qDistribution[startIndex + j] = result;
-                    qValue += result * _support[j];
+                    qValue += _qTargetDistribution[j] / expSum * _support[j];
                 }
 
                 if (maxQValue > qValue) continue;
@@ -172,7 +188,6 @@ namespace Algorithms.RL
 
             return mMaxQIndex;
             //}
-
             //return Random.Range(0, _numberOfActions);
         }
 
@@ -180,10 +195,10 @@ namespace Algorithms.RL
         {
             _nStepBuffer[_lastNStepPosition] = new Experience(currentState, action, reward, done, nextState);
             _lastNStepPosition = (_lastNStepPosition + 1) % _nStep;
-            
+
             var experience = _nStepBuffer[_lastNStepPosition];
             if (experience.CurrentState == null) return;
-            
+
             if (!experience.Done)
             {
                 for (int i = 1; i < _nStep; i++)
@@ -196,7 +211,7 @@ namespace Algorithms.RL
                     if (nStepExperience.Done) break;
                 }
             }
-            
+
             if (_experiences.Count < _maxExperienceSize)
             {
                 _experiences.Add(experience);
@@ -233,15 +248,13 @@ namespace Algorithms.RL
 
             for (int i = 0; i < _batchSize; i++)
             {
-                //TODO: should cash and reset to 0 with a for
-                var predictNextAdvantageMean = new float[_supportSize];
-                var predictAdvantageMean = new float[_supportSize];
-                var targetAdvantageMean = new float[_supportSize];
-
                 int actionIndex;
                 for (int j = 0; j < _supportSize; j++)
                 {
                     _yTarget[i, j] = 0.0f;
+                    _predictNextAdvantageMean[j] = 0.0f;
+                    _predictAdvantageMean[j] = 0.0f;
+                    _targetAdvantageMean[j] = 0.0f;
 
                     for (int k = 0; k < _numberOfActions; k++)
                     {
@@ -249,21 +262,19 @@ namespace Algorithms.RL
 
                         _dAdvantage[i, actionIndex] = 0.0f;
 
-                        predictNextAdvantageMean[j] += _advantageNextPredict[i, actionIndex];
-                        predictAdvantageMean[j] += _advantagePredict[i, actionIndex];
-                        targetAdvantageMean[j] += _advantageTarget[i, actionIndex];
+                        _predictNextAdvantageMean[j] += _advantageNextPredict[i, actionIndex];
+                        _predictAdvantageMean[j] += _advantagePredict[i, actionIndex];
+                        _targetAdvantageMean[j] += _advantageTarget[i, actionIndex];
                     }
 
-                    predictNextAdvantageMean[j] /= _numberOfActions;
-                    predictAdvantageMean[j] /= _numberOfActions;
-                    targetAdvantageMean[j] /= _numberOfActions;
+                    _predictNextAdvantageMean[j] /= _numberOfActions;
+                    _predictAdvantageMean[j] /= _numberOfActions;
+                    _targetAdvantageMean[j] /= _numberOfActions;
                 }
 
                 float maxValue;
                 var targetMaxQValue = float.MinValue;
                 var targetMaxQIndex = 0;
-                //TODO: Can be cashed
-                var qTargetDistribution = new float[_supportSize * _numberOfActions];
                 for (int j = 0; j < _numberOfActions; j++)
                 {
                     maxValue = float.MinValue;
@@ -271,8 +282,8 @@ namespace Algorithms.RL
                     for (int k = 0; k < _supportSize; k++)
                     {
                         var value = _valueMextPredict[i, k] +
-                                    (_advantageNextPredict[i, actionIndex + k] - predictNextAdvantageMean[k]);
-                        qTargetDistribution[actionIndex + k] = value;
+                                    (_advantageNextPredict[i, actionIndex + k] - _predictNextAdvantageMean[k]);
+                        _qTargetDistribution[k] = value;
 
                         if (maxValue > value) continue;
                         maxValue = value;
@@ -281,17 +292,16 @@ namespace Algorithms.RL
                     var targetExpSum = 0.0f;
                     for (int k = 0; k < _supportSize; k++)
                     {
-                        var result = Mathf.Exp(qTargetDistribution[actionIndex + k] - maxValue);
-                        qTargetDistribution[actionIndex + k] = result;
+                        //TODO: save repeated summed indexes
+                        var result = Mathf.Exp(_qTargetDistribution[k] - maxValue);
+                        _qTargetDistribution[k] = result;
                         targetExpSum += result;
                     }
 
                     var qValue = 0f;
                     for (int k = 0; k < _supportSize; k++)
                     {
-                        var result = qTargetDistribution[actionIndex + k] / targetExpSum;
-                        qTargetDistribution[actionIndex + k] = result;
-                        qValue += result * _support[k];
+                        qValue += _qTargetDistribution[k] / targetExpSum * _support[k];
                     }
 
                     if (targetMaxQValue > qValue) continue;
@@ -304,20 +314,20 @@ namespace Algorithms.RL
                 var experienceAction = experience.Action;
                 maxValue = float.MinValue;
                 actionIndex = experienceAction * _supportSize;
-                var distribution = new float[_supportSize];
                 var distActionIndex = targetMaxQIndex * _supportSize;
                 var distMaxValue = float.MinValue;
                 for (int j = 0; j < _supportSize; j++)
                 {
-                    var value = _valuePredict[i, j] + (_advantagePredict[i, actionIndex + j] - predictAdvantageMean[j]);
+                    var value = _valuePredict[i, j] +
+                                (_advantagePredict[i, actionIndex + j] - _predictAdvantageMean[j]);
                     _actionSample[i, j] = value;
                     if (maxValue < value)
                     {
                         maxValue = value;
                     }
 
-                    value = _valueTarget[i, j] + (_advantageTarget[i, distActionIndex + j] - targetAdvantageMean[j]);
-                    distribution[j] = value;
+                    value = _valueTarget[i, j] + (_advantageTarget[i, distActionIndex + j] - _targetAdvantageMean[j]);
+                    _unProjectedTargetDist[j] = value;
                     if (distMaxValue > value) continue;
                     distMaxValue = value;
                 }
@@ -330,8 +340,8 @@ namespace Algorithms.RL
                     _actionSample[i, j] = result;
                     predictExpSum += result;
 
-                    result = Mathf.Exp(distribution[j] - distMaxValue);
-                    distribution[j] = result;
+                    result = Mathf.Exp(_unProjectedTargetDist[j] - distMaxValue);
+                    _unProjectedTargetDist[j] = result;
                     expSum += result;
                 }
 
@@ -345,7 +355,7 @@ namespace Algorithms.RL
                     var lower = (int)b;
                     var upper = Mathf.CeilToInt(b);
 
-                    var probability = distribution[j] / expSum;
+                    var probability = _unProjectedTargetDist[j] / expSum;
                     if (lower == upper)
                     {
                         _yTarget[i, lower] += probability;
@@ -360,8 +370,7 @@ namespace Algorithms.RL
                 //Loss and Derivatives
                 actionIndex = experienceAction * _supportSize;
                 var sampleLoss = 0.0f;
-                _sampleWeights[i] /= _maxWeight;
-                var weightPer = _sampleWeights[i];
+                var weightPer = _sampleWeights[i] / _maxWeight;
                 for (int j = 0; j < _supportSize; j++)
                 {
                     var predValue = _actionSample[i, j] / predictExpSum;
@@ -380,14 +389,13 @@ namespace Algorithms.RL
                 _sampleLosses[i] = sampleLoss / _supportSize * -1f;
             }
 
-            var dValueFinal = _duellingNetwork.ValueModel.Update(_dValue);
-            var dAdvantageFinal = _duellingNetwork.AdvantageModel.Update(_dAdvantage);
-            var dInputRowSize = _dInput.GetLength(1);
+            _dValueFinal = _duellingNetwork.ValueModel.Update(_dValue);
+            _dAdvantageFinal = _duellingNetwork.AdvantageModel.Update(_dAdvantage);
             for (int i = 0; i < _batchSize; i++)
             {
-                for (int j = 0; j < dInputRowSize; j++)
+                for (int j = 0; j < _inputNumberOfNeurons; j++)
                 {
-                    _dInput[i, j] = dValueFinal[i, j] + dAdvantageFinal[i, j];
+                    _dInput[i, j] = _dValueFinal[i, j] + _dAdvantageFinal[i, j];
                 }
             }
 

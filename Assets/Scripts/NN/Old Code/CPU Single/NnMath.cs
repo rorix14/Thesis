@@ -143,7 +143,7 @@ namespace NN.CPU_Single
             var sigma = (maxValue - mean) / 3.0f;
             
             // TODO: use custom made clamp function so it does not convert numbers into floats
-            return Mathf.Clamp(std * sigma + mean, minValue, maxValue);
+            return Clamp(std * sigma + mean, minValue, maxValue);
         }
 
         public static float MatrixMean(float[,] mat)

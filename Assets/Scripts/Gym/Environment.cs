@@ -27,7 +27,7 @@ namespace Gym
         protected T[] ActionLookup;
         protected List<Transform> AllEnvTransforms;
 
-        private Vector2 levelSIzeRange;
+        private Vector2 levelSizeRange;
         private List<IResettable> _resettables;
 
         public int GetObservationSize => ObservationLenght;
@@ -39,7 +39,7 @@ namespace Gym
             _resettables = new List<IResettable>();
             GetAllChildrenByRecursion(transform);
 
-            levelSIzeRange = new Vector2(levelSizeMaxMin.x - levelSizeMaxMin.y, levelSizeMaxMin.z - levelSizeMaxMin.w);
+            levelSizeRange = new Vector2(levelSizeMaxMin.x - levelSizeMaxMin.y, levelSizeMaxMin.z - levelSizeMaxMin.w);
             // float[] myArray = { 2, 3, 4, 5, 6, 7, 8, 9, 10 };
             // for (int i = 0; i < myArray.Length; i++)
             // {
@@ -71,11 +71,11 @@ namespace Gym
 
         protected float NormalizePosition(float value, bool isX)
         {
-            float range = levelSIzeRange.y;
+            float range = levelSizeRange.y;
             float min = levelSizeMaxMin.w;
             if (isX)
             {
-                range = levelSIzeRange.x;
+                range = levelSizeRange.x;
                 min = levelSizeMaxMin.y;
             }
 

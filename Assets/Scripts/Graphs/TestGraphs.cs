@@ -53,7 +53,7 @@ namespace Graphs
 
             var dist = new List<float> { 0f, 0f, 0f, 0f, 0f, 0f };
             var gamma = 0.99f;
-            var reward = 3f;
+            var reward = -5f;
             var support = new float[] { -10f, -5f, 0f, 5f, 10f };
             var delta = (10f + 10f) / 4;
             preds = new List<float> { 0.15f, 0.1f, 0.5f, 0.1f, 0.15f, 0f };
@@ -61,19 +61,33 @@ namespace Graphs
             {
                 var v = reward + support[i] * gamma;
                 var tz = Mathf.Clamp(v, -10f, 10f);
-                var b = (tz + 10f) / delta;
-                var l = (int)b;
-                var u = Mathf.CeilToInt(b);
-            
-                if (l == u)
-                {
-                    dist[l] += preds[i];
-                }
-                else
-                {
-                    dist[l] += preds[i] * (u - b);
-                    dist[u] += preds[i] * (b - l);
-                }
+
+                //TODO: Has potential, but a stable solution has not found
+                // var res1 = Mathf.Clamp01(1 - Mathf.Abs(tz - support[i]) / delta);
+                // var res2 = Mathf.Clamp01(Mathf.Abs(tz - support[i]) / delta);
+                // var test = res1 * preds[i];
+                // var test2 = res2 * preds[i];
+                // dist[i] += test;
+                // dist[i + 1] += test2;
+                // print("Test lower: " + test);
+                // print("Test upper: " + test2);
+
+                 var b = (tz + 10f) / delta;
+                 var l = (int)b;
+                 var u = Mathf.CeilToInt(b);
+                
+                 if (l == u)
+                 {
+                     dist[l] += preds[i];
+                     print("Lower: " + preds[i]);
+                 }
+                 else
+                 {
+                     dist[l] += preds[i] * (u - b);
+                     dist[u] += preds[i] * (b - l);
+                     print("Lower: " + preds[i] * (u - b));
+                     print("Upper: " + preds[i] * (b - l));
+                 }
             }
             // var b =  Mathf.RoundToInt((reward + 10f) / delta);
             // b = Mathf.Clamp(b, 0, 4);
@@ -100,7 +114,7 @@ namespace Graphs
             // {
             //     m[i] /= sum;
             // }
-            
+
             for (int i = 0; i < 6; i++)
             {
                 print("pred: " + preds[i] + ", dist: " + dist[i]);

@@ -1,0 +1,61 @@
+#define MATRIX_THREAD_COUNT_X 8
+#define MATRIX_THREAD_COUNT_Y 8
+#define MATRIX_THREAD_COUNT_Z 8
+
+#pragma kernel forward_pass_ReLU
+
+unsigned int input_column_size;
+unsigned int input_row_size;
+unsigned int weights_row_size;
+float noise_standard_deviation;
+
+StructuredBuffer<float> input;
+RWStructuredBuffer<float> weights;
+RWStructuredBuffer<float> biases;
+RWStructuredBuffer<float> output;
+
+RWStructuredBuffer<float> weight_noise;
+RWStructuredBuffer<float> bias_noise;
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= weights_row_size)
+        return;
+
+    const int input_column_index = id.x * input_row_size;
+    float result = 0;
+    for (unsigned int i = 0; i < input_row_size; ++i)
+    {
+        const int weight_column_index = i * (weights_row_size * input_column_size) + id.y;
+        
+        result += input[input_column_index + i] * (weights[i * weights_row_size + id.y]
+            * noise_standard_deviation * weight_noise[weight_column_index + id.x * weights_row_size]);
+    }
+    result += biases[id.y] + noise_standard_deviation * bias_noise[id.y + id.x * weights_row_size];
+
+    output[id.x * weights_row_size + id.y] = result < 0.0f ? 0.0f : result;
+}
+
+StructuredBuffer<float> d_values;
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_linear_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_row_size || id.y >= weights_row_size)
+        return;
+
+    float d_weight = 0;
+    float d_bias = 0;
+    for (unsigned int i = 0; i < input_column_size; ++i)
+    {
+        const float d_value = d_values[i * weights_row_size + id.y];
+        d_bias += d_value;
+        d_weight += input[i * input_row_size + id.x] * d_value;
+    }
+    
+    const float weight_index = id.x * weights_row_size + id.y;
+    
+    if (id.x != 0) return;
+
+}
