@@ -7,18 +7,23 @@ namespace Gym
     public class StealthGameEnv : Environment<Vector3>
     {
         [SerializeField] private Transform[] stealthLevels;
-        [SerializeField] private float passiveReward;
-        [SerializeField] private float goalReachedReward;
-        [SerializeField] private float spottedReward;
-        [SerializeField] private float assassinateReward;
+        [SerializeField] protected float passiveReward;
+        [SerializeField] protected float goalReachedReward;
+        [SerializeField] protected float spottedReward;
+        [SerializeField] protected float assassinateReward;
 
-        private PlayerAgent _player;
-        private List<EnemyAgent> _enemies;
-        private Transform _goalTransform;
+        protected PlayerAgent _player;
+        protected List<EnemyAgent> _enemies;
+        protected Transform _goalTransform;
 
         private Dictionary<StealthLevels, Transform> _levelsTable;
 
-        private bool _envStarted;
+        protected bool _envStarted;
+
+        //cashed variables
+        protected int _playerViewPoints;
+        protected int _enemyCount;
+        protected int _enemyViewPoints;
 
         public enum StealthLevels
         {
@@ -62,13 +67,21 @@ namespace Gym
                     _player = player;
                 }
             }
+
+            _enemyCount = _enemies.Count;
         }
 
-        private void Start()
+        protected virtual void Start()
         {
             if (_envStarted) return;
 
             _envStarted = true;
+
+            _playerViewPoints = _player.ViewPoints.Length;
+            if (_enemies.Count > 0)
+            {
+                _enemyViewPoints = _enemies[0].ViewPoints.Length;
+            }
 
             ObservationLenght = 4;
             if (_player.ViewPoints != null)
@@ -77,7 +90,7 @@ namespace Gym
             }
 
             if (_enemies.Count <= 0 || _enemies[0].ViewPoints == null) return;
-            
+
             ObservationLenght += _enemies.Count * 2;
             ObservationLenght += _enemies[0].ViewPoints.Length * 2 * _enemies.Count;
         }
@@ -106,7 +119,7 @@ namespace Gym
             var goalPosition = _goalTransform.position;
             observation[0] = NormalizePosition(goalPosition.x, true);
             observation[1] = NormalizePosition(goalPosition.z, false);
-            
+
             _player.MovePlayer(action);
             _player.CheckObstacles();
 
@@ -115,7 +128,7 @@ namespace Gym
             observation[3] = NormalizePosition(playerPosition.z, false);
 
             int obsIndex = 4;
-            for (int i = 0; i < _player.ViewPoints.Length; i++)
+            for (int i = 0; i < _playerViewPoints; i++)
             {
                 var viewPoint = _player.ViewPoints[i];
                 observation[obsIndex] = NormalizePosition(viewPoint.x, true);
@@ -123,7 +136,7 @@ namespace Gym
                 obsIndex += 2;
             }
 
-            for (var i = 0; i < _enemies.Count; i++)
+            for (var i = 0; i < _enemyCount; i++)
             {
                 var enemy = _enemies[i];
                 enemy.UpdateEnemy();
@@ -133,7 +146,7 @@ namespace Gym
                 observation[obsIndex + 1] = NormalizePosition(enemyPosition.z, false);
                 obsIndex += 2;
 
-                for (int j = 0; j < enemy.ViewPoints.Length; j++)
+                for (int j = 0; j < _enemyViewPoints; j++)
                 {
                     var viewPoint = enemy.ViewPoints[j];
                     observation[obsIndex] = NormalizePosition(viewPoint.x, true);
@@ -169,7 +182,7 @@ namespace Gym
             }
 
             var observation = new float[ObservationLenght];
-            
+
             var goalPosition = _goalTransform.position;
             observation[0] = NormalizePosition(goalPosition.x, true);
             observation[1] = NormalizePosition(goalPosition.z, false);
@@ -180,7 +193,8 @@ namespace Gym
 
             _player.CheckObstacles();
             int obsIndex = 4;
-            for (int i = 0; i < _player.ViewPoints.Length; i++)
+
+            for (int i = 0; i < _playerViewPoints; i++)
             {
                 var viewPoint = _player.ViewPoints[i];
                 observation[obsIndex] = NormalizePosition(viewPoint.x, true);
@@ -188,7 +202,7 @@ namespace Gym
                 obsIndex += 2;
             }
 
-            for (var i = 0; i < _enemies.Count; i++)
+            for (var i = 0; i < _enemyCount; i++)
             {
                 var enemy = _enemies[i];
                 enemy.UpdateEnemy();
@@ -198,7 +212,7 @@ namespace Gym
                 observation[obsIndex + 1] = NormalizePosition(enemyPosition.z, false);
                 obsIndex += 2;
 
-                for (int j = 0; j < enemy.ViewPoints.Length; j++)
+                for (int j = 0; j < _enemyViewPoints; j++)
                 {
                     var viewPoint = enemy.ViewPoints[j];
                     observation[obsIndex] = NormalizePosition(viewPoint.x, true);

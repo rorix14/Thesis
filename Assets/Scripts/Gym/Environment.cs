@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Stealth_Game;
+using UnityEditor;
 using UnityEngine;
 
 namespace Gym
@@ -20,6 +21,20 @@ namespace Gym
             }
         }
 
+        public struct DistributedStepInfo
+        {
+            public readonly float[,] Observations;
+            public float[] Rewards;
+            public bool[] Dones;
+
+            public DistributedStepInfo(float[,] observations, float[] rewards, bool[] dones)
+            {
+                Observations = observations;
+                Rewards = rewards;
+                Dones = dones;
+            }
+        }
+
         [SerializeField] private Vector4 levelSizeMaxMin;
         [SerializeField] protected int episodeLength;
         protected int EpisodeLengthIndex;
@@ -28,7 +43,7 @@ namespace Gym
         protected List<Transform> AllEnvTransforms;
 
         private Vector2 levelSizeRange;
-        private List<IResettable> _resettables;
+        protected List<IResettable> _resettables;
 
         public int GetObservationSize => ObservationLenght;
         public int GetNumberOfActions => ActionLookup.Length;
@@ -50,6 +65,12 @@ namespace Gym
         //TODO: Test with returning a tuple, allocating in the heap, might be faster then copying structs 
         public abstract StepInfo Step(int action);
 
+        public virtual DistributedStepInfo DistributedStep(int[] actions)
+        {
+            return new DistributedStepInfo();
+        }
+
+
         public virtual float[] ResetEnv()
         {
             EpisodeLengthIndex = 0;
@@ -58,6 +79,12 @@ namespace Gym
                 resettable.ResetAgent();
             }
 
+            return null;
+        }
+
+        public virtual float[,] DistributedResetEnv()
+        {
+            ResetEnv();
             return null;
         }
 
@@ -82,7 +109,7 @@ namespace Gym
             return 2.0f * (value - min) / range - 1.0f;
         }
 
-        private void GetAllChildrenByRecursion(Transform aParent)
+        protected void GetAllChildrenByRecursion(Transform aParent)
         {
             foreach (Transform child in aParent)
             {

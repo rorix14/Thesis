@@ -103,6 +103,12 @@ namespace Stealth_Game
             }
         }
 
+        public void SetPosition(Vector3 newPosition)
+        {
+            transform.position = newPosition;
+            Physics.SyncTransforms();
+        }
+
         public void ResetAgent()
         {
             _moveDirection = Vector3.zero;

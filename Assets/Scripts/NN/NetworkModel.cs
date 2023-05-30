@@ -5,16 +5,16 @@ namespace NN
 {
     public class NetworkModel
     {
-        private readonly NetworkLayer[] _layers;
+        protected readonly NetworkLayer[] _layers;
         private readonly NetworkLoss _lossFunction;
         private readonly float _learningRate;
         private readonly float _decay;
-        private float _currentLearningRate;
+        protected float _currentLearningRate;
         private int _iteration;
-        private readonly float _beta1;
-        private readonly float _beta2;
-        private float _bata1Corrected;
-        private float _bata2Corrected;
+        protected readonly float _beta1;
+        protected readonly float _beta2;
+        protected float _bata1Corrected;
+        protected float _bata2Corrected;
 
         public NetworkModel(NetworkLayer[] layers, NetworkLoss lossFunction, float learningRate = 0.005f,
             float decay = 1e-3f,
@@ -47,7 +47,7 @@ namespace NN
             return _layers[_layers.Length - 1].Output;
         }
 
-        public float[,] Update(float[,] yTarget)
+        public virtual float[,] Update(float[,] yTarget)
         {
             if (_decay > 0)
             {

@@ -1,71 +1,104 @@
-using NN;
-using NN.CPU_Single;
-using UnityEngine;
-using ActivationFunction = NN.ActivationFunction;
-
 namespace Algorithms.NE
 {
-    public class ES : NetworkLayer
+    public class ES
     {
-        private float _noiseStD;
-        private float _learningRate;
-        private readonly int _populationSize;
-        
-        private readonly float[,] _weightNoise;
-        private readonly float[] _biasNoise;
-        private readonly float _totalNoiseValues;
-        
-        private readonly ComputeBuffer _weightNoiseBuffer;
-        private readonly ComputeBuffer _biasNoiseBuffer;
+        private readonly ESModel _networkModel;
+        private readonly int _numberOfActions;
+        private readonly int _batchSize;
 
+        private readonly int[] _sampledActions;
 
-        // Population size can just be the head number
-        public ES(int populationSize, int nInputs, int nNeurons, ActivationFunction activationFunction, ComputeShader shader,
-            bool isFirstLayer = false, float paramsRange = 4, float paramsCoefficient = 0.01f, int headNumber = 1) :
-            base(nInputs, nNeurons, activationFunction, shader, isFirstLayer, paramsRange, paramsCoefficient,
-                headNumber)
+        private readonly float[] _episodeRewards;
+        private readonly bool[] _completedAgents;
+
+        //Cashed variables
+        private readonly float[,] _episodeRewardUpdate;
+        private float _episodeRewardMean;
+        private int _finishedIndividuals;
+
+        public float EpisodeRewardMean => _episodeRewardMean;
+        public float FinishedIndividuals => _finishedIndividuals;
+
+        public ES(ESModel networkModel, int numberOfActions, int batchSize)
         {
-            _populationSize = populationSize;
+            _networkModel = networkModel;
+            _numberOfActions = numberOfActions;
+            _batchSize = batchSize;
 
-            _weightNoise = new float[nInputs, nNeurons * populationSize];
-            _biasNoise = new float[nNeurons * populationSize];
-            _totalNoiseValues = _weightNoise.Length;
+            _sampledActions = new int[batchSize];
 
-            _weightNoiseBuffer = new ComputeBuffer(_weightNoise.Length, sizeof(float));
-            _biasNoiseBuffer = new ComputeBuffer(_biasNoise.Length, sizeof(float));
-            
-            _shader.SetInt("noise_row_size", _weightNoise.GetLength(1));
+            _episodeRewards = new float[batchSize];
+            _completedAgents = new bool[batchSize];
+
+            _episodeRewardUpdate = new float[1, batchSize];
         }
 
-        public override void Forward(float[,] inputs)
+
+        public int[] SamplePopulationActions(float[,] states)
         {
-            for (int i = 0; i < _weightNoise.GetLength(1); i++)
+            var predictions = _networkModel.Predict(states);
+
+            for (int i = 0; i < _batchSize; i++)
             {
-                _biasNoise[i] =  NnMath.RandomGaussian(-4.0f, 4.0f);
-                for (int j = 0; j < _weightNoise.GetLength(0); j++)
+                if (_completedAgents[i])
                 {
-                    _weightNoise[j, i] = NnMath.RandomGaussian(-4.0f, 4.0f);
+                    _sampledActions[i] = -1;
+                    continue;
                 }
+                
+                var maxAction = predictions[i, 0];
+                var maxIndex = 0;
+                for (int j = 1; j < _numberOfActions; j++)
+                {
+                    var actionValue = predictions[i, j];
+                    if (maxAction > actionValue) continue;
+
+                    maxAction = actionValue;
+                    maxIndex = j;
+                }
+
+                _sampledActions[i] = maxIndex;
             }
-            
-            _weightNoiseBuffer.SetData(_weightNoise);
-            _biasNoiseBuffer.SetData(_biasNoise);
 
+            return _sampledActions;
         }
 
-        protected override void InitializeForwardBuffers(float[,] inputs)
+        public void AddExperience(float[] rewards, bool[] dones)
         {
-            base.InitializeForwardBuffers(inputs);
-            
-            _shader.SetBuffer(_kernelHandleForward, "weight_noise", _weightNoiseBuffer);
-            _shader.SetBuffer(_kernelHandleForward, "bias_noise", _biasNoiseBuffer);
+            for (int i = 0; i < _batchSize; i++)
+            {
+                if (_completedAgents[i]) continue;
 
+                var done = dones[i];
+                _episodeRewards[i] += rewards[i];
+                _completedAgents[i] = done;
+                _finishedIndividuals += done ? 1 : 0;
+            }
         }
-        public override void Dispose()
+
+        public void Train()
         {
-            base.Dispose();
-            
-            _weightNoiseBuffer?.Dispose();
+            _episodeRewardMean = 0f;
+            for (int i = 0; i < _batchSize; i++)
+            {
+                var reward = _episodeRewards[i];
+                _episodeRewardUpdate[0, i] = reward;
+                _episodeRewardMean = EpisodeRewardMean + reward;
+
+                _episodeRewards[i] = 0f;
+                _completedAgents[i] = false;
+            }
+
+            _episodeRewardMean /= _batchSize;
+
+            _finishedIndividuals = 0;
+
+            _networkModel.Update(_episodeRewardUpdate);
+        }
+
+        public void Dispose()
+        {
+            _networkModel?.Dispose();
         }
     }
 }

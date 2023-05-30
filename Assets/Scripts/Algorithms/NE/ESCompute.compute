@@ -1,13 +1,16 @@
+//TODO: Should rename file to "ESNetworkLayer"
 #define MATRIX_THREAD_COUNT_X 8
 #define MATRIX_THREAD_COUNT_Y 8
-#define MATRIX_THREAD_COUNT_Z 8
 
 #pragma kernel forward_pass_ReLU
+#pragma kernel backwards_pass_ReLU_weights_biases_Adam
 
 unsigned int input_column_size;
 unsigned int input_row_size;
 unsigned int weights_row_size;
-float noise_standard_deviation;
+
+unsigned int noise_row_size; //(weights_row_size * input_column_size)
+float noise_std;
 
 StructuredBuffer<float> input;
 RWStructuredBuffer<float> weights;
@@ -17,45 +20,61 @@ RWStructuredBuffer<float> output;
 RWStructuredBuffer<float> weight_noise;
 RWStructuredBuffer<float> bias_noise;
 
+//TODO: do forward function for tanh
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
 
+    const int current_child = id.x * weights_row_size;
     const int input_column_index = id.x * input_row_size;
     float result = 0;
+
     for (unsigned int i = 0; i < input_row_size; ++i)
     {
-        const int weight_column_index = i * (weights_row_size * input_column_size) + id.y;
-        
+        const int weight_noise_column_index = i * noise_row_size + id.y;
+
         result += input[input_column_index + i] * (weights[i * weights_row_size + id.y]
-            * noise_standard_deviation * weight_noise[weight_column_index + id.x * weights_row_size]);
+            * noise_std * weight_noise[weight_noise_column_index + current_child]);
     }
-    result += biases[id.y] + noise_standard_deviation * bias_noise[id.y + id.x * weights_row_size];
+
+    result += biases[id.y] + noise_std * bias_noise[id.y + current_child];
 
     output[id.x * weights_row_size + id.y] = result < 0.0f ? 0.0f : result;
 }
 
-StructuredBuffer<float> d_values;
+float beta_1_corrected; //reward_mean;
+float beta_2_corrected; //reward_std;
+float current_learning_rate; //learning_rate
+
+StructuredBuffer<float> d_values;  //rewards
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void backwards_pass_linear_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
+void backwards_pass_ReLU_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_row_size || id.y >= weights_row_size)
         return;
 
-    float d_weight = 0;
-    float d_bias = 0;
+    const float weight_index = id.x * weights_row_size + id.y;
+    const int weight_noise_column_index = id.x * noise_row_size + id.y;
+    float d_weight = 0.0f;
+    float d_bias = 0.0f;
+
+    beta_2_corrected = beta_2_corrected == 0.0f ? 1e-7f : beta_2_corrected;
     for (unsigned int i = 0; i < input_column_size; ++i)
     {
-        const float d_value = d_values[i * weights_row_size + id.y];
-        d_bias += d_value;
-        d_weight += input[i * input_row_size + id.x] * d_value;
+        const float reward = (d_values[i] - beta_1_corrected) / beta_2_corrected;
+        d_weight += weight_noise[weight_noise_column_index + i * weights_row_size] * reward;
+
+        if (id.x != 0) continue;
+        d_bias += bias_noise[i * weights_row_size] * reward;
     }
-    
-    const float weight_index = id.x * weights_row_size + id.y;
-    
+
+    const float tempVar = noise_std * input_column_size;
+    weights[weight_index] += current_learning_rate * d_weight / tempVar;
+
     if (id.x != 0) return;
 
+    biases[id.y] += current_learning_rate * d_bias / tempVar;
 }

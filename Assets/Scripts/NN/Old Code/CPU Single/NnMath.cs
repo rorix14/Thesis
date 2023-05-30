@@ -15,14 +15,14 @@ namespace NN.CPU_Single
             {
                 value = min;
             }
-            else if(value > max)
+            else if (value > max)
             {
                 value = max;
             }
 
             return value;
         }
-        
+
         public static float ArrayMax(float[] valueArray)
         {
             float num = valueArray[0];
@@ -80,7 +80,7 @@ namespace NN.CPU_Single
         {
             var mat1ColumnSize = mat1.GetLength(0);
             var mat2RowSize = mat2.GetLength(1);
-            
+
             var output = new float[mat1ColumnSize, mat2RowSize];
             for (int i = 0; i < mat2.GetLength(0); i++)
             {
@@ -110,21 +110,6 @@ namespace NN.CPU_Single
             return transposedMat;
         }
 
-        public static float StandardDivination(float[,] values)
-        {
-            float average = MatrixMean(values);
-            float sum = 0;
-            for (int i = 0; i < values.GetLength(0); i++)
-            {
-                for (int j = 0; j < values.GetLength(1); j++)
-                {
-                    sum += Mathf.Pow(values[i, j] - average, 2);
-                }
-            }
-
-            return Mathf.Sqrt(sum / values.Length);
-        }
-
         public static float RandomGaussian(float minValue = 0.0f, float maxValue = 1.0f)
         {
             float u;
@@ -141,17 +126,40 @@ namespace NN.CPU_Single
 
             var mean = (minValue + maxValue) / 2.0f;
             var sigma = (maxValue - mean) / 3.0f;
-            
+
             // TODO: use custom made clamp function so it does not convert numbers into floats
             return Clamp(std * sigma + mean, minValue, maxValue);
         }
 
+        public static float StandardDivination(float[,] values, float valuesMean = float.MinValue)
+        {
+            if (valuesMean == float.MinValue)
+            {
+                valuesMean = MatrixMean(values);
+            }
+
+            var valuesRowSize = values.GetLength(1);
+            float sum = 0;
+            for (int i = 0; i < values.GetLength(0); i++)
+            {
+                for (int j = 0; j < valuesRowSize; j++)
+                {
+                    //TODO: should do value multiplication instead of using the pow function.
+                    //But should test first to see if values remain the same
+                    sum += Mathf.Pow(values[i, j] - valuesMean, 2);
+                }
+            }
+
+            return Mathf.Sqrt(sum / values.Length);
+        }
+
         public static float MatrixMean(float[,] mat)
         {
+            var matRowSize = mat.GetLength(1);
             float result = 0;
             for (int i = 0; i < mat.GetLength(0); i++)
             {
-                for (int j = 0; j < mat.GetLength(1); j++)
+                for (int j = 0; j < matRowSize; j++)
                 {
                     result += mat[i, j];
                 }

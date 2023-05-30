@@ -71,8 +71,8 @@ namespace TestGround
                 return;
             }
 
-            //var stepInfo = _env.Step(_movementToAction[_currentPlayerAction]);
-            var stepInfo = _env.Step(Random.Range(0, 10));
+            var stepInfo = _env.Step(_movementToAction[_currentPlayerAction]);
+            //var stepInfo = _env.Step(Random.Range(0, 10));
             _rewardsOverTime[_episodeIndex] += stepInfo.Reward;
 
             if (!stepInfo.Done) return;
