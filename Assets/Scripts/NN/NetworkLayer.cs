@@ -33,7 +33,7 @@ namespace NN
 
         private ComputeBuffer _inputBuffer;
         protected ComputeBuffer _outputBuffer;
-        private readonly ComputeBuffer _weightsBuffer;
+        protected readonly ComputeBuffer _weightsBuffer;
         protected readonly ComputeBuffer _biasesBuffer;
 
         // forward only variables

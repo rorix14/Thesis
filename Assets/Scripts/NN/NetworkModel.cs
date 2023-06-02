@@ -7,10 +7,10 @@ namespace NN
     {
         protected readonly NetworkLayer[] _layers;
         private readonly NetworkLoss _lossFunction;
-        private readonly float _learningRate;
-        private readonly float _decay;
+        protected readonly float _learningRate;
+        protected readonly float _decay;
         protected float _currentLearningRate;
-        private int _iteration;
+        protected int _iteration;
         protected readonly float _beta1;
         protected readonly float _beta2;
         protected float _bata1Corrected;

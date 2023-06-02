@@ -106,7 +106,7 @@ namespace Stealth_Game
         public void SetPosition(Vector3 newPosition)
         {
             transform.position = newPosition;
-            Physics.SyncTransforms();
+            //Physics.SyncTransforms();
         }
 
         public void ResetAgent()
@@ -117,7 +117,7 @@ namespace Stealth_Game
             var index = Random.Range(0, startingPositions.Length);
             transformRef.position = startingPositions[index];
             transformRef.rotation = _initRotation;
-            Physics.SyncTransforms();
+            //Physics.SyncTransforms();
 
             GoalReached = false;
             IterableObjects.Clear();

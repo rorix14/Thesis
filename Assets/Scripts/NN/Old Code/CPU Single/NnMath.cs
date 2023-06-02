@@ -127,7 +127,6 @@ namespace NN.CPU_Single
             var mean = (minValue + maxValue) / 2.0f;
             var sigma = (maxValue - mean) / 3.0f;
 
-            // TODO: use custom made clamp function so it does not convert numbers into floats
             return Clamp(std * sigma + mean, minValue, maxValue);
         }
 

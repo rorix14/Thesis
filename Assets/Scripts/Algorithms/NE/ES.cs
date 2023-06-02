@@ -33,7 +33,6 @@ namespace Algorithms.NE
             _episodeRewardUpdate = new float[1, batchSize];
         }
 
-
         public int[] SamplePopulationActions(float[,] states)
         {
             var predictions = _networkModel.Predict(states);
@@ -74,6 +73,11 @@ namespace Algorithms.NE
                 _completedAgents[i] = done;
                 _finishedIndividuals += done ? 1 : 0;
             }
+        }
+
+        public void ReduceNoise(float noiseStd)
+        {
+            
         }
 
         public void Train()

@@ -18,12 +18,6 @@
 #pragma kernel backwards_pass_linear_inputs
 #pragma kernel backwards_pass_linear_weights_biases_Adam
 
-#pragma kernel forward_pass_MSE_loss
-#pragma kernel backwards_pass_MSE_loss
-
-#pragma kernel forward_pass_MSE_prioritized_loss
-#pragma kernel backwards_pass_MSE_prioritized_loss
-
 unsigned int input_column_size;
 unsigned int input_row_size;
 unsigned int weights_row_size;
@@ -35,65 +29,17 @@ RWStructuredBuffer<float> output;
 
 //TODO: should see if a MATRIX_THREAD_COUNT_Y of 1 is faster, as inputs and outputs might just have the size of 1
 
+float forward_pass(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,  RWStructuredBuffer<float> biases);
+
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
 {
     //TODO: checking for x value might not be necessary, out of bounds always returns zero
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
-
-    //dot product
-    const int input_column_index = id.x * input_row_size;
-    float result = 0;
-    for (unsigned int i = 0; i < input_row_size; ++i)
-    {
-        result += input[input_column_index + i] * weights[i * weights_row_size + id.y];
-    }
-    result += biases[id.y];
-
-    // do ReLU activation
+    
+    const float result = forward_pass(id, input, weights, biases);
     output[id.x * weights_row_size + id.y] = result < 0.0f ? 0.0f : result;
-}
-
-StructuredBuffer<float> y_true;
-RWStructuredBuffer<float> sample_losses;
-// number of threads can be different, this should be the best configuration for 1D arrays 
-[numthreads(32,1, 1)]
-void forward_pass_MSE_loss(uint3 id : SV_DispatchThreadID)
-{
-    if (id.x >= input_column_size)
-        return;
-
-    float result = 0;
-    for (unsigned int i = 0; i < weights_row_size; ++i)
-    {
-        const int index = id.x * weights_row_size + i;
-        const float error = y_true[index] - output[index];
-        result += error * error;
-    }
-
-    sample_losses[id.x] = result / weights_row_size;
-}
-
-StructuredBuffer<float> sample_weights;
-
-[numthreads(32,1, 1)]
-void forward_pass_MSE_prioritized_loss(uint3 id : SV_DispatchThreadID)
-{
-    if (id.x >= input_column_size)
-        return;
-
-    float result = 0;
-    for (unsigned int i = 0; i < weights_row_size; ++i)
-    {
-        const int index = id.x * weights_row_size + i;
-        const float error = y_true[index] - output[index];
-        //result += abs(error);
-        result += error * error;
-    }
-
-    //TODO: try it without j division;
-    sample_losses[id.x] = result / weights_row_size;
 }
 
 StructuredBuffer<float> d_values;
@@ -124,7 +70,7 @@ float beta_1;
 float beta_2;
 float epsilon;
 float current_learning_rate;
-float beta_1_corrected;
+float reward_mean;
 float beta_2_corrected;
 
 RWStructuredBuffer<float> weights_momentum;
@@ -162,29 +108,6 @@ void backwards_pass_ReLU_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
     Adam_optimizer(id.y, d_bias, biases, biases_momentum, biases_cache);
 }
 
-RWStructuredBuffer<float> d_inputs_loss;
-
-[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void backwards_pass_MSE_loss(uint3 id : SV_DispatchThreadID)
-{
-    if (id.x >= input_column_size || id.y >= weights_row_size)
-        return;
-
-    const int index = id.x * weights_row_size + id.y;
-    d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) / weights_row_size / input_column_size;
-}
-
-[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void backwards_pass_MSE_prioritized_loss(uint3 id : SV_DispatchThreadID)
-{
-    if (id.x >= input_column_size || id.y >= weights_row_size)
-        return;
-
-    const int index = id.x * weights_row_size + id.y;
-    d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) * sample_weights[id.x] / weights_row_size /
-        input_column_size;
-}
-
 ////////// Functions used for Tanh layers ///////////////
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
@@ -192,15 +115,8 @@ void forward_pass_Tanh(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
-
-    const int input_column_index = id.x * input_row_size;
-    float result = 0;
-    for (unsigned int i = 0; i < input_row_size; ++i)
-    {
-        result += input[input_column_index + i] * weights[i * weights_row_size + id.y];
-    }
-    result += biases[id.y];
-
+    
+    const float result = forward_pass(id, input, weights, biases);
     const float exp_pos = exp(result);
     const float exp_neg = exp(-result);
 
@@ -338,15 +254,8 @@ void forward_pass_linear(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
-
-    const int input_column_index = id.x * input_row_size;
-    float result = 0;
-    for (unsigned int i = 0; i < input_row_size; ++i)
-    {
-        result += input[input_column_index + i] * weights[i * weights_row_size + id.y];
-    }
-
-    output[id.x * weights_row_size + id.y] = result + biases[id.y];
+    
+    output[id.x * weights_row_size + id.y] = forward_pass(id, input, weights, biases);
 }
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
@@ -389,17 +298,102 @@ void backwards_pass_linear_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
     Adam_optimizer(id.y, d_bias, biases, biases_momentum, biases_cache);
 }
 
+inline float forward_pass(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,  RWStructuredBuffer<float> biases)
+{
+    const int input_column_index = id.x * input_row_size;
+    float result = 0;
+    for (unsigned int i = 0; i < input_row_size; ++i)
+    {
+        result += input[input_column_index + i] * weights[i * weights_row_size + id.y];
+    }
+    return result + biases[id.y];
+}
+
 inline void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
                            RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache)
 {
     momentum[index] = beta_1 * momentum[index] + (1 - beta_1) * d_value;
-    const float momentum_corrected = momentum[index] / (1 - beta_1_corrected);
+    const float momentum_corrected = momentum[index] / (1 - reward_mean);
 
     cache[index] = beta_2 * cache[index] + (1 - beta_2) * (d_value * d_value);
     const float cash_corrected = cache[index] / (1 - beta_2_corrected);
 
     buffer_to_update[index] += -current_learning_rate * momentum_corrected / (sqrt(cash_corrected) + epsilon);
 }
+
+
+
+////////// Loss Functions, currently they are not being used, might also be outdated and incomplete
+
+// #pragma kernel forward_pass_MSE_loss
+// #pragma kernel backwards_pass_MSE_loss
+// #pragma kernel forward_pass_MSE_prioritized_loss
+// #pragma kernel backwards_pass_MSE_prioritized_loss
+// StructuredBuffer<float> y_true;
+// RWStructuredBuffer<float> sample_losses;
+// // number of threads can be different, this should be the best configuration for 1D arrays 
+// [numthreads(32,1, 1)]
+// void forward_pass_MSE_loss(uint3 id : SV_DispatchThreadID)
+// {
+//     if (id.x >= input_column_size)
+//         return;
+//
+//     float result = 0;
+//     for (unsigned int i = 0; i < weights_row_size; ++i)
+//     {
+//         const int index = id.x * weights_row_size + i;
+//         const float error = y_true[index] - output[index];
+//         result += error * error;
+//     }
+//
+//     sample_losses[id.x] = result / weights_row_size;
+// }
+//
+// StructuredBuffer<float> sample_weights;
+//
+// [numthreads(32,1, 1)]
+// void forward_pass_MSE_prioritized_loss(uint3 id : SV_DispatchThreadID)
+// {
+//     if (id.x >= input_column_size)
+//         return;
+//
+//     float result = 0;
+//     for (unsigned int i = 0; i < weights_row_size; ++i)
+//     {
+//         const int index = id.x * weights_row_size + i;
+//         const float error = y_true[index] - output[index];
+//         //result += abs(error);
+//         result += error * error;
+//     }
+//
+//     //TODO: try it without j division;
+//     sample_losses[id.x] = result / weights_row_size;
+// }
+//
+// RWStructuredBuffer<float> d_inputs_loss;
+//
+// [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+// void backwards_pass_MSE_loss(uint3 id : SV_DispatchThreadID)
+// {
+//     if (id.x >= input_column_size || id.y >= weights_row_size)
+//         return;
+//
+//     const int index = id.x * weights_row_size + id.y;
+//     d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) / weights_row_size / input_column_size;
+// }
+//
+// [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+// void backwards_pass_MSE_prioritized_loss(uint3 id : SV_DispatchThreadID)
+// {
+//     if (id.x >= input_column_size || id.y >= weights_row_size)
+//         return;
+//
+//     const int index = id.x * weights_row_size + id.y;
+//     d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) * sample_weights[id.x] / weights_row_size /
+//         input_column_size;
+// }
+
+
 
 /*
 [numthreads(32,1,1)]

@@ -1,4 +1,5 @@
 using Stealth_Game;
+using UnityEngine;
 
 namespace Gym
 {
@@ -38,7 +39,7 @@ namespace Gym
             _playerAgents[0] = _player;
             for (int i = 1; i < populationSize; i++)
             {
-                var newPlayer = Instantiate(_player);
+                var newPlayer = Instantiate(_player, _player.transform.parent);
                 _playerAgents[i] = newPlayer;
                 _resettables.Add(newPlayer);
             }
@@ -92,26 +93,25 @@ namespace Gym
                 currentStep.Rewards[i] = passiveReward;
                 currentStep.Dones[i] = EpisodeLengthIndex > episodeLength;
                 
-                
+                var assassinatedIndex = i * _enemyCount;
                 if (action.y != 0)
                 {
                     action.y = 0;
                     if (currentPlayer.IterableObjects.Count > 0)
                     {
-                        var enemyToRemove = _player.IterableObjects[0].GetComponent<EnemyAgent>();
+                        var enemyToRemove = currentPlayer.IterableObjects[0].GetComponent<EnemyAgent>();
                         var hasKilledEnemy = false;
                         for (int j = 0; j < _enemyCount; j++)
                         {
-                            if (_agentAssassinated[i * _enemyCount + j] == enemyToRemove)
-                            {
-                                hasKilledEnemy = true;
-                                break;
-                            }
+                            if (_agentAssassinated[assassinatedIndex + j] != enemyToRemove) continue;
+                            
+                            hasKilledEnemy = true;
+                            break;
                         }
 
                         if (!hasKilledEnemy)
                         {
-                            _agentAssassinated[i] = enemyToRemove;
+                            _agentAssassinated[assassinatedIndex] = enemyToRemove;
                             currentPlayer.IterableObjects.RemoveAt(0);
                             currentStep.Rewards[i] = assassinateReward;
                         }
@@ -131,20 +131,24 @@ namespace Gym
                 int obsIndex = 4;
                 for (int j = 0; j < _playerViewPoints; j++)
                 {
-                    var viewPoint = _player.ViewPoints[i];
+                    var viewPoint = currentPlayer.ViewPoints[j];
                     currentStep.Observations[i, obsIndex] = NormalizePosition(viewPoint.x, true);
                     currentStep.Observations[i, obsIndex + 1] = NormalizePosition(viewPoint.z, false);
                     obsIndex += 2;
                 }
 
+                var enemyStateSize = _enemyObservationSize / _enemyCount;
                 for (int j = 0; j < _enemyCount; j++)
                 {
-                    var enemy = _enemies[i];
-                    if (_agentAssassinated[i * _enemyCount + j] == enemy) continue;
-
-                    index = j * (_enemyCount + _enemyViewPoints);
-                    currentStep.Observations[i, obsIndex + index] = _enemyObservation[j * (_enemyCount + _enemyViewPoints)];
-
+                    var enemy = _enemies[j];
+                    if (_agentAssassinated[assassinatedIndex + j] == enemy) continue;
+                    
+                    index = j * enemyStateSize;
+                    for (int k = 0; k < enemyStateSize; k++)
+                    {
+                        currentStep.Observations[i, obsIndex + k + index] = _enemyObservation[k + index];
+                    }
+                    
                     if (!enemy.CanSeeTarget(playerPosition)) continue;
 
                     currentStep.Dones[i] = true;
@@ -159,7 +163,7 @@ namespace Gym
 
             EpisodeLengthIndex++;
 
-            return new DistributedStepInfo();
+            return currentStep;
         }
 
         public override float[,] DistributedResetEnv()
@@ -186,7 +190,7 @@ namespace Gym
             var playerPositionZ = NormalizePosition(playerPosition.z, false);
 
             _player.CheckObstacles();
-            int index = 0;
+            int index;
             for (int i = 0; i < _playerViewPoints; i++)
             {
                 var viewPoint = _player.ViewPoints[i];
@@ -244,7 +248,9 @@ namespace Gym
                     obsIndex++;
                 }
             }
-
+            
+            Physics.SyncTransforms();
+            
             return observationBatch;
         }
     }
