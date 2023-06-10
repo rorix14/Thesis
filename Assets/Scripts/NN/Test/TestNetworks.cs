@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Algorithms;
-using NN.CPU_Single;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -44,24 +43,42 @@ namespace NN
             //TestBuffer();
             //LookUpArrayVsSwitch(1000);
             //Test(100000);
-            //Test2(1000000);
+            Test2(1000000);
         }
 
         private void Test2(int it)
         {
-            var arr = new float[] { 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.3f, 0.0f, 0.2f, 0.0f };
-            SumTree sumTree = new SumTree(arr.Length, arr);
+            var arr = new float[] { -7f, -25f, 50f, -25f };
+            var n = arr.Length;
+            var ivec = new int[n];
+            for (int i = 0; i < n; i++) ivec[i] = i;
 
-            var test = new int[arr.Length];
-            for (int i = 0; i < it; i++)
+            Array.Sort(arr, ivec);
+            
+            var sumRanks = 0;
+            var dupCount = 0;
+            var array = new float[n];
+            for (int i = 0; i < n; i++)
             {
-                var ran = Random.Range(0.0f, sumTree.Total());
-                test[sumTree.Sample(ran, out var t)]++;
+                sumRanks += i;
+                dupCount += 1;
+                if (i == n - 1 || Math.Abs(arr[i] - arr[i + 1]) > 0.0f)
+                {
+                    var averageRank = sumRanks / (float)dupCount + 1;
+                    for (int j = i - dupCount + 1; j < i + 1; j++)
+                    {
+                        array[ivec[j]] = averageRank;
+                    }
+
+                    sumRanks = 0;
+                    dupCount = 0;
+                }
             }
 
-            for (int i = 0; i < arr.Length; i++)
+            for (int i = 0; i < array.Length; i++)
             {
-                print(test[i] / (float)it);
+                var normValue = (array[i] - 1) / (array.Length - 1);
+                print("ind: " + i + ", value: " + (normValue - 0.5f));
             }
         }
 

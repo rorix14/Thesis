@@ -84,11 +84,16 @@ namespace Gym
 
         public virtual float[,] DistributedResetEnv()
         {
-            ResetEnv();
+            EpisodeLengthIndex = 0;
+            foreach (var resettable in _resettables)
+            {
+                resettable.ResetAgent();
+            }
+
             return null;
         }
 
-        public void Close()
+        public virtual void Close()
         {
             // It might be better to just destroy the game-objects in the AllEnvTransforms list,
             // this way we can load new "levels" without creating a new environment class,

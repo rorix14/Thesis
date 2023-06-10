@@ -173,7 +173,8 @@ namespace Stealth_Game
             if (!angleIsGlobal)
                 angleInDegrees += transform.eulerAngles.y;
 
-            return new Vector3(Mathf.Sin(angleInDegrees * Mathf.Deg2Rad), 0, Mathf.Cos(angleInDegrees * Mathf.Deg2Rad));
+            var angleRadians = angleInDegrees * Mathf.Deg2Rad;
+            return new Vector3(Mathf.Sin(angleRadians), 0.0f, Mathf.Cos(angleRadians));
         }
 
         public void ResetAgent()

@@ -252,7 +252,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 20
+  simulationSpeed: 21
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
 --- !u!114 &82632406
@@ -286,7 +286,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 18
+  simulationSpeed: 19
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   stepNumber: 3
@@ -321,7 +321,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 16
+  simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
@@ -369,7 +369,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 82632402}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8805df05c1022894ebb6b8b32910cc2f, type: 3}
   m_Name: 
@@ -391,7 +391,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 82632402}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 005f50db4c0485841b4d3788d2e957c5, type: 3}
   m_Name: 
@@ -400,7 +400,7 @@ MonoBehaviour:
   noiseStandardDeviation: 0.01
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 8
+  simulationSpeed: 16
   numberOfEpisodes: 300
 --- !u!1 &149193037
 GameObject:
@@ -1074,6 +1074,7 @@ GameObject:
   - component: {fileID: 886758025}
   - component: {fileID: 886758026}
   - component: {fileID: 886758027}
+  - component: {fileID: 886758028}
   m_Layer: 0
   m_Name: Enviroment
   m_TagString: Untagged
@@ -1129,6 +1130,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03fa7607dc859024392bfcfbd8dd5007, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelSizeMaxMin: {x: 7, y: -7, z: 7, w: -7}
+  episodeLength: 700
+  stealthLevels: []
+  passiveReward: -0.01
+  goalReachedReward: 50
+  spottedReward: -20
+  assassinateReward: 15
+--- !u!114 &886758028
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 886758024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5266438c30f4f0b408dcb147770bdba9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   levelSizeMaxMin: {x: 7, y: -7, z: 7, w: -7}

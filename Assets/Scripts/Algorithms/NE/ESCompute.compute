@@ -2,6 +2,7 @@
 #define MATRIX_THREAD_COUNT_X 8
 #define MATRIX_THREAD_COUNT_Y 8
 
+//TODO: Make tanh functions
 #pragma kernel forward_pass_ReLU
 #pragma kernel backwards_pass_ReLU_inputs
 #pragma kernel backwards_pass_ReLU_weights_biases_Adam
@@ -28,11 +29,7 @@ RWStructuredBuffer<float> weights;
 RWStructuredBuffer<float> biases;
 RWStructuredBuffer<float> output;
 
-// StructuredBuffer<float> weight_noise;
-// StructuredBuffer<float> bias_noise;
-
-StructuredBuffer<float> input_noise;
-StructuredBuffer<float> output_noise;
+StructuredBuffer<float> noise_input_output_buffer;
 
 //Adam variables
 float beta_1;
@@ -49,12 +46,11 @@ RWStructuredBuffer<float> biases_momentum;
 RWStructuredBuffer<float> biases_cache;
 
 float forward_pass_ES(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,
-                      RWStructuredBuffer<float> biases, StructuredBuffer<float> input_noise,
-                      StructuredBuffer<float> output_noise);
+                      RWStructuredBuffer<float> biases, StructuredBuffer<float> noise_input_output_buffer);
 
 void backward_pass_ES(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,
-                      RWStructuredBuffer<float> biases, StructuredBuffer<float> input_noise,
-                      StructuredBuffer<float> output_noise, RWStructuredBuffer<float> weights_momentum,
+                      RWStructuredBuffer<float> biases, StructuredBuffer<float> noise_input_output_buffer,
+                      RWStructuredBuffer<float> weights_momentum,
                       RWStructuredBuffer<float> weights_cache, RWStructuredBuffer<float> biases_momentum,
                       RWStructuredBuffer<float> biases_cache);
 
@@ -65,8 +61,7 @@ void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
 
-    //const float result = forward_pass_ES(id, input, weights, biases, weight_noise, bias_noise);
-    const float result = forward_pass_ES(id, input, weights, biases, input_noise, output_noise);
+    const float result = forward_pass_ES(id, input, weights, biases, noise_input_output_buffer);
     output[id.x * weights_row_size + id.y] = result < 0.0f ? 0.0f : result;
 }
 
@@ -76,7 +71,7 @@ void backwards_pass_ReLU_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
     if (id.x >= input_row_size || id.y >= weights_row_size)
         return;
 
-    backward_pass_ES(id, d_values, weights, biases, input_noise, output_noise, weights_momentum, weights_cache,
+    backward_pass_ES(id, d_values, weights, biases, noise_input_output_buffer, weights_momentum, weights_cache,
                      biases_momentum, biases_cache);
 }
 
@@ -86,7 +81,7 @@ void forward_pass_linear(uint3 id : SV_DispatchThreadID)
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
 
-    output[id.x * weights_row_size + id.y] = forward_pass_ES(id, input, weights, biases, input_noise, output_noise);
+    output[id.x * weights_row_size + id.y] = forward_pass_ES(id, input, weights, biases, noise_input_output_buffer);
 }
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
@@ -95,14 +90,13 @@ void backwards_pass_linear_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
     if (id.x >= input_row_size || id.y >= weights_row_size)
         return;
 
-    backward_pass_ES(id, d_values, weights, biases, input_noise, output_noise, weights_momentum, weights_cache,
+    backward_pass_ES(id, d_values, weights, biases, noise_input_output_buffer, weights_momentum, weights_cache,
                      biases_momentum, biases_cache);
 }
 
 
 inline float forward_pass_ES(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,
-                             RWStructuredBuffer<float> biases, StructuredBuffer<float> input_noise,
-                             StructuredBuffer<float> output_noise)
+                             RWStructuredBuffer<float> biases, StructuredBuffer<float> noise_input_output_buffer)
 {
     const int input_column_index = id.x * input_row_size;
     float result = 0;
@@ -110,8 +104,7 @@ inline float forward_pass_ES(uint3 id, StructuredBuffer<float> input, RWStructur
     const int current_child = id.x % half_population_size * weights_row_size;
     const float mirror = id.x < half_population_size ? 1.0f : -1.0f;
 
-    const float epsilon_output = output_noise[current_child + id.y];
-    const float factorized_epsilon_output = sign(epsilon_output) * sqrt(abs(epsilon_output));
+    const float epsilon_output = noise_input_output_buffer[input_row_size + current_child + id.y];
 
     for (unsigned int i = 0; i < input_row_size; ++i)
     {
@@ -119,18 +112,18 @@ inline float forward_pass_ES(uint3 id, StructuredBuffer<float> input, RWStructur
         // result += input[input_column_index + i] * (weights[i * weights_row_size + id.y]
         //     + mirror * weight_noise[weight_noise_column_index + current_child]);
 
-        const float epsilon_input = input_noise[i];
+        const float epsilon_input = noise_input_output_buffer[i];
         result += input[input_column_index + i] * (weights[i * weights_row_size + id.y]
-            + noise_std * mirror * sign(epsilon_input) * sqrt(abs(epsilon_input)) * factorized_epsilon_output);
+            + noise_std * mirror * epsilon_input * epsilon_output);
     }
 
     //return result + biases[id.y] +  bias_noise[id.y + current_child];
-    return result + biases[id.y] + noise_std * mirror * factorized_epsilon_output;
+    return result + biases[id.y] + noise_std * mirror * epsilon_output;
 }
 
 inline void backward_pass_ES(uint3 id, StructuredBuffer<float> d_values, RWStructuredBuffer<float> weights,
-                             RWStructuredBuffer<float> biases, StructuredBuffer<float> input_noise,
-                             StructuredBuffer<float> output_noise, RWStructuredBuffer<float> weights_momentum,
+                             RWStructuredBuffer<float> biases, StructuredBuffer<float> noise_input_output_buffer,
+                             RWStructuredBuffer<float> weights_momentum,
                              RWStructuredBuffer<float> weights_cache, RWStructuredBuffer<float> biases_momentum,
                              RWStructuredBuffer<float> biases_cache)
 {
@@ -139,26 +132,26 @@ inline void backward_pass_ES(uint3 id, StructuredBuffer<float> d_values, RWStruc
     float d_weight = 0.0f;
     float d_bias = 0.0f;
 
-    const float epsilon_input = input_noise[id.x];
+    const float epsilon_input = noise_input_output_buffer[id.x];
 
     for (unsigned int i = 0; i < input_column_size; ++i)
     {
-        const float normalized_reward = (d_values[i] - reward_mean) / reward_std;
-
+        //const float normalized_reward = (d_values[i] - reward_mean) / reward_std;
+        const float normalized_reward = d_values[i];
+        
         const float mirror = i < half_population_size ? 1.0f : -1.0f;
         // d_weight += mirror * weight_noise[weight_noise_column_index + i % half_population_size * weights_row_size] *
         //     normalized_reward;
 
-        const float epsilon_output = output_noise[id.y + i % half_population_size * weights_row_size];
-
-        d_weight += noise_std * mirror * (sign(epsilon_input) * sqrt(abs(epsilon_input))) * (sign(epsilon_output) *
-            sqrt(abs(epsilon_output))) * normalized_reward;
+        const float epsilon_output = noise_input_output_buffer[input_row_size + id.y + i % half_population_size *
+            weights_row_size];
+        d_weight += noise_std * mirror * (epsilon_input * epsilon_output) * normalized_reward;
 
         if (id.x != 0) continue;
 
-        d_bias += noise_std * mirror * (sign(epsilon_output) * sqrt(abs(epsilon_output))) * normalized_reward;
+        d_bias += noise_std * mirror * epsilon_output * normalized_reward;
     }
-    
+
     d_weight /= noise_normalizer;
 
     //Adam
@@ -172,7 +165,7 @@ inline void backward_pass_ES(uint3 id, StructuredBuffer<float> d_values, RWStruc
         epsilon);
 
     if (id.x != 0) return;
-    
+
     d_bias /= noise_normalizer;
 
     //Adam

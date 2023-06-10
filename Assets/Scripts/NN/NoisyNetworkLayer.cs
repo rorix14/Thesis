@@ -10,7 +10,11 @@ namespace NN
         private readonly float[,] _sigmaBiases;
         private readonly float[] _epsilonInputOutput;
 
+        private readonly float[] _noiseSamplesBuffer;
+        
+        // Cashed variables
         private readonly int _epsilonArrayLenght;
+        private readonly int _noiseSamplesSize;
 
         // Compute buffer variables
         private readonly ComputeBuffer _sigmaWeightsBuffer;
@@ -67,13 +71,21 @@ namespace NN
             _sigmaBiasesBuffer.SetData(_sigmaBiases);
 
             _epsilonInputOutputBuffer = new ComputeBuffer(_epsilonInputOutput.Length, sizeof(float));
+            
+            _noiseSamplesSize = 10000000;
+            _noiseSamplesBuffer = new float[_noiseSamplesSize];
+            for (int i = 0; i < _noiseSamplesSize; i++)
+            {
+                var randomValue = NnMath.RandomGaussian(-4.0f, 4.0f);
+                _noiseSamplesBuffer[i] = NnMath.Sign(randomValue) * Mathf.Sqrt(Mathf.Abs(randomValue));
+            }
         }
 
         public override void Forward(float[,] inputs)
         {
             for (int i = 0; i < _epsilonArrayLenght; i++)
             {
-                _epsilonInputOutput[i] = NnMath.RandomGaussian(-4.0f, 4.0f);
+                _epsilonInputOutput[i] = _noiseSamplesBuffer[Random.Range(0, _noiseSamplesSize)];
             }
 
             _epsilonInputOutputBuffer.SetData(_epsilonInputOutput);

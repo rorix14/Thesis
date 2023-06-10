@@ -25,6 +25,8 @@ namespace Gym
         protected int _enemyCount;
         protected int _enemyViewPoints;
 
+        protected float[] _resetObservation;
+
         public enum StealthLevels
         {
             LevelOne
@@ -43,6 +45,11 @@ namespace Gym
                 Vector3.forward + Vector3.right, Vector3.forward + Vector3.left, Vector3.back + Vector3.right,
                 Vector3.back + Vector3.left, Vector3.up
             };
+
+            for (int i = 0; i < ActionLookup.Length; i++)
+            {
+                ActionLookup[i].Normalize();
+            }
 
             _enemies = new List<EnemyAgent>();
             foreach (var envTransform in AllEnvTransforms)
@@ -180,16 +187,18 @@ namespace Gym
             {
                 base.ResetEnv();
             }
-
-            var observation = new float[ObservationLenght];
+            
+            Physics.SyncTransforms();
+            
+            _resetObservation = new float[ObservationLenght];
 
             var goalPosition = _goalTransform.position;
-            observation[0] = NormalizePosition(goalPosition.x, true);
-            observation[1] = NormalizePosition(goalPosition.z, false);
+            _resetObservation[0] = NormalizePosition(goalPosition.x, true);
+            _resetObservation[1] = NormalizePosition(goalPosition.z, false);
 
             var playerPosition = _player.transform.position;
-            observation[2] = NormalizePosition(playerPosition.x, true);
-            observation[3] = NormalizePosition(playerPosition.z, false);
+            _resetObservation[2] = NormalizePosition(playerPosition.x, true);
+            _resetObservation[3] = NormalizePosition(playerPosition.z, false);
 
             _player.CheckObstacles();
             int obsIndex = 4;
@@ -197,8 +206,8 @@ namespace Gym
             for (int i = 0; i < _playerViewPoints; i++)
             {
                 var viewPoint = _player.ViewPoints[i];
-                observation[obsIndex] = NormalizePosition(viewPoint.x, true);
-                observation[obsIndex + 1] = NormalizePosition(viewPoint.z, false);
+                _resetObservation[obsIndex] = NormalizePosition(viewPoint.x, true);
+                _resetObservation[obsIndex + 1] = NormalizePosition(viewPoint.z, false);
                 obsIndex += 2;
             }
 
@@ -208,20 +217,20 @@ namespace Gym
                 enemy.UpdateEnemy();
                 var enemyPosition = enemy.transform.position;
 
-                observation[obsIndex] = NormalizePosition(enemyPosition.x, true);
-                observation[obsIndex + 1] = NormalizePosition(enemyPosition.z, false);
+                _resetObservation[obsIndex] = NormalizePosition(enemyPosition.x, true);
+                _resetObservation[obsIndex + 1] = NormalizePosition(enemyPosition.z, false);
                 obsIndex += 2;
 
                 for (int j = 0; j < _enemyViewPoints; j++)
                 {
                     var viewPoint = enemy.ViewPoints[j];
-                    observation[obsIndex] = NormalizePosition(viewPoint.x, true);
-                    observation[obsIndex + 1] = NormalizePosition(viewPoint.z, false);
+                    _resetObservation[obsIndex] = NormalizePosition(viewPoint.x, true);
+                    _resetObservation[obsIndex + 1] = NormalizePosition(viewPoint.z, false);
                     obsIndex += 2;
                 }
             }
-
-            return observation;
+            
+            return _resetObservation;
         }
     }
 }

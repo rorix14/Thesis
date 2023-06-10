@@ -28,6 +28,12 @@ namespace Stealth_Game
         public Vector3[] ViewPoints { get; private set; }
         public bool GoalReached { get; private set; }
 
+        public float MoveSpeed => moveSpeed;
+        public float RotationSpeed => rotationSpeed;
+        public float ViewRadius => viewRadius;
+        public int WallChecks => wallChecks;
+        public LayerMask ObstacleMask => obstacleMask;
+
         private void Awake()
         {
             _characterController = GetComponent<CharacterController>();
@@ -45,10 +51,15 @@ namespace Stealth_Game
             }
         }
 
+        public void SoftMovePlayer(Vector3 velocity)
+        {
+            _characterController.Move(velocity);
+        }
+
         public void MovePlayer(Vector3 movementDir)
         {
             _moveDirection = movementDir;
-            _moveDirection.Normalize();
+            //_moveDirection.Normalize();
             _characterController.Move(_moveDirection * (moveSpeed * Time.fixedDeltaTime));
 
             if (_moveDirection == Vector3.zero) return;
@@ -62,9 +73,8 @@ namespace Stealth_Game
         {
             for (int i = 0; i < wallChecks; i++)
             {
-                float angle = /*transform.eulerAngles.y +*/ _viewStepSize * i;
-
-                var direction = new Vector3(Mathf.Sin(angle * Mathf.Deg2Rad), 0, Mathf.Cos(angle * Mathf.Deg2Rad));
+                var angleRadians = Mathf.Deg2Rad * ( /*transform.eulerAngles.y +*/ _viewStepSize * i);
+                var direction = new Vector3(Mathf.Sin(angleRadians), 0.0f, Mathf.Cos(angleRadians));
 
                 var impactPoint = Physics.Raycast(transform.position, direction, out var hit, viewRadius, obstacleMask)
                     ? hit.point

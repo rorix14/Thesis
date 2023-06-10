@@ -14,16 +14,16 @@ namespace TestGround
 
             var updateLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.Tanh, Instantiate(shader), true),
-                new NetworkLayer(128, 128, ActivationFunction.Tanh, Instantiate(shader)),
+                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.ReLu, Instantiate(shader), true),
+                new NetworkLayer(128, 128, ActivationFunction.ReLu, Instantiate(shader)),
                 new NetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
             };
             var updateModel = new NetworkModel(updateLayers, new MeanSquaredError(Instantiate(shader)));
 
             var targetLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.Tanh, Instantiate(shader), true),
-                new NetworkLayer(128, 128, ActivationFunction.Tanh, Instantiate(shader)),
+                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.ReLu, Instantiate(shader), true),
+                new NetworkLayer(128, 128, ActivationFunction.ReLu, Instantiate(shader)),
                 new NetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
             };
             var targetModel = new NetworkModel(targetLayers, new MeanSquaredError(Instantiate(shader)));

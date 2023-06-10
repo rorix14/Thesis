@@ -143,9 +143,8 @@ namespace NN.CPU_Single
             {
                 for (int j = 0; j < valuesRowSize; j++)
                 {
-                    //TODO: should do value multiplication instead of using the pow function.
-                    //But should test first to see if values remain the same
-                    sum += Mathf.Pow(values[i, j] - valuesMean, 2);
+                    var adjustedValue = values[i, j] - valuesMean;
+                    sum += adjustedValue * adjustedValue;
                 }
             }
 

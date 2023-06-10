@@ -324,7 +324,7 @@ GameObject:
   - component: {fileID: 198575113}
   - component: {fileID: 198575115}
   - component: {fileID: 198575114}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Nose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -407,7 +407,7 @@ GameObject:
   - component: {fileID: 253572021}
   - component: {fileID: 253572020}
   - component: {fileID: 253572019}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -527,6 +527,7 @@ GameObject:
   - component: {fileID: 343454279}
   - component: {fileID: 343454278}
   - component: {fileID: 343454280}
+  - component: {fileID: 343454281}
   m_Layer: 0
   m_Name: Enviroment
   m_TagString: Untagged
@@ -580,6 +581,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03fa7607dc859024392bfcfbd8dd5007, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelSizeMaxMin: {x: 7, y: -7, z: 7, w: -7}
+  episodeLength: 700
+  stealthLevels: []
+  passiveReward: -0.01
+  goalReachedReward: 50
+  spottedReward: -20
+  assassinateReward: 15
+--- !u!114 &343454281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 343454277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5266438c30f4f0b408dcb147770bdba9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   levelSizeMaxMin: {x: 7, y: -7, z: 7, w: -7}
@@ -889,7 +909,7 @@ MonoBehaviour:
   noiseStandardDeviation: 0.01
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 4
+  simulationSpeed: 17
   numberOfEpisodes: 300
 --- !u!1 &449518215
 GameObject:

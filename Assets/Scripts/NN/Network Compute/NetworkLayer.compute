@@ -70,7 +70,7 @@ float beta_1;
 float beta_2;
 float epsilon;
 float current_learning_rate;
-float reward_mean;
+float beta_1_corrected;
 float beta_2_corrected;
 
 RWStructuredBuffer<float> weights_momentum;
@@ -313,7 +313,7 @@ inline void Adam_optimizer(const int index, const float d_value, RWStructuredBuf
                            RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache)
 {
     momentum[index] = beta_1 * momentum[index] + (1 - beta_1) * d_value;
-    const float momentum_corrected = momentum[index] / (1 - reward_mean);
+    const float momentum_corrected = momentum[index] / (1 - beta_1_corrected);
 
     cache[index] = beta_2 * cache[index] + (1 - beta_2) * (d_value * d_value);
     const float cash_corrected = cache[index] / (1 - beta_2_corrected);

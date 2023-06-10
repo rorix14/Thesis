@@ -19,7 +19,8 @@ namespace TestGround.NE
         [SerializeField] private int numberOfEpisodes;
 
         private int _episodeIndex;
-        private DistributedStealthGameEnv _env;
+        private JobStealthGameEnv _env;
+        //private DistributedStealthGameEnv _env;
 
         private ES _neModel;
 
@@ -30,7 +31,8 @@ namespace TestGround.NE
 
         private void Awake()
         {
-            _env = FindObjectOfType<DistributedStealthGameEnv>();
+            _env = FindObjectOfType<JobStealthGameEnv>();
+            //_env = FindObjectOfType<DistributedStealthGameEnv>();
             _rewardsMeanOverTime = new List<float>(numberOfEpisodes);
             for (int i = 0; i < _rewardsMeanOverTime.Capacity; i++)
             {
@@ -48,6 +50,7 @@ namespace TestGround.NE
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();
 
+            //TODO: Make tanh function for ES layers
             var network = new NetworkLayer[]
             {
                 new ESNetworkLayer(populationSize, noiseStandardDeviation, _env.GetObservationSize, 128,
@@ -131,6 +134,7 @@ namespace TestGround.NE
         {
             Time.timeScale = 1;
             _neModel?.Dispose();
+            if(_env) _env.Close();
         }
     }
 }

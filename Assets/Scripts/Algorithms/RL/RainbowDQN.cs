@@ -1,5 +1,4 @@
 using System;
-using NN;
 using NN.CPU_Single;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -128,9 +127,6 @@ namespace Algorithms.RL
 
         public override int EpsilonGreedySample(float[] state, float eps = 0.1f)
         {
-            //var probability = Random.value;
-            //if (probability > eps)
-            //{
             for (int i = 0; i < _stateLenght; i++)
             {
                 _predictSate[0, i] = state[i];
@@ -187,8 +183,6 @@ namespace Algorithms.RL
             }
 
             return mMaxQIndex;
-            //}
-            //return Random.Range(0, _numberOfActions);
         }
 
         public override void AddExperience(float[] currentState, int action, float reward, bool done, float[] nextState)
@@ -292,7 +286,6 @@ namespace Algorithms.RL
                     var targetExpSum = 0.0f;
                     for (int k = 0; k < _supportSize; k++)
                     {
-                        //TODO: save repeated summed indexes
                         var result = Mathf.Exp(_qTargetDistribution[k] - maxValue);
                         _qTargetDistribution[k] = result;
                         targetExpSum += result;
