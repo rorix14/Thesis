@@ -48,7 +48,7 @@ namespace NN
         private ComputeBuffer _dInputsBuffer;
 
         protected readonly int _kernelHandleInputsBackward;
-        protected readonly int _kernelHandleWeightsBiasesBackward;
+        protected int _kernelHandleWeightsBiasesBackward;
 
         private int _threadGroupXInputsBackward;
         private int _threadGroupYInputsBackward;
@@ -65,7 +65,7 @@ namespace NN
             bool isFirstLayer = false, float paramsRange = 4.0f, float paramsCoefficient = 0.01f, int headNumber = 1)
         {
             // Seed used to better reproduce results, usual seeds are 42, 50, 34
-            Random.InitState(42);
+            Random.InitState(34);
             // neural networks standard init
             _weights = new float[nInputs, nNeurons];
             _biases = new float[1, nNeurons];

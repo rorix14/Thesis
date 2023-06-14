@@ -4,21 +4,21 @@ namespace Algorithms.NE
 {
     public class ES
     {
-        private readonly ESModel _networkModel;
+        protected readonly ESModel _networkModel;
         private readonly int _numberOfActions;
-        private readonly int _batchSize;
+        protected readonly int _batchSize;
 
         private readonly int[] _sampledActions;
 
-        private readonly float[] _episodeRewards;
-        private readonly bool[] _completedAgents;
+        protected readonly float[] _episodeRewards;
+        protected readonly bool[] _completedAgents;
 
         //Cashed variables
         private float[,] _modelPredictions;
 
-        private readonly float[,] _episodeRewardUpdate;
-        private int _finishedIndividuals;
-        private float _episodeRewardMean;
+        protected readonly float[,] _episodeRewardUpdate;
+        protected int _finishedIndividuals;
+        protected float _episodeRewardMean;
 
         private readonly int[] _rewardsIndexKeys;
 
@@ -85,7 +85,7 @@ namespace Algorithms.NE
             }
         }
 
-        public void Train()
+        public virtual void Train()
         {
             // for (int i = 0; i < _batchSize; i++)
             // {

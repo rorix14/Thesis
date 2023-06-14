@@ -11,9 +11,9 @@ namespace Algorithms.NE
 
         public float RewardMean => _rewardMean;
         
-        public ESModel(NetworkLayer[] layers, NetworkLoss lossFunction, float learningRate = 0.005f,
+        public ESModel(NetworkLayer[] layers, float learningRate = 0.005f,
             float decay = 0.001f, float beta1 = 0.9f, float beta2 = 0.999f, float epsilon = 1E-07f) : base(layers,
-            lossFunction, learningRate, decay, beta1, beta2, epsilon)
+            new NoLoss(null), learningRate, decay, beta1, beta2, epsilon)
         {
             _epsilon = epsilon;
         }
@@ -24,6 +24,35 @@ namespace Algorithms.NE
             {
                 var layer = (ESNetworkLayer)_layers[i];
                 layer.SetNoiseStd(noiseStd);
+            }
+        }
+        
+        public void SetBestIndex(int bestIndex)
+        {
+            for (int i = 0; i < _layers.Length; i++)
+            {
+                var layer = (ESNetworkLayer)_layers[i];
+                layer.SetBestIndex(bestIndex);
+            }
+        }
+
+        public void TestUpdate(float[,] yTarget, int bestIndex)
+        {
+            if (bestIndex < 0)
+            {
+                for (int i = 0; i < _layers.Length; i++)
+                {
+                    ((ESNetworkLayer)_layers[i]).SetNoise();
+                }
+            }
+            else
+            {
+                for (int i = 0; i < _layers.Length; i++)
+                {
+                    var layer = (ESNetworkLayer)_layers[i];
+                    layer.SetBestIndex(bestIndex);
+                    layer.Backward(yTarget, _currentLearningRate, _bata1Corrected, _bata2Corrected);
+                }
             }
         }
 

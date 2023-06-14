@@ -2,12 +2,19 @@
 #define MATRIX_THREAD_COUNT_X 8
 #define MATRIX_THREAD_COUNT_Y 8
 
-//TODO: Make tanh functions
 #pragma kernel forward_pass_ReLU
+#pragma kernel forward_pass_Tanh
+#pragma kernel forward_pass_linear
+
+#pragma kernel ES_backwards_pass
+
+#pragma kernel RS_backwards_pass
+
+// Made for compatability
 #pragma kernel backwards_pass_ReLU_inputs
 #pragma kernel backwards_pass_ReLU_weights_biases_Adam
-
-#pragma kernel forward_pass_linear
+#pragma kernel backwards_pass_Tanh_inputs
+#pragma kernel backwards_pass_Tanh_weights_biases_Adam
 #pragma kernel backwards_pass_linear_inputs
 #pragma kernel backwards_pass_linear_weights_biases_Adam
 
@@ -48,13 +55,7 @@ RWStructuredBuffer<float> biases_cache;
 float forward_pass_ES(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,
                       RWStructuredBuffer<float> biases, StructuredBuffer<float> noise_input_output_buffer);
 
-void backward_pass_ES(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,
-                      RWStructuredBuffer<float> biases, StructuredBuffer<float> noise_input_output_buffer,
-                      RWStructuredBuffer<float> weights_momentum,
-                      RWStructuredBuffer<float> weights_cache, RWStructuredBuffer<float> biases_momentum,
-                      RWStructuredBuffer<float> biases_cache);
-
-//TODO: do forward function for tanh
+// ReLU forward
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
 {
@@ -65,16 +66,21 @@ void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
     output[id.x * weights_row_size + id.y] = result < 0.0f ? 0.0f : result;
 }
 
+// Tanh forward
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void backwards_pass_ReLU_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
+void forward_pass_Tanh(uint3 id : SV_DispatchThreadID)
 {
-    if (id.x >= input_row_size || id.y >= weights_row_size)
+    if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
 
-    backward_pass_ES(id, d_values, weights, biases, noise_input_output_buffer, weights_momentum, weights_cache,
-                     biases_momentum, biases_cache);
+    const float result = forward_pass_ES(id, input, weights, biases, noise_input_output_buffer);
+    const float exp_pos = exp(result);
+    const float exp_neg = exp(-result);
+
+    output[id.x * weights_row_size + id.y] = (exp_pos - exp_neg) / (exp_pos + exp_neg);
 }
 
+// Linear forward
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void forward_pass_linear(uint3 id : SV_DispatchThreadID)
 {
@@ -84,16 +90,87 @@ void forward_pass_linear(uint3 id : SV_DispatchThreadID)
     output[id.x * weights_row_size + id.y] = forward_pass_ES(id, input, weights, biases, noise_input_output_buffer);
 }
 
+// ES backwards function
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
-void backwards_pass_linear_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
+void ES_backwards_pass(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_row_size || id.y >= weights_row_size)
         return;
 
-    backward_pass_ES(id, d_values, weights, biases, noise_input_output_buffer, weights_momentum, weights_cache,
-                     biases_momentum, biases_cache);
+     //const int weight_noise_column_index = id.x * noise_row_size + id.y;
+    float d_weight = 0.0f;
+    float d_bias = 0.0f;
+
+    const float epsilon_input = noise_input_output_buffer[id.x];
+
+    for (unsigned int i = 0; i < input_column_size; ++i)
+    {
+        //const float normalized_reward = (d_values[i] - reward_mean) / reward_std;
+        const float normalized_reward = d_values[i];
+
+        const float mirror = i < half_population_size ? 1.0f : -1.0f;
+        // d_weight += mirror * weight_noise[weight_noise_column_index + i % half_population_size * weights_row_size] *
+        //     normalized_reward;
+
+        const float epsilon_output = noise_input_output_buffer[input_row_size + id.y + i % half_population_size *
+            weights_row_size];
+        d_weight += noise_std * mirror * (epsilon_input * epsilon_output) * normalized_reward;
+
+        if (id.x != 0) continue;
+
+        d_bias += noise_std * mirror * epsilon_output * normalized_reward;
+    }
+
+    d_weight /= noise_normalizer;
+
+    //Adam
+    const float weight_index = id.x * weights_row_size + id.y;
+
+    weights_momentum[weight_index] = beta_1 * weights_momentum[weight_index] + (1 - beta_1) * d_weight;
+    const float weights_momentum_corrected = weights_momentum[weight_index] / (1 - beta_1_corrected);
+
+    weights_cache[weight_index] = beta_2 * weights_cache[weight_index] + (1 - beta_2) * (d_weight * d_weight);
+    const float weights_cash_corrected = weights_cache[weight_index] / (1 - beta_2_corrected);
+
+    weights[weight_index] += current_learning_rate * weights_momentum_corrected / (sqrt(weights_cash_corrected) +
+        epsilon);
+
+    if (id.x != 0) return;
+
+    d_bias /= noise_normalizer;
+
+    //Adam
+    biases_momentum[id.y] = beta_1 * biases_momentum[id.y] + (1 - beta_1) * d_bias;
+    const float momentum_corrected = biases_momentum[id.y] / (1 - beta_1_corrected);
+
+    biases_cache[id.y] = beta_2 * biases_cache[id.y] + (1 - beta_2) * (d_bias * d_bias);
+    const float cash_corrected = biases_cache[id.y] / (1 - beta_2_corrected);
+
+    biases[id.y] += current_learning_rate * momentum_corrected / (sqrt(cash_corrected) + epsilon);
 }
 
+// RS backwards function
+unsigned int best_performer_index;
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void RS_backwards_pass(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_row_size || id.y >= weights_row_size)
+        return;
+
+    const float weight_index = id.x * weights_row_size + id.y;
+    const float epsilon_input = noise_input_output_buffer[id.x];
+    const float epsilon_output = noise_input_output_buffer[input_row_size + id.y + best_performer_index %
+        half_population_size * weights_row_size];
+
+    const float mirror = best_performer_index < half_population_size ? 1.0f : -1.0f;
+
+    weights[weight_index] += noise_std * mirror * (epsilon_input * epsilon_output);
+
+    if (id.x != 0) return;
+
+    biases[id.y] += noise_std * mirror * epsilon_output;
+}
 
 inline float forward_pass_ES(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,
                              RWStructuredBuffer<float> biases, StructuredBuffer<float> noise_input_output_buffer)
@@ -121,69 +198,27 @@ inline float forward_pass_ES(uint3 id, StructuredBuffer<float> input, RWStructur
     return result + biases[id.y] + noise_std * mirror * epsilon_output;
 }
 
-inline void backward_pass_ES(uint3 id, StructuredBuffer<float> d_values, RWStructuredBuffer<float> weights,
-                             RWStructuredBuffer<float> biases, StructuredBuffer<float> noise_input_output_buffer,
-                             RWStructuredBuffer<float> weights_momentum,
-                             RWStructuredBuffer<float> weights_cache, RWStructuredBuffer<float> biases_momentum,
-                             RWStructuredBuffer<float> biases_cache)
-{
-    const float weight_index = id.x * weights_row_size + id.y;
-    //const int weight_noise_column_index = id.x * noise_row_size + id.y;
-    float d_weight = 0.0f;
-    float d_bias = 0.0f;
-
-    const float epsilon_input = noise_input_output_buffer[id.x];
-
-    for (unsigned int i = 0; i < input_column_size; ++i)
-    {
-        //const float normalized_reward = (d_values[i] - reward_mean) / reward_std;
-        const float normalized_reward = d_values[i];
-        
-        const float mirror = i < half_population_size ? 1.0f : -1.0f;
-        // d_weight += mirror * weight_noise[weight_noise_column_index + i % half_population_size * weights_row_size] *
-        //     normalized_reward;
-
-        const float epsilon_output = noise_input_output_buffer[input_row_size + id.y + i % half_population_size *
-            weights_row_size];
-        d_weight += noise_std * mirror * (epsilon_input * epsilon_output) * normalized_reward;
-
-        if (id.x != 0) continue;
-
-        d_bias += noise_std * mirror * epsilon_output * normalized_reward;
-    }
-
-    d_weight /= noise_normalizer;
-
-    //Adam
-    weights_momentum[weight_index] = beta_1 * weights_momentum[weight_index] + (1 - beta_1) * d_weight;
-    const float weights_momentum_corrected = weights_momentum[weight_index] / (1 - beta_1_corrected);
-
-    weights_cache[weight_index] = beta_2 * weights_cache[weight_index] + (1 - beta_2) * (d_weight * d_weight);
-    const float weights_cash_corrected = weights_cache[weight_index] / (1 - beta_2_corrected);
-
-    weights[weight_index] += current_learning_rate * weights_momentum_corrected / (sqrt(weights_cash_corrected) +
-        epsilon);
-
-    if (id.x != 0) return;
-
-    d_bias /= noise_normalizer;
-
-    //Adam
-    biases_momentum[id.y] = beta_1 * biases_momentum[id.y] + (1 - beta_1) * d_bias;
-    const float momentum_corrected = biases_momentum[id.y] / (1 - beta_1_corrected);
-
-    biases_cache[id.y] = beta_2 * biases_cache[id.y] + (1 - beta_2) * (d_bias * d_bias);
-    const float cash_corrected = biases_cache[id.y] / (1 - beta_2_corrected);
-
-    biases[id.y] += current_learning_rate * momentum_corrected / (sqrt(cash_corrected) + epsilon);
-}
-
 //Here just for compatability with the neural network library
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_ReLU_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
+{
+}
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_Tanh_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
+{
+}
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_linear_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
+{
+}
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void backwards_pass_ReLU_inputs(uint3 id : SV_DispatchThreadID)
 {
 }
-
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_Tanh_inputs(uint3 id : SV_DispatchThreadID)
+{
+}
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void backwards_pass_linear_inputs(uint3 id : SV_DispatchThreadID)
 {

@@ -711,6 +711,7 @@ GameObject:
   - component: {fileID: 400505072}
   - component: {fileID: 400505073}
   - component: {fileID: 400505074}
+  - component: {fileID: 400505075}
   m_Layer: 0
   m_Name: Test Algorithm
   m_TagString: Untagged
@@ -900,7 +901,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 400505063}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 005f50db4c0485841b4d3788d2e957c5, type: 3}
   m_Name: 
@@ -910,6 +911,24 @@ MonoBehaviour:
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 17
+  numberOfEpisodes: 300
+--- !u!114 &400505075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400505063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93b15678ae668de449dfe5989ba2b725, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  populationSize: 60
+  noiseStandardDeviation: 0.01
+  shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  simulationSpeed: 5
   numberOfEpisodes: 300
 --- !u!1 &449518215
 GameObject:

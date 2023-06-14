@@ -12,22 +12,23 @@ namespace TestGround.NE
     public class TestES : MonoBehaviour
     {
         [SerializeField] protected int populationSize;
-        [SerializeField] private float noiseStandardDeviation;
+        [SerializeField] protected float noiseStandardDeviation;
         [SerializeField] protected ComputeShader shader;
         [SerializeField] private WindowGraph windowGraphPrefab;
         [SerializeField] protected float simulationSpeed;
         [SerializeField] private int numberOfEpisodes;
 
         private int _episodeIndex;
-        private JobStealthGameEnv _env;
+
+        protected JobStealthGameEnv _env;
         //private DistributedStealthGameEnv _env;
 
-        private ES _neModel;
+        protected ES _neModel;
 
         private List<float> _rewardsMeanOverTime;
         private WindowGraph _graphReward;
 
-        private float[,] _currentSates;
+        protected float[,] _currentSates;
 
         private void Awake()
         {
@@ -40,28 +41,28 @@ namespace TestGround.NE
             }
         }
 
-        protected void Start()
+        protected virtual void Start()
         {
             if (populationSize % 2 != 0)
             {
                 populationSize++;
             }
-            
+
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();
 
-            //TODO: Make tanh function for ES layers
             var network = new NetworkLayer[]
             {
-                new ESNetworkLayer(populationSize, noiseStandardDeviation, _env.GetObservationSize, 128,
-                    ActivationFunction.ReLu, Instantiate(shader), true),
-                new ESNetworkLayer(populationSize, noiseStandardDeviation, 128, 128, ActivationFunction.ReLu,
-                    Instantiate(shader), true),
-                new ESNetworkLayer(populationSize, noiseStandardDeviation, 128, _env.GetNumberOfActions,
-                    ActivationFunction.Linear, Instantiate(shader), true)
+                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, _env.GetObservationSize, 128,
+                    ActivationFunction.ReLu, Instantiate(shader), isFirstLayer: true),
+                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, 128, 128,
+                    ActivationFunction.ReLu,
+                    Instantiate(shader), isFirstLayer: true),
+                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, 128, _env.GetNumberOfActions,
+                    ActivationFunction.Linear, Instantiate(shader), isFirstLayer: true)
             };
 
-            var neModel = new ESModel(network, new NoLoss(Instantiate(shader)));
+            var neModel = new ESModel(network);
             _neModel = new ES(neModel, _env.GetNumberOfActions, populationSize);
 
             Time.timeScale = simulationSpeed;
@@ -134,7 +135,7 @@ namespace TestGround.NE
         {
             Time.timeScale = 1;
             _neModel?.Dispose();
-            if(_env) _env.Close();
+            if (_env) _env.Close();
         }
     }
 }

@@ -5,6 +5,12 @@ using ActivationFunction = NN.ActivationFunction;
 
 namespace Algorithms.NE
 {
+    public enum AlgorithmNE
+    {
+        RS,
+        ES
+    }
+
     public class ESNetworkLayer : NetworkLayer
     {
         private readonly float[] _noiseInputOutput;
@@ -17,25 +23,33 @@ namespace Algorithms.NE
 
         private readonly int _noiseSamplesSize;
 
-        public ESNetworkLayer(int populationSize, float noiseStD, int nInputs, int nNeurons,
-            ActivationFunction activationFunction,
-            ComputeShader shader,
+        public ESNetworkLayer(AlgorithmNE algorithmNE, int populationSize, float noiseStD, int nInputs, int nNeurons,
+            ActivationFunction activationFunction, ComputeShader shader, float noiseRange = 10.0f,
             bool isFirstLayer = false, float paramsRange = 4.0f, float paramsCoefficient = 0.01f, int headNumber = 1) :
             base(nInputs, nNeurons, activationFunction, shader, isFirstLayer, paramsRange, paramsCoefficient,
                 headNumber)
         {
             var noiseRowSize = nNeurons * (populationSize / 2);
-
             _shader.SetInt("noise_row_size", noiseRowSize);
             _shader.SetFloat("noise_std", noiseStD);
             _shader.SetFloat("noise_normalizer", noiseStD * populationSize);
             _shader.SetInt("half_population_size", populationSize / 2);
 
+            switch (algorithmNE)
+            {
+                case AlgorithmNE.RS:
+                    _kernelHandleWeightsBiasesBackward = _shader.FindKernel("RS_backwards_pass");
+                    break;
+                case AlgorithmNE.ES:
+                    _kernelHandleWeightsBiasesBackward = _shader.FindKernel("ES_backwards_pass");
+                    break;
+            }
+
             _noiseSamplesSize = 10000000;
             _noiseSamplesBuffer = new float[_noiseSamplesSize];
             for (int i = 0; i < _noiseSamplesSize; i++)
             {
-                var randomValue = NnMath.RandomGaussian(-10.0f, 10.0f);
+                var randomValue = NnMath.RandomGaussian(-noiseRange, noiseRange);
                 _noiseSamplesBuffer[i] = NnMath.Sign(randomValue) * Mathf.Sqrt(Mathf.Abs(randomValue));
             }
 
@@ -52,6 +66,11 @@ namespace Algorithms.NE
             _shader.SetFloat("noise_std", noiseStd);
         }
 
+        public void SetBestIndex(int bestIndex)
+        {
+            _shader.SetInt("best_performer_index", bestIndex);
+        }
+
         public void SetNeParameters(float rewardMean, float rewardStd)
         {
             _shader.SetFloat("reward_mean", rewardMean);
@@ -66,7 +85,7 @@ namespace Algorithms.NE
             SetNoise();
         }
 
-        private void SetNoise()
+        public void SetNoise()
         {
             for (int i = 0; i < _noiseInputOutputLenght; i++)
             {
