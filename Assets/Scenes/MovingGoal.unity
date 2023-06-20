@@ -627,6 +627,57 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 766728432}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &797145187
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 797145189}
+  - component: {fileID: 797145188}
+  m_Layer: 0
+  m_Name: Tester
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &797145188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 797145187}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f35cae125de164c4f9223ab9b6c7e196, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  algorithmsPrefabs:
+  - {fileID: 2703651450852920366, guid: 0efca29b38e8aae4d9b96c36190ab738, type: 3}
+  testDescriptions:
+  - DQN, 3 layers,  256 neurons, tanh, 32 batch size, 50 copy network.
+  testNumber: 10
+  generatorSeed: 42
+  saveInfo: 0
+  saveFileName: goal  DQN tanh neuron 2
+--- !u!4 &797145189
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 797145187}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &845216469
 GameObject:
   m_ObjectHideFlags: 0
@@ -653,7 +704,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &845216470
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -666,6 +717,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2ddc1a29d453f54bad60157163c60f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 20
@@ -685,7 +739,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   numberOfEpisodes: 300
-  simulationSpeed: 30
+  simulationSpeed: 1
 --- !u!4 &845216472
 Transform:
   m_ObjectHideFlags: 0
@@ -712,6 +766,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b395153931b86c8438218e8c887a3318, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 18
@@ -730,6 +787,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faa416fe8ab61db40a3bcdd7389c854d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 12
@@ -747,6 +807,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 504273b729618d84faa4ccf06c7e2111, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 18
@@ -764,6 +827,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 922ad9b59b95d8e4587fce7cd88aaea4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 16
@@ -782,6 +848,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fe19bf0504435b41a4c1ccc6b77aa5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 13
@@ -799,6 +868,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 752b88b9965fa394c84c41e650f89af3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 15
@@ -819,6 +891,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8805df05c1022894ebb6b8b32910cc2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 6
@@ -854,7 +929,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 845216469}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 93b15678ae668de449dfe5989ba2b725, type: 3}
   m_Name: 

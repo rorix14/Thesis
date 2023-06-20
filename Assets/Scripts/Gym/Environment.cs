@@ -42,7 +42,8 @@ namespace Gym
         protected T[] ActionLookup;
         protected List<Transform> AllEnvTransforms;
 
-        private Vector2 levelSizeRange;
+        private Vector2 _levelSizeRange;
+        private float _levelMaxDistance;
         protected List<IResettable> _resettables;
 
         public int GetObservationSize => ObservationLenght;
@@ -54,7 +55,10 @@ namespace Gym
             _resettables = new List<IResettable>();
             GetAllChildrenByRecursion(transform);
 
-            levelSizeRange = new Vector2(levelSizeMaxMin.x - levelSizeMaxMin.y, levelSizeMaxMin.z - levelSizeMaxMin.w);
+            _levelSizeRange = new Vector2(levelSizeMaxMin.x - levelSizeMaxMin.y, levelSizeMaxMin.z - levelSizeMaxMin.w);
+            _levelMaxDistance =
+                Mathf.Sqrt(_levelSizeRange.x * _levelSizeRange.x + _levelSizeRange.y * _levelSizeRange.y);
+            
             // float[] myArray = { 2, 3, 4, 5, 6, 7, 8, 9, 10 };
             // for (int i = 0; i < myArray.Length; i++)
             // {
@@ -101,16 +105,23 @@ namespace Gym
             Destroy(gameObject);
         }
 
+        // Normalize values between 0 and 1
+        protected float NormalizeDistance(float value)
+        {
+            return value / _levelMaxDistance;
+        }
+
+        // Normalize values between -1 and 1
         protected float NormalizePosition(float value, bool isX)
         {
-            float range = levelSizeRange.y;
+            float range = _levelSizeRange.y;
             float min = levelSizeMaxMin.w;
             if (isX)
             {
-                range = levelSizeRange.x;
+                range = _levelSizeRange.x;
                 min = levelSizeMaxMin.y;
             }
-
+            
             return 2.0f * (value - min) / range - 1.0f;
         }
 

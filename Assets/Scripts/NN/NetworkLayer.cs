@@ -62,22 +62,25 @@ namespace NN
         protected ComputeBuffer _biasesCacheBuffer;
 
         public NetworkLayer(int nInputs, int nNeurons, ActivationFunction activationFunction, ComputeShader shader,
-            bool isFirstLayer = false, float paramsRange = 4.0f, float paramsCoefficient = 0.01f, int headNumber = 1)
+            bool isFirstLayer = false, float paramsRange = 4.0f, float paramsCoefficient = 0.005f, int headNumber = 1)
         {
             // Seed used to better reproduce results, usual seeds are 42, 50, 34
-            Random.InitState(34);
+            //Random.InitState(42);
             // neural networks standard init
             _weights = new float[nInputs, nNeurons];
             _biases = new float[1, nNeurons];
             _isFirstLayer = isFirstLayer;
 
+            //var test = 1f / Mathf.Sqrt(nInputs);
+            //var test = Mathf.Sqrt(6) / Mathf.Sqrt(nInputs + nNeurons);
+            //paramsCoefficient = Mathf.Sqrt(2f / nInputs);
+
             for (int i = 0; i < _weights.GetLength(1); i++)
             {
-                _biases[0, i] = paramsCoefficient * NnMath.RandomGaussian(-paramsRange, paramsRange);
+                _biases[0, i] = paramsCoefficient * Random.Range(-paramsRange, paramsRange) /*NnMath.RandomGaussian(-paramsRange, paramsRange)*/;
                 for (int j = 0; j < _weights.GetLength(0); j++)
                 {
-                    _weights[j, i] =
-                        paramsCoefficient * NnMath.RandomGaussian(-paramsRange, paramsRange); //* Random.value;
+                    _weights[j, i] = paramsCoefficient * Random.Range(-paramsRange, paramsRange) /*NnMath.RandomGaussian(-paramsRange, paramsRange)*/;
                 }
             }
 

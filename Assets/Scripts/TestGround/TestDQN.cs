@@ -6,13 +6,13 @@ using Algorithms.RL;
 using Graphs;
 using Gym;
 using NN;
+using TestGround.Base;
 using UnityEngine;
 using UnityEngine.UI;
-using Random = System.Random;
 
 namespace TestGround
 {
-    public class TestDQN : MonoBehaviour
+    public class TestDQN : TestAlgorithmBase
     {
         [SerializeField] protected ComputeShader shader;
         [SerializeField] private WindowGraph windowGraphPrefab;
@@ -23,8 +23,6 @@ namespace TestGround
         protected float[] _currentSate;
         private int _totalIteration;
         protected StealthGameEnv _env;
-        private List<float> _rewardsOverTime;
-        private List<float> _lossPerEpisode;
 
         // DQN specific variables
         protected ModelDQN _DQN;
@@ -32,21 +30,21 @@ namespace TestGround
 
         private WindowGraph _graphReward;
         private WindowGraph _graphLoss;
-        
+
         // private Stopwatch _stopwatch;
         // private List<long> _times;
 
         private void Awake()
         {
             _env = FindObjectOfType<StealthGameEnv>();
-            _rewardsOverTime = new List<float>(numberOfEpisodes);
-            _lossPerEpisode = new List<float>(numberOfEpisodes);
-            for (int i = 0; i < _rewardsOverTime.Capacity; i++)
+            Rewards = new List<float>(numberOfEpisodes);
+            Loss = new List<float>(numberOfEpisodes);
+            for (int i = 0; i < Rewards.Capacity; i++)
             {
-                _rewardsOverTime.Add(0f);
-                _lossPerEpisode.Add(0f);
+                Rewards.Add(0f);
+                Loss.Add(0f);
             }
-            
+
             // _stopwatch = new Stopwatch();
             // _times = new List<long>(1000000);
         }
@@ -57,16 +55,16 @@ namespace TestGround
 
             var updateLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.Tanh, Instantiate(shader), true),
-                new NetworkLayer(128, 128, ActivationFunction.Tanh, Instantiate(shader)),
+                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.ReLu, Instantiate(shader), true),
+                /*new NetworkLayer(128, 128, ActivationFunction.Tanh, Instantiate(shader)),*/
                 new NetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
             };
             var updateModel = new NetworkModel(updateLayers, new MeanSquaredError(Instantiate(shader)));
 
             var targetLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.Tanh, Instantiate(shader), true),
-                new NetworkLayer(128, 128, ActivationFunction.Tanh, Instantiate(shader)),
+                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.ReLu, Instantiate(shader), true),
+                /*new NetworkLayer(128, 128, ActivationFunction.Tanh, Instantiate(shader)),*/
                 new NetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
             };
             var targetModel = new NetworkModel(targetLayers, new MeanSquaredError(Instantiate(shader)));
@@ -83,10 +81,11 @@ namespace TestGround
         {
             if (_episodeIndex >= numberOfEpisodes)
             {
-                if (!_env) return;
+                //if (!_env) return;
 
-                _env.Close();
-                PlotTrainingData();
+                IsFinished = true;
+                //_env.Close();
+                //PlotTrainingData();
                 return;
             }
 
@@ -94,24 +93,24 @@ namespace TestGround
             var stepInfo = _env.Step(action);
 
             _DQN.AddExperience(_currentSate, action, stepInfo.Reward, stepInfo.Done, stepInfo.Observation);
-            
+
             //_stopwatch.Restart();
             _DQN.Train();
             //_stopwatch.Stop();
             //_times.Add(_stopwatch.ElapsedMilliseconds);
-            
+
             if (_totalIteration % targetNetworkCopyPeriod == 0)
             {
                 _DQN.SetTargetModel();
             }
 
             _currentSate = stepInfo.Observation;
-            _rewardsOverTime[_episodeIndex] += stepInfo.Reward;
+            Rewards[_episodeIndex] += stepInfo.Reward;
             ++_totalIteration;
 
             if (!stepInfo.Done) return;
 
-            _lossPerEpisode[_episodeIndex] = _DQN.SampleLoss();
+            Loss[_episodeIndex] = _DQN.SampleLoss();
             _currentSate = _env.ResetEnv();
             ++_episodeIndex;
 
@@ -125,22 +124,22 @@ namespace TestGround
             Time.timeScale = 1;
 
             float rewardSum = 0.0f;
-            foreach (var reward in _rewardsOverTime)
+            foreach (var reward in Rewards)
             {
                 rewardSum += reward;
             }
 
             float lossSum = 0.0f;
-            for (int i = 0; i < _lossPerEpisode.Count; i++)
+            for (int i = 0; i < Loss.Count; i++)
             {
-                var loss = _lossPerEpisode[i];
+                var loss = Loss[i];
                 lossSum += loss;
                 // if (loss > 1)
                 // {
                 //     _lossPerEpisode[i] = 1.0f;
                 // }
             }
-            
+
             // float timeSum = 0.0f;
             // foreach (var time in _times)
             // {
@@ -148,10 +147,10 @@ namespace TestGround
             // }
 
 
-            print("Average Reward: " + rewardSum / _rewardsOverTime.Count);
-            print("Average Loss: " + lossSum / _lossPerEpisode.Count);
+            print("Average Reward: " + rewardSum / Rewards.Count);
+            print("Average Loss: " + lossSum / Loss.Count);
             //print("Average Time: " + timeSum / _times.Count);
-            
+
             var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
             _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
             _graphLoss = Instantiate(windowGraphPrefab, layoutGroup.transform);
@@ -162,16 +161,16 @@ namespace TestGround
         {
             yield return new WaitForSeconds(0.1f);
 
-            _graphReward.SetGraph(null, _rewardsOverTime, GraphType.LineGraph,
+            _graphReward.SetGraph(null, Rewards, GraphType.LineGraph,
                 "Rewards per Episode", "episodes", "rewards");
 
-            _graphLoss.SetGraph(null, _lossPerEpisode, GraphType.LineGraph,
+            _graphLoss.SetGraph(null, Loss, GraphType.LineGraph,
                 "Loss per Episode", "episodes", "loss");
         }
 
         private void OnDestroy()
         {
-            Time.timeScale = 1;
+            //Time.timeScale = 1;
             _DQN?.Dispose();
         }
     }

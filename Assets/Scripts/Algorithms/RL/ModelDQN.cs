@@ -67,7 +67,7 @@ namespace Algorithms.RL
             _batchIndexes = new int[batchSize];
             _nextQ = new (int index, float value)[batchSize];
             _yTarget = new float[batchSize, numberOfActions];
-            _predictSate = new float[1, stateSize];
+            _predictSate = new float[batchSize, stateSize];
         }
 
         public virtual int EpsilonGreedySample(float[] state, float eps = 0.1f)

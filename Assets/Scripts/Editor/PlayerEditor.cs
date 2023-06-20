@@ -12,8 +12,8 @@ namespace Editor
             var player = (PlayerAgent)target;
             Handles.color = Color.red;
 
-            if(player.ViewPoints is null) return;
-            
+            if (player.ViewPoints is null) return;
+
             var playerPos = player.transform.position;
             foreach (var viewPoint in player.ViewPoints)
             {

@@ -93,6 +93,7 @@ namespace Gym
             ObservationLenght = 4;
             if (_player.ViewPoints != null)
             {
+                //ObservationLenght += _player.ViewPoints.Length;
                 ObservationLenght += _player.ViewPoints.Length * 2;
             }
 
@@ -137,6 +138,8 @@ namespace Gym
             int obsIndex = 4;
             for (int i = 0; i < _playerViewPoints; i++)
             {
+                // observation[obsIndex] = NormalizeDistance(_player.ViewDistances[i]);
+                // obsIndex++;
                 var viewPoint = _player.ViewPoints[i];
                 observation[obsIndex] = NormalizePosition(viewPoint.x, true);
                 observation[obsIndex + 1] = NormalizePosition(viewPoint.z, false);
@@ -205,6 +208,8 @@ namespace Gym
 
             for (int i = 0; i < _playerViewPoints; i++)
             {
+                // _resetObservation[obsIndex] = NormalizeDistance(_player.ViewDistances[i]);
+                // obsIndex++;
                 var viewPoint = _player.ViewPoints[i];
                 _resetObservation[obsIndex] = NormalizePosition(viewPoint.x, true);
                 _resetObservation[obsIndex + 1] = NormalizePosition(viewPoint.z, false);

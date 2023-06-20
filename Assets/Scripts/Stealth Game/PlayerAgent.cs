@@ -26,6 +26,7 @@ namespace Stealth_Game
         // more than just enemies
         public List<Transform> IterableObjects { get; private set; }
         public Vector3[] ViewPoints { get; private set; }
+        public float[] ViewDistances { get; private set; }
         public bool GoalReached { get; private set; }
 
         public float MoveSpeed => moveSpeed;
@@ -39,6 +40,7 @@ namespace Stealth_Game
             _characterController = GetComponent<CharacterController>();
             _viewStepSize = 360 / (float)wallChecks;
             ViewPoints = new Vector3[wallChecks];
+            ViewDistances = new float[wallChecks];
 
             IterableObjects = new List<Transform>();
 
@@ -81,6 +83,8 @@ namespace Stealth_Game
                     : transform.position + direction * viewRadius;
 
                 ViewPoints[i] = impactPoint;
+                //TODO: should take into account when nothing is hit
+                ViewDistances[i] = hit.distance;
             }
         }
 
