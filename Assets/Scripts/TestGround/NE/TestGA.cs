@@ -9,21 +9,20 @@ using UnityEngine.UI;
 
 namespace TestGround.NE
 {
-    public class TestES : MonoBehaviour
+    public class TestGA : MonoBehaviour
     {
-        [SerializeField] protected int populationSize;
-        [SerializeField] protected float noiseStandardDeviation;
-        [SerializeField] protected ComputeShader shader;
+        [SerializeField] private int populationSize;
+        [SerializeField] private int eliteNumber;
+        [SerializeField] private int tournamentNumber;
+        
+        [SerializeField] private ComputeShader shader;
         [SerializeField] private WindowGraph windowGraphPrefab;
-        [SerializeField] protected float simulationSpeed;
+        [SerializeField] private float simulationSpeed;
         [SerializeField] private int numberOfEpisodes;
 
         private int _episodeIndex;
-
         protected JobStealthGameEnv _env;
-        //private DistributedStealthGameEnv _env;
-
-        protected ES _neModel;
+        protected GA _gaModel;
 
         private List<float> _rewardsMeanOverTime;
         private WindowGraph _graphReward;
@@ -33,7 +32,7 @@ namespace TestGround.NE
         private void Awake()
         {
             _env = FindObjectOfType<JobStealthGameEnv>();
-            //_env = FindObjectOfType<DistributedStealthGameEnv>();
+
             _rewardsMeanOverTime = new List<float>(numberOfEpisodes);
             for (int i = 0; i < _rewardsMeanOverTime.Capacity; i++)
             {
@@ -41,34 +40,27 @@ namespace TestGround.NE
             }
         }
 
-        protected virtual void Start()
+        void Start()
         {
-            if (populationSize % 2 != 0)
-            {
-                populationSize++;
-            }
-
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();
 
             var network = new NetworkLayer[]
             {
-                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, _env.GetObservationSize, 128,
-                    ActivationFunction.ReLu, Instantiate(shader)),
-                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, 128, 128,
-                    ActivationFunction.ReLu,
+                new GANetworkLayer(populationSize, _env.GetObservationSize, 128, ActivationFunction.ReLu,
                     Instantiate(shader)),
-                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, 128, _env.GetNumberOfActions,
-                    ActivationFunction.Linear, Instantiate(shader))
+                new GANetworkLayer(populationSize, 128, 128, ActivationFunction.ReLu, Instantiate(shader)),
+                new GANetworkLayer(populationSize, 128, _env.GetNumberOfActions, ActivationFunction.Linear,
+                    Instantiate(shader))
             };
 
-            var neModel = new ESModel(network);
-            _neModel = new ES(neModel, _env.GetNumberOfActions, populationSize);
+            var neModel = new GAModel(network);
+            _gaModel = new GA(neModel, _env.GetNumberOfActions, populationSize, eliteNumber, tournamentNumber);
 
             Time.timeScale = simulationSpeed;
         }
 
-        protected void FixedUpdate()
+        void FixedUpdate()
         {
             if (_episodeIndex >= numberOfEpisodes)
             {
@@ -78,27 +70,23 @@ namespace TestGround.NE
                 PlotTrainingData();
                 return;
             }
-
-            var actions = _neModel.SamplePopulationActions(_currentSates);
+            
+            var actions = _gaModel.SamplePopulationActions(_currentSates);
             var stepInfo = _env.DistributedStep(actions);
 
-            _neModel.AddExperience(stepInfo.Rewards, stepInfo.Dones);
+            _gaModel.AddExperience(stepInfo.Rewards, stepInfo.Dones);
             _currentSates = stepInfo.Observations;
 
-            if (_neModel.FinishedIndividuals < populationSize) return;
+            if (_gaModel.FinishedIndividuals < populationSize) return;
 
-            _neModel.Train();
-            // if (_episodeIndex == 260)
-            // {
-            //     _neModel.ReduceNoise(noiseStandardDeviation);
-            // }
+            _gaModel.Train();
 
-            _rewardsMeanOverTime[_episodeIndex] = _neModel.EpisodeRewardMean;
+            _rewardsMeanOverTime[_episodeIndex] = _gaModel.EpisodeRewardMean;
 
             _currentSates = _env.DistributedResetEnv();
             ++_episodeIndex;
         }
-
+        
         private void PlotTrainingData()
         {
             Time.timeScale = 1;
@@ -134,7 +122,7 @@ namespace TestGround.NE
         private void OnDestroy()
         {
             Time.timeScale = 1;
-            _neModel?.Dispose();
+            _gaModel?.Dispose();
             if (_env) _env.Close();
         }
     }

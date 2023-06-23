@@ -25,7 +25,7 @@ namespace Algorithms.NE
 
         public ESNetworkLayer(AlgorithmNE algorithmNE, int populationSize, float noiseStD, int nInputs, int nNeurons,
             ActivationFunction activationFunction, ComputeShader shader, float noiseRange = 10.0f,
-            bool isFirstLayer = false, float paramsRange = 4.0f, float paramsCoefficient = 0.01f, int headNumber = 1) :
+            bool isFirstLayer = true, float paramsRange = 4.0f, float paramsCoefficient = 0.01f, int headNumber = 1) :
             base(nInputs, nNeurons, activationFunction, shader, isFirstLayer, paramsRange, paramsCoefficient,
                 headNumber)
         {

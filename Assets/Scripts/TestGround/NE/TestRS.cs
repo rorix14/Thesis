@@ -19,11 +19,11 @@ public class TestRS : TestES
         var network = new NetworkLayer[]
         {
             new ESNetworkLayer(AlgorithmNE.RS, populationSize, noiseStandardDeviation, _env.GetObservationSize, 128,
-                ActivationFunction.ReLu, Instantiate(shader), 25f, true),
+                ActivationFunction.ReLu, Instantiate(shader), 25f),
             new ESNetworkLayer(AlgorithmNE.RS, populationSize, noiseStandardDeviation, 128, 128,
-                ActivationFunction.ReLu, Instantiate(shader), 25f, true),
+                ActivationFunction.ReLu, Instantiate(shader), 25f),
             new ESNetworkLayer(AlgorithmNE.RS, populationSize, noiseStandardDeviation, 128, _env.GetNumberOfActions,
-                ActivationFunction.Linear, Instantiate(shader), 25f, true)
+                ActivationFunction.Linear, Instantiate(shader), 25f)
         };
 
         var neModel = new ESModel(network);
