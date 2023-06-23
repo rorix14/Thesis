@@ -69,6 +69,7 @@ namespace Utils
             if (algorithmsPrefabs.Length == 0) return;
 
             Random.InitState(_testSeeds[_currenTest]);
+            //Random.InitState(36);
             _currentAlgorithm = Instantiate(algorithmsPrefabs[_currentAlgorithmIndex]);
             
             _stopwatch.Start();

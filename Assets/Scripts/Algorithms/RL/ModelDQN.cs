@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using NN;
 using NN.CPU_Single;
+using Unity.Mathematics;
+using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
 
@@ -109,7 +111,30 @@ namespace Algorithms.RL
             RandomBatch();
 
             MaxByRow(_targetModel.Predict(_nextStates));
-            NnMath.CopyMatrix(_yTarget, _networkModel.Predict(_currentStates));
+            var isnan = NnMath.CopyMatrix(_yTarget, _networkModel.Predict(_currentStates));
+            //
+            // if (isnan)
+            // {
+            //     var mat = NnMath.MatrixDotProduct(_networkModel._layers[0].Output, _networkModel._layers[1]._weights);
+            //     for (int i = 0; i < 128; i++)
+            //     {
+            //         var neuronBias = _networkModel._layers[1]._biases[0, i];
+            //         for (int j = 0; j < 32; j++)
+            //         {
+            //             if (i == 44)
+            //             {
+            //                 isnan = false;
+            //             }
+            //             mat[j, i] += neuronBias;
+            //             var expP = Mathf.Exp(mat[j, i]);
+            //             var expN = Mathf.Exp(-mat[j, i]);
+            //             mat[j, i] = (expP - expN) / (expP + expN);
+            //         }
+            //     }
+            // }
+
+            // Currently I have a problem, I'm using a neural network with an Tanh activation function, when passing a large value to the tanh function it returns Nan, this is because
+            // the result is a number bigger than a float and i am doing this in c# while using floats, can you help be solve this problem?
             for (int i = 0; i < _batchSize; i++)
             {
                 var experience = _experiences[_batchIndexes[i]];

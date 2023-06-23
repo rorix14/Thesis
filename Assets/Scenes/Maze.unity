@@ -2238,11 +2238,11 @@ MonoBehaviour:
   algorithmsPrefabs:
   - {fileID: 2703651450852920366, guid: 0efca29b38e8aae4d9b96c36190ab738, type: 3}
   testDescriptions:
-  - DQN, 3 layers,  256 neurons, tanh, 32 batch size, 50 copy network.
+  - DQN, 3 layers,  128 neurons, ReLu, 32 batch size, 50 copy network.
   testNumber: 10
   generatorSeed: 42
-  saveInfo: 0
-  saveFileName: maze DQN tanh neuron 2
+  saveInfo: 1
+  saveFileName: maze DQN Tanh lr 0.0005, 1e-6
 --- !u!4 &1932842573
 Transform:
   m_ObjectHideFlags: 0

@@ -18,8 +18,8 @@ namespace NN
         // Neural network variables
         public float[,] Output;
         public float[,] DInputs;
-        protected readonly float[,] _weights;
-        protected readonly float[,] _biases;
+        public readonly float[,] _weights;
+        public readonly float[,] _biases;
 
         protected readonly ActivationFunction _activationFunction;
 
@@ -140,6 +140,8 @@ namespace NN
             }
 
             _outputBuffer.GetData(Output);
+            // _weightsBuffer.GetData(_weights);
+            // _biasesBuffer.GetData(_biases);
         }
 
         public virtual void Backward(float[,] dValues, float currentLearningRate, float beta1Corrected,

@@ -5,7 +5,7 @@ namespace NN
 {
     public class NetworkModel
     {
-        protected readonly NetworkLayer[] _layers;
+        public readonly NetworkLayer[] _layers;
         private readonly NetworkLoss _lossFunction;
         protected readonly float _learningRate;
         protected readonly float _decay;
