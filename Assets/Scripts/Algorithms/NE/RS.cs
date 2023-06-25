@@ -1,10 +1,12 @@
+using NN;
+
 namespace Algorithms.NE
 {
     public class RS : ES
     {
         private float _previousBestReward;
 
-        public RS(ESModel networkModel, int numberOfActions, int batchSize) : base(networkModel, numberOfActions,
+        public RS(NetworkModel networkModel, int numberOfActions, int batchSize) : base(networkModel, numberOfActions,
             batchSize)
         {
             _previousBestReward = float.MinValue;
@@ -43,7 +45,7 @@ namespace Algorithms.NE
             _previousBestReward = maxReward;
 
             //_networkModel.SetBestIndex(maxIndex);
-            _networkModel.TestUpdate(_episodeRewardUpdate, maxIndex);
+            _esModel.TestUpdate(_episodeRewardUpdate, maxIndex);
         }
     }
 }

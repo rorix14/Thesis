@@ -47,13 +47,13 @@ namespace NN
         protected ComputeBuffer _dValuesBuffer;
         private ComputeBuffer _dInputsBuffer;
 
-        protected readonly int _kernelHandleInputsBackward;
+        protected int _kernelHandleInputsBackward;
         protected int _kernelHandleWeightsBiasesBackward;
 
-        private int _threadGroupXInputsBackward;
-        private int _threadGroupYInputsBackward;
-        private int _threadGroupXWeightsBackward;
-        private int _threadGroupYWeightsBackward;
+        protected int _threadGroupXInputsBackward;
+        protected int _threadGroupYInputsBackward;
+        protected int _threadGroupXWeightsBackward;
+        protected int _threadGroupYWeightsBackward;
 
         // Adam optimizer
         private ComputeBuffer _weightsMomentumBuffer;
@@ -140,8 +140,6 @@ namespace NN
             }
 
             _outputBuffer.GetData(Output);
-            // _weightsBuffer.GetData(_weights);
-            // _biasesBuffer.GetData(_biases);
         }
 
         public virtual void Backward(float[,] dValues, float currentLearningRate, float beta1Corrected,
@@ -208,8 +206,8 @@ namespace NN
 
         protected virtual void InitializeForwardBuffers(float[,] inputs)
         {
-            Output = new float[inputs.GetLength(0), _weights.GetLength(1)];
-
+            Output ??= new float[inputs.GetLength(0), _weights.GetLength(1)];
+            
             _shader.SetInt("input_column_size", inputs.GetLength(0));
 
             _shader.GetKernelThreadGroupSizes(_kernelHandleForward, out var threadSizeX, out var threadSizeY, out _);

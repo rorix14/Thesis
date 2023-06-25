@@ -64,23 +64,16 @@ namespace NN.CPU_Single
             return copyMat;
         }
 
-        public static bool CopyMatrix(float[,] inMat, float[,] matToCopy)
+        public static void CopyMatrix(float[,] inMat, float[,] matToCopy)
         {
-            var isNan = false;
             int matRowSize = matToCopy.GetLength(1);
             for (int i = 0; i < matToCopy.GetLength(0); i++)
             {
                 for (int j = 0; j < matRowSize; j++)
                 {
-                    // if (float.IsNaN( matToCopy[i, j]))
-                    // {
-                    //     isNan = true;
-                    // }
                     inMat[i, j] = matToCopy[i, j];
                 }
             }
-
-            return isNan;
         }
 
         public static float[,] MatrixDotProduct(float[,] mat1, float[,] mat2)

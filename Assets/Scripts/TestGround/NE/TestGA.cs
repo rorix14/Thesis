@@ -14,20 +14,21 @@ namespace TestGround.NE
         [SerializeField] private int populationSize;
         [SerializeField] private int eliteNumber;
         [SerializeField] private int tournamentNumber;
-        
+        [SerializeField] private float mutationNoiseStd;
+
         [SerializeField] private ComputeShader shader;
         [SerializeField] private WindowGraph windowGraphPrefab;
         [SerializeField] private float simulationSpeed;
         [SerializeField] private int numberOfEpisodes;
 
         private int _episodeIndex;
-        protected JobStealthGameEnv _env;
-        protected GA _gaModel;
+        private JobStealthGameEnv _env;
+        private GA _gaModel;
 
         private List<float> _rewardsMeanOverTime;
         private WindowGraph _graphReward;
 
-        protected float[,] _currentSates;
+        private float[,] _currentSates;
 
         private void Awake()
         {
@@ -40,17 +41,24 @@ namespace TestGround.NE
             }
         }
 
-        void Start()
+        private void Start()
         {
+            //Temp seed
+            Random.InitState(42);
+
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();
 
+            //TODO: noise std should be a settable parameter 
             var network = new NetworkLayer[]
             {
-                new GANetworkLayer(populationSize, _env.GetObservationSize, 128, ActivationFunction.ReLu,
+                new GANetworkLayer(populationSize, mutationNoiseStd, _env.GetObservationSize, 128,
+                    ActivationFunction.ReLu,
                     Instantiate(shader)),
-                new GANetworkLayer(populationSize, 128, 128, ActivationFunction.ReLu, Instantiate(shader)),
-                new GANetworkLayer(populationSize, 128, _env.GetNumberOfActions, ActivationFunction.Linear,
+                new GANetworkLayer(populationSize, mutationNoiseStd, 128, 128, ActivationFunction.ReLu,
+                    Instantiate(shader)),
+                new GANetworkLayer(populationSize, mutationNoiseStd, 128, _env.GetNumberOfActions,
+                    ActivationFunction.Linear,
                     Instantiate(shader))
             };
 
@@ -60,7 +68,7 @@ namespace TestGround.NE
             Time.timeScale = simulationSpeed;
         }
 
-        void FixedUpdate()
+        private void FixedUpdate()
         {
             if (_episodeIndex >= numberOfEpisodes)
             {
@@ -70,7 +78,7 @@ namespace TestGround.NE
                 PlotTrainingData();
                 return;
             }
-            
+
             var actions = _gaModel.SamplePopulationActions(_currentSates);
             var stepInfo = _env.DistributedStep(actions);
 
@@ -86,7 +94,7 @@ namespace TestGround.NE
             _currentSates = _env.DistributedResetEnv();
             ++_episodeIndex;
         }
-        
+
         private void PlotTrainingData()
         {
             Time.timeScale = 1;

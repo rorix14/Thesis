@@ -1,10 +1,12 @@
 using System;
+using NN;
 
 namespace Algorithms.NE
 {
     public class ES
     {
-        protected readonly ESModel _networkModel;
+        protected readonly NetworkModel _networkModel;
+        protected readonly ESModel _esModel;
         private readonly int _numberOfActions;
         protected readonly int _batchSize;
 
@@ -27,9 +29,10 @@ namespace Algorithms.NE
         //public float EpisodeRewardMean => _networkModel.RewardMean;
         public float FinishedIndividuals => _finishedIndividuals;
 
-        public ES(ESModel networkModel, int numberOfActions, int batchSize)
+        public ES(NetworkModel networkModel, int numberOfActions, int batchSize)
         {
             _networkModel = networkModel;
+            _esModel = null;
             _numberOfActions = numberOfActions;
             _batchSize = batchSize;
 
@@ -122,25 +125,25 @@ namespace Algorithms.NE
                     var averageRank = sumRanks / (float)dupCount + 1;
                     for (int j = i - dupCount + 1; j < i + 1; j++)
                     {
-                        _episodeRewardUpdate[0, _rewardsIndexKeys[j]] = (averageRank - 1) / (_batchSize - 1) -0.5f;
+                        _episodeRewardUpdate[0, _rewardsIndexKeys[j]] = (averageRank - 1) / (_batchSize - 1) - 0.5f;
                     }
 
                     sumRanks = 0;
                     dupCount = 0;
                 }
-                
+
                 _episodeRewardMean += _episodeRewards[i];
 
                 _episodeRewards[i] = 0f;
                 _completedAgents[i] = false;
             }
-            
+
             _episodeRewardMean /= _batchSize;
         }
 
         public void ReduceNoise(float noiseStd)
         {
-            _networkModel.SetNoiseStd(noiseStd);
+            _esModel.SetNoiseStd(noiseStd);
         }
 
         public void Dispose()

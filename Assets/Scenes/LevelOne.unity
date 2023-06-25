@@ -203,13 +203,14 @@ GameObject:
   - component: {fileID: 82632412}
   - component: {fileID: 82632413}
   - component: {fileID: 82632414}
+  - component: {fileID: 82632415}
   m_Layer: 0
   m_Name: Test Algorithm
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &82632403
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -444,6 +445,26 @@ MonoBehaviour:
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 4
+  numberOfEpisodes: 300
+--- !u!114 &82632415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 82632402}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23f445959184e9241a163ee53f0cadde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  populationSize: 50
+  eliteNumber: 3
+  tournamentNumber: 6
+  mutationNoiseStd: 0.01
+  shader: {fileID: 7200000, guid: 010bb3406e14d204c9ef0d83fa08e5c6, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  simulationSpeed: 16
   numberOfEpisodes: 300
 --- !u!1 &149193037
 GameObject:
@@ -997,7 +1018,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &741151726
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1013,11 +1034,11 @@ MonoBehaviour:
   algorithmsPrefabs:
   - {fileID: 2703651450852920366, guid: 0efca29b38e8aae4d9b96c36190ab738, type: 3}
   testDescriptions:
-  - DQN, 3 layers,  128 neurons, Tanh, 32 batch size, 50 copy network.
+  - DQN, 3 layers,  128 neurons, ReLu, 32 batch size, 50 copy network.
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: one DQN Tanh lr 0.0005, 1e-6
+  saveFileName: one DQN ReLu lr 0.0001, 1e-4
 --- !u!4 &741151727
 Transform:
   m_ObjectHideFlags: 0

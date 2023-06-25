@@ -1,14 +1,18 @@
 #define MATRIX_THREAD_COUNT_X 8
 #define MATRIX_THREAD_COUNT_Y 8
 
-//TODO: need to add softmax function
+//TODO: need to add softmax function and tanh
 #pragma kernel forward_pass_ReLU
+#pragma kernel forward_pass_linear
 
 #pragma kernel GA_backwards_pass
+#pragma kernel GA_set_new_population
 
 // Made for compatability
 #pragma kernel backwards_pass_ReLU_inputs
 #pragma kernel backwards_pass_ReLU_weights_biases_Adam
+#pragma kernel backwards_pass_linear_inputs
+#pragma kernel backwards_pass_linear_weights_biases_Adam
 
 unsigned int input_column_size;
 unsigned int input_row_size;
@@ -25,6 +29,7 @@ float forward_pass_GA(uint3 id, StructuredBuffer<float> input, RWStructuredBuffe
                       RWStructuredBuffer<float> biases);
 
 
+// ReLU forward
 [numthreads(MATRIX_THREAD_COUNT_X, MATRIX_THREAD_COUNT_Y,1)]
 void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
 {
@@ -33,6 +38,16 @@ void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
 
     const float result = forward_pass_GA(id, input, weights, biases);
     output[id.x * weights_row_size + id.y] = result < 0.0f ? 0.0f : result;
+}
+
+// Linear forward
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void forward_pass_linear(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_column_size || id.y >= weights_row_size)
+        return;
+
+    output[id.x * weights_row_size + id.y] = forward_pass_GA(id, input, weights, biases);
 }
 
 unsigned int population_size;
@@ -58,16 +73,14 @@ void GA_backwards_pass(uint3 id : SV_DispatchThreadID)
 
     if (id.x < input_row_size && id.y < population_weight_row_size)
     {
-        // fill new buffer with weights and biases from the parents
-        // then sum with the noise buffer
+        // fill new buffer with weights and biases from the parents then sum with the noise buffer
         const int current_child = id.y / weights_row_size;
         const crossover tmp_crossover = crossover_info[current_child];
         const unsigned int row_normalized = id.y % weights_row_size;
         const int parent_index = row_normalized < tmp_crossover.crossover_point
                                      ? tmp_crossover.parent_one
                                      : tmp_crossover.parent_two;
-
-
+        
         const int column_index = id.x * population_weight_row_size;
         weights_temp[weight_index] = weights[column_index + parent_index * weights_row_size + row_normalized] +
             weights_mutation_noise[weight_index];
@@ -79,9 +92,25 @@ void GA_backwards_pass(uint3 id : SV_DispatchThreadID)
     }
 
     //wait until all are done
-    AllMemoryBarrierWithGroupSync();
+
+    //TODO: might not be working as intended
+    //AllMemoryBarrierWithGroupSync();
 
     //fill the weights and biases buffer with new values
+    // weights[weight_index] = weights_temp[weight_index];
+    // if (id.x == 0)
+    // {
+    //     biases[id.y] = biases_temp[id.y];
+    // }
+}
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void GA_set_new_population(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= input_row_size || id.y >= population_weight_row_size)
+        return;
+
+    const int weight_index = id.x * population_weight_row_size + id.y;
     weights[weight_index] = weights_temp[weight_index];
     if (id.x == 0)
     {
@@ -110,8 +139,16 @@ inline float forward_pass_GA(uint3 id, StructuredBuffer<float> input, RWStructur
 void backwards_pass_ReLU_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
 {
 }
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_linear_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
+{
+}
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void backwards_pass_ReLU_inputs(uint3 id : SV_DispatchThreadID)
+{
+}
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void backwards_pass_linear_inputs(uint3 id : SV_DispatchThreadID)
 {
 }

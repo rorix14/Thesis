@@ -34,29 +34,38 @@ namespace Algorithms.NE
         private readonly int _populationSize;
         private readonly int _neuronNumber;
         private readonly int _individualWeightSize;
+        private readonly int _populationNeuronLenght;
 
-        private readonly int[] _populationNoiseIndexes;
+        private readonly int[] _populationWeightNoiseIndexes;
+        private readonly int[] _populationBiasesNoiseIndexes;
 
         private readonly int _noiseSamplesSize;
         private readonly float[] _noiseSamplesBuffer;
 
+        // private readonly float[,] _weigthTest;
+        // private readonly float[,] _biasTest;
 
-        public GANetworkLayer(int populationSize, int nInputs, int nNeurons, ActivationFunction activationFunction,
-            ComputeShader shader, float noiseRange = 10.0f, bool isFirstLayer = true, float paramsRange = 4,
-            float paramsCoefficient = 0.005f, int headNumber = 1) : base(nInputs, nNeurons * populationSize,
-            activationFunction, shader, isFirstLayer, paramsRange, paramsCoefficient, headNumber)
+        public GANetworkLayer(int populationSize, float noiseStD, int nInputs, int nNeurons,
+            ActivationFunction activationFunction, ComputeShader shader, float noiseRange = 10.0f,
+            float paramsRange = 4, float paramsCoefficient = 0.01f) : base(nInputs, nNeurons * populationSize,
+            activationFunction, shader, true, paramsRange, paramsCoefficient)
         {
             _populationSize = populationSize;
             _neuronNumber = nNeurons;
             _individualWeightSize = nInputs * nNeurons;
+            _populationNeuronLenght = populationSize * nNeurons;
 
             _shader.SetInt("weights_row_size", nNeurons);
             _shader.SetInt("population_weight_row_size", nNeurons * populationSize);
 
             _kernelHandleWeightsBiasesBackward = _shader.FindKernel("GA_backwards_pass");
+            _kernelHandleInputsBackward = _shader.FindKernel("GA_set_new_population");
 
             _weightsTempBuffer = new ComputeBuffer(_weights.Length, sizeof(float));
             _biasesTempBuffer = new ComputeBuffer(_biases.Length, sizeof(float));
+
+            // _weigthTest = new float[nInputs, nNeurons * populationSize];
+            // _biasTest = new float[1, nNeurons * populationSize];
 
             _weightsTempBuffer.SetData(_weights);
             _biasesTempBuffer.SetData(_biases);
@@ -65,73 +74,126 @@ namespace Algorithms.NE
             _noiseSamplesBuffer = new float[_noiseSamplesSize];
             for (int i = 0; i < _noiseSamplesSize; i++)
             {
-                _noiseSamplesBuffer[i] = NnMath.RandomGaussian(-noiseRange, noiseRange);
+                _noiseSamplesBuffer[i] = noiseStD * NnMath.RandomGaussian(-noiseRange, noiseRange);
             }
 
             _weightsMutationNoise = new float[_weights.Length];
             _weightsMutationNoiseBuffer = new ComputeBuffer(_weights.Length, sizeof(float));
             _weightsMutationNoiseBuffer.SetData(_weightsMutationNoise);
+            _populationWeightNoiseIndexes = new int[_weights.Length];
 
             _biasesMutationNoise = new float[_biases.Length];
             _biasesMutationNoiseBuffer = new ComputeBuffer(_biases.Length, sizeof(float));
             _biasesMutationNoiseBuffer.SetData(_biasesMutationNoise);
-
-            _populationNoiseIndexes = new int[_weights.Length];
+            _populationBiasesNoiseIndexes = new int[_biases.Length];
 
             _crossoverInfoBuffer = new ComputeBuffer(populationSize, sizeof(int) * 3);
 
-            InitializeBackwardsBuffers(new float[1, 1]);
+            InitializeBuffers(new float[populationSize, nInputs]);
         }
 
         public void UpdateLayer(CrossoverInfo[] crossoverInfos, float[] mutationsVolume)
         {
-            //TODO: crossover point must be decided here
-            var totalMutations = 0;
+            var totalWeightsMutations = 0;
+            var totalBiasMutations = 0;
             for (int i = 0; i < _populationSize; i++)
             {
-                var noiseIndexStart = totalMutations;
-                var mutationVolume = (int)(mutationsVolume[i] * _individualWeightSize);
-                totalMutations += mutationVolume;
-
-                var rangeMin = _individualWeightSize * i;
-                var rangeMax = _individualWeightSize * (i + 1);
-                crossoverInfos[i].CrossoverPoint = Random.Range(rangeMin, rangeMax);
+                if (crossoverInfos[i].Parent1 == crossoverInfos[i].Parent2)
+                {
+                    //crossoverInfos[i].CrossoverPoint = Random.Range(0, _neuronNumber);
+                }
+                else
+                {
+                    crossoverInfos[i].CrossoverPoint = Random.Range(0, _neuronNumber);
+                }
                 
-                for (int j = 0; j < mutationVolume; j++)
+                var mutationVolume = mutationsVolume[i];
+
+                var weightNoiseIndexStart = totalWeightsMutations;
+                var weightsMutationVolume = (int)(mutationVolume * _individualWeightSize);
+                totalWeightsMutations += weightsMutationVolume;
+
+                var rangeMin = _neuronNumber * i;
+                var rangeMax = _neuronNumber * (i + 1);
+
+                for (int j = 0; j < weightsMutationVolume; j++)
+                {
+                    var randomIndex = Random.Range(0, _populationSize) * _populationNeuronLenght +
+                                      Random.Range(rangeMin, rangeMax);
+
+                    _weightsMutationNoise[randomIndex] = _noiseSamplesBuffer[Random.Range(0, _noiseSamplesSize)];
+                    _populationWeightNoiseIndexes[weightNoiseIndexStart + j] = randomIndex;
+                }
+
+                var biasNoiseIndexStart = totalBiasMutations;
+                var biasMutationVolume = (int)(mutationVolume * _neuronNumber);
+                totalBiasMutations += biasMutationVolume;
+
+                rangeMin = _neuronNumber * i;
+                rangeMax = _neuronNumber * (i + 1);
+
+                for (int j = 0; j < biasMutationVolume; j++)
                 {
                     var randomIndex = Random.Range(rangeMin, rangeMax);
-                    _populationNoiseIndexes[noiseIndexStart + j] = randomIndex;
-                    _weightsMutationNoise[randomIndex] = _noiseSamplesBuffer[Random.Range(0, _noiseSamplesSize)];
+                    _biasesMutationNoise[randomIndex] = _noiseSamplesBuffer[Random.Range(0, _noiseSamplesSize)];
+                    _populationBiasesNoiseIndexes[biasNoiseIndexStart + j] = randomIndex;
                 }
             }
 
             _weightsMutationNoiseBuffer.SetData(_weightsMutationNoise);
+            _biasesMutationNoiseBuffer.SetData(_biasesMutationNoise);
             _crossoverInfoBuffer.SetData(crossoverInfos);
 
-            //TODO: must be protected
-            // _shader.Dispatch(_kernelHandleInputsBackward, _threadGroupXInputsBackward,
-            //     _threadGroupYInputsBackward, 1);
+            _shader.Dispatch(_kernelHandleWeightsBiasesBackward, _threadGroupXWeightsBackward,
+                _threadGroupYWeightsBackward, 1);
 
-            for (int i = 0; i < totalMutations; i++)
+            // _weightsBuffer.GetData(_weights);
+            // _biasesBuffer.GetData(_biases);
+            // _weightsTempBuffer.GetData(_weigthTest);
+            // _biasesTempBuffer.GetData(_biasTest);
+
+            _shader.Dispatch(_kernelHandleInputsBackward, _threadGroupXInputsBackward, _threadGroupYInputsBackward, 1);
+
+            // _weightsBuffer.GetData(_weights);
+            // _biasesBuffer.GetData(_biases);
+
+            for (int i = 0; i < totalWeightsMutations; i++)
             {
-                _weightsMutationNoise[_populationNoiseIndexes[i]] = 0f;
+                _weightsMutationNoise[_populationWeightNoiseIndexes[i]] = 0f;
+            }
+
+            for (int i = 0; i < totalBiasMutations; i++)
+            {
+                _biasesMutationNoise[_populationBiasesNoiseIndexes[i]] = 0f;
             }
         }
 
-        protected override void InitializeBackwardsBuffers(float[,] dValues)
+        private void InitializeBuffers(float[,] inputShape)
         {
-            base.InitializeBackwardsBuffers(dValues);
+            Output = new float[inputShape.GetLength(0), _neuronNumber];
+            InitializeForwardBuffers(inputShape);
+            InitializeBackwardsBuffers(new float[1, 1]);
+
+            _shader.GetKernelThreadGroupSizes(_kernelHandleInputsBackward, out var x, out var y, out _);
+            _threadGroupXInputsBackward = Mathf.CeilToInt(_weights.GetLength(0) / (float)x);
+            _threadGroupYInputsBackward = Mathf.CeilToInt(_weights.GetLength(1) / (float)y);
+
+            _shader.SetBuffer(_kernelHandleInputsBackward, "biases", _biasesBuffer);
+            _shader.SetBuffer(_kernelHandleInputsBackward, "weights_temp", _weightsTempBuffer);
+            _shader.SetBuffer(_kernelHandleInputsBackward, "biases_temp", _biasesTempBuffer);
 
             _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "weights_temp", _weightsTempBuffer);
             _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "biases_temp", _biasesTempBuffer);
             _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "weights_mutation_noise",
                 _weightsMutationNoiseBuffer);
-            _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "biases_mutation_noise", _weightsMutationNoiseBuffer);
+            _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "biases_mutation_noise", _biasesMutationNoiseBuffer);
             _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "crossover_info", _crossoverInfoBuffer);
         }
 
         public override void Dispose()
         {
+            base.Dispose();
+
             _weightsTempBuffer?.Dispose();
             _biasesTempBuffer?.Dispose();
             _weightsMutationNoiseBuffer?.Dispose();
