@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3006157079894222475}
   - component: {fileID: 2703651450852920366}
   m_Layer: 0
-  m_Name: DQN
+  m_Name: DQN 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -52,7 +52,6 @@ MonoBehaviour:
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   activationFunction: 1
-  learningRate: 0.005
+  learningRate: 0.1
   decayRate: 0.001
-  neuronNumber: 128
-  weightsInitStd: 0.005
+  neuronNumber: 256

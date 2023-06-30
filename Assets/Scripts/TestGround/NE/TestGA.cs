@@ -49,17 +49,14 @@ namespace TestGround.NE
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();
 
-            //TODO: noise std should be a settable parameter 
             var network = new NetworkLayer[]
             {
                 new GANetworkLayer(populationSize, mutationNoiseStd, _env.GetObservationSize, 128,
-                    ActivationFunction.ReLu,
-                    Instantiate(shader)),
-                new GANetworkLayer(populationSize, mutationNoiseStd, 128, 128, ActivationFunction.ReLu,
+                    ActivationFunction.Tanh, Instantiate(shader)),
+                new GANetworkLayer(populationSize, mutationNoiseStd, 128, 128, ActivationFunction.Tanh,
                     Instantiate(shader)),
                 new GANetworkLayer(populationSize, mutationNoiseStd, 128, _env.GetNumberOfActions,
-                    ActivationFunction.Linear,
-                    Instantiate(shader))
+                    ActivationFunction.Linear, Instantiate(shader))
             };
 
             var neModel = new GAModel(network);

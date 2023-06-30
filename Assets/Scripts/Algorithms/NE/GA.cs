@@ -43,6 +43,37 @@ namespace Algorithms.NE
             }
         }
 
+        //Only use if the softmax activation function is used in the output layer
+        // public override int[] SamplePopulationActions(float[,] states)
+        // {
+        //     _modelPredictions = _networkModel.Predict(states);
+        //     
+        //     for (int i = 0; i < _batchSize; i++)
+        //     {
+        //         if (_completedAgents[i])
+        //         {
+        //             _sampledActions[i] = -1;
+        //             continue;
+        //         }
+        //
+        //         var randomPoint = Random.value;
+        //         _sampledActions[i] = 0;
+        //         for (int j = 0; j < _numberOfActions; j++)
+        //         {
+        //             var probability = _modelPredictions[i, j];
+        //             if (randomPoint < probability)
+        //             {
+        //                 _sampledActions[i] = j;
+        //                 break;
+        //             }
+        //             
+        //             randomPoint -= probability;
+        //         }
+        //     }
+        //
+        //     return _sampledActions;
+        // }
+
         public override void Train()
         {
             for (int i = 0; i < _batchSize; i++)

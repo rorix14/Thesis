@@ -7,16 +7,16 @@ namespace Algorithms.NE
     {
         protected readonly NetworkModel _networkModel;
         protected readonly ESModel _esModel;
-        private readonly int _numberOfActions;
+        protected readonly int _numberOfActions;
         protected readonly int _batchSize;
 
-        private readonly int[] _sampledActions;
+        protected readonly int[] _sampledActions;
 
         protected readonly float[] _episodeRewards;
         protected readonly bool[] _completedAgents;
 
         //Cashed variables
-        private float[,] _modelPredictions;
+        protected float[,] _modelPredictions;
 
         protected readonly float[,] _episodeRewardUpdate;
         protected int _finishedIndividuals;
@@ -46,7 +46,7 @@ namespace Algorithms.NE
             _rewardsIndexKeys = new int[batchSize];
         }
 
-        public int[] SamplePopulationActions(float[,] states)
+        public virtual int[] SamplePopulationActions(float[,] states)
         {
             _modelPredictions = _networkModel.Predict(states);
 

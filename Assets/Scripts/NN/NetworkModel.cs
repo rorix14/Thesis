@@ -17,8 +17,7 @@ namespace NN
         protected float _bata2Corrected;
 
         public NetworkModel(NetworkLayer[] layers, NetworkLoss lossFunction, float learningRate = 0.005f,
-            float decay = 1e-3f,
-            float beta1 = 0.9f, float beta2 = 0.999f, float epsilon = 1e-7f)
+            float decay = 1e-3f, float beta1 = 0.9f, float beta2 = 0.999f, float epsilon = 1e-7f)
         {
             _layers = layers;
             _lossFunction = lossFunction;
@@ -57,7 +56,7 @@ namespace NN
             ++_iteration;
             _bata1Corrected *= _beta1;
             _bata2Corrected *= _beta2;
-            
+
             _lossFunction.Backward(_layers[_layers.Length - 1].Output, yTarget);
             _layers[_layers.Length - 1]
                 .Backward(_lossFunction.DInputs, _currentLearningRate, _bata1Corrected, _bata2Corrected);
@@ -134,7 +133,7 @@ namespace NN
             var msePrio = (MeanSquaredErrorPrioritized)_lossFunction;
             msePrio?.SetLossExternalParameters(parameters);
         }
-        
+
         public void Dispose()
         {
             _lossFunction.Dispose();

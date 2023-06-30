@@ -76,7 +76,7 @@ namespace Utils
             return wrapper.items;
         }
 
-        public static string ToJson<T>(T[] array, bool prettyPrint = true)
+        public static string ToJson<T>(T[] array, bool prettyPrint = false)
         {
             var wrapper = new Wrapper<T>
             {

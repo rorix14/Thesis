@@ -10,7 +10,7 @@ namespace Utils
     public class AlgorithmTester : MonoBehaviour
     {
         [SerializeField] private TestAlgorithmBase[] algorithmsPrefabs;
-        [SerializeField] private string[] testDescriptions;
+        private string[] _testDescriptions;
         [SerializeField] private int testNumber;
         [SerializeField] private int generatorSeed = 42;
         [SerializeField] private bool saveInfo;
@@ -34,7 +34,7 @@ namespace Utils
             Random.InitState(generatorSeed);
 
             _testSeeds = new int [testNumber];
-            
+
             var iteration = 0;
             while (iteration < testNumber)
             {
@@ -48,7 +48,7 @@ namespace Utils
                     hasSeed = true;
                     break;
                 }
-                
+
                 if (hasSeed) continue;
 
                 _testSeeds[iteration] = randomSeed;
@@ -56,11 +56,13 @@ namespace Utils
             }
 
             _testResults = new TestResultsSavable[algorithmsPrefabs.Length];
+            _testDescriptions = new string[algorithmsPrefabs.Length];
             for (int i = 0; i < algorithmsPrefabs.Length; i++)
             {
                 _testResults[i].algorithmStatsArray = new AlgorithmStats[testNumber];
+                _testDescriptions[i] = algorithmsPrefabs[i].GetDescription();
             }
-            
+
             _stopwatch = new Stopwatch();
         }
 
@@ -71,7 +73,7 @@ namespace Utils
             Random.InitState(_testSeeds[_currenTest]);
             //Random.InitState(36);
             _currentAlgorithm = Instantiate(algorithmsPrefabs[_currentAlgorithmIndex]);
-            
+
             _stopwatch.Start();
         }
 
@@ -80,16 +82,16 @@ namespace Utils
             if (_testsFinished || !_currentAlgorithm.IsFinished) return;
 
             _stopwatch.Stop();
-            
+
             PrintAlgorithmResults();
             StoreData();
             Destroy(_currentAlgorithm.gameObject);
-            
+
             _currenTest++;
             if (_currenTest >= testNumber)
             {
-                print("Final: reward average: " + _rewardAverageFinal / testNumber + ", loss average: " +
-                      _lossAverageFinal / testNumber);
+                print(_testDescriptions[_currentAlgorithmIndex] + ". Final: reward average: " +
+                      _rewardAverageFinal / testNumber + ", loss average: " + _lossAverageFinal / testNumber);
 
                 _rewardAverageFinal = 0f;
                 _lossAverageFinal = 0f;
@@ -105,7 +107,7 @@ namespace Utils
                     }
 
                     _testsFinished = true;
-                    
+
                     EditorApplication.Beep();
                     EditorApplication.ExitPlaymode();
                     return;
@@ -114,7 +116,7 @@ namespace Utils
 
             Random.InitState(_testSeeds[_currenTest]);
             _currentAlgorithm = Instantiate(algorithmsPrefabs[_currentAlgorithmIndex]);
-            
+
             _stopwatch.Restart();
         }
 
@@ -152,10 +154,10 @@ namespace Utils
         {
             for (int i = 0; i < algorithmsPrefabs.Length; i++)
             {
-                _testResults[i].description = testDescriptions[i];
+                _testResults[i].description = _testDescriptions[i];
                 _testResults[i].averageTrainTime /= testNumber;
             }
-            
+
             FileHandler.SaveToJson(_testResults, "Test Data/Preliminary algorithm Tests/" + saveFileName);
         }
 

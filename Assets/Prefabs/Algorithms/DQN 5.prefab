@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3006157079894222475}
   - component: {fileID: 2703651450852920366}
   m_Layer: 0
-  m_Name: Test Algorithm (1)
+  m_Name: DQN 5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -43,8 +43,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2ddc1a29d453f54bad60157163c60f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 21
+  simulationSpeed: 22
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  activationFunction: 0
+  learningRate: 0.1
+  decayRate: 0.001
+  neuronNumber: 256

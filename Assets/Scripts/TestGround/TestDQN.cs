@@ -1,13 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Algorithms.RL;
 using Graphs;
 using Gym;
 using NN;
 using TestGround.Base;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace TestGround
@@ -34,6 +34,20 @@ namespace TestGround
         // private Stopwatch _stopwatch;
         // private List<long> _times;
 
+        //Only were for testing
+        [SerializeField] protected ActivationFunction activationFunction;
+        [SerializeField] protected float learningRate;
+        [SerializeField] protected float decayRate;
+        [SerializeField] protected int neuronNumber;
+        [SerializeField] protected float weightsInitStd;
+
+        public override string GetDescription()
+        {
+            return "DQN, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
+                   ", 32 batch size, 50 copy network, lr " + learningRate + ", decay " + decayRate +
+                   ", initialization std " + weightsInitStd;
+        }
+
         private void Awake()
         {
             _env = FindObjectOfType<StealthGameEnv>();
@@ -55,19 +69,27 @@ namespace TestGround
 
             var updateLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.ReLu, Instantiate(shader), true),
-                new NetworkLayer(128, 128, ActivationFunction.ReLu, Instantiate(shader)),
-                new NetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
+                new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true,
+                    paramsCoefficient: weightsInitStd),
+                new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader),
+                    paramsCoefficient: weightsInitStd),
+                new NetworkLayer(neuronNumber, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader),
+                    paramsCoefficient: weightsInitStd)
             };
-            var updateModel = new NetworkModel(updateLayers, new MeanSquaredError(Instantiate(shader)), 0.0001f, 1e-4f);
+            var updateModel = new NetworkModel(updateLayers, new MeanSquaredError(Instantiate(shader)), learningRate,
+                decayRate);
 
             var targetLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.ReLu, Instantiate(shader), true),
-                new NetworkLayer(128, 128, ActivationFunction.ReLu, Instantiate(shader)),
-                new NetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
+                new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true,
+                    paramsCoefficient: weightsInitStd),
+                new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader),
+                    paramsCoefficient: weightsInitStd),
+                new NetworkLayer(neuronNumber, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader),
+                    paramsCoefficient: weightsInitStd)
             };
-            var targetModel = new NetworkModel(targetLayers, new MeanSquaredError(Instantiate(shader)));
+            var targetModel = new NetworkModel(targetLayers, new MeanSquaredError(Instantiate(shader)), learningRate,
+                decayRate);
 
             _DQN = new ModelDQN(updateModel, targetModel, _env.GetNumberOfActions, _env.GetObservationSize);
 

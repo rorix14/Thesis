@@ -1,7 +1,10 @@
+using System.Collections.Generic;
+using System.Diagnostics;
 using NN;
 using NN.CPU_Single;
 using UnityEngine;
 using ActivationFunction = NN.ActivationFunction;
+using Debug = UnityEngine.Debug;
 
 namespace Algorithms.NE
 {
@@ -58,8 +61,8 @@ namespace Algorithms.NE
             _shader.SetInt("weights_row_size", nNeurons);
             _shader.SetInt("population_weight_row_size", nNeurons * populationSize);
 
-            _kernelHandleWeightsBiasesBackward = _shader.FindKernel("GA_backwards_pass");
-            _kernelHandleInputsBackward = _shader.FindKernel("GA_set_new_population");
+            _kernelHandleWeightsBiasesBackward = _shader.FindKernel("GA_backwards_pass_full");
+            _kernelHandleInputsBackward = _shader.FindKernel("GA_set_new_population_full");
 
             _weightsTempBuffer = new ComputeBuffer(_weights.Length, sizeof(float));
             _biasesTempBuffer = new ComputeBuffer(_biases.Length, sizeof(float));
@@ -96,17 +99,20 @@ namespace Algorithms.NE
         {
             var totalWeightsMutations = 0;
             var totalBiasMutations = 0;
+            var eliteNumber = 0;
             for (int i = 0; i < _populationSize; i++)
             {
                 if (crossoverInfos[i].Parent1 == crossoverInfos[i].Parent2)
                 {
-                    //crossoverInfos[i].CrossoverPoint = Random.Range(0, _neuronNumber);
+                    eliteNumber++;
+                    continue;
                 }
-                else
-                {
-                    crossoverInfos[i].CrossoverPoint = Random.Range(0, _neuronNumber);
-                }
-                
+
+                //crossoverInfos[i].CrossoverPoint = Random.Range(0, _neuronNumber);
+                crossoverInfos[i].CrossoverPoint = (i - eliteNumber) % 2 == 0
+                    ? Random.Range(0, _neuronNumber)
+                    : crossoverInfos[i - 1].CrossoverPoint;
+
                 var mutationVolume = mutationsVolume[i];
 
                 var weightNoiseIndexStart = totalWeightsMutations;
@@ -143,20 +149,12 @@ namespace Algorithms.NE
             _weightsMutationNoiseBuffer.SetData(_weightsMutationNoise);
             _biasesMutationNoiseBuffer.SetData(_biasesMutationNoise);
             _crossoverInfoBuffer.SetData(crossoverInfos);
-
-            _shader.Dispatch(_kernelHandleWeightsBiasesBackward, _threadGroupXWeightsBackward,
-                _threadGroupYWeightsBackward, 1);
-
-            // _weightsBuffer.GetData(_weights);
-            // _biasesBuffer.GetData(_biases);
-            // _weightsTempBuffer.GetData(_weigthTest);
-            // _biasesTempBuffer.GetData(_biasTest);
-
-            _shader.Dispatch(_kernelHandleInputsBackward, _threadGroupXInputsBackward, _threadGroupYInputsBackward, 1);
-
-            // _weightsBuffer.GetData(_weights);
-            // _biasesBuffer.GetData(_biases);
-
+            
+            _shader.Dispatch(_kernelHandleWeightsBiasesBackward, _threadGroupXInputsBackward,
+                _threadGroupYInputsBackward, _threadGroupZInputsBackward);
+            _shader.Dispatch(_kernelHandleInputsBackward, _threadGroupXInputsBackward, _threadGroupYInputsBackward,
+                _threadGroupZInputsBackward);
+            
             for (int i = 0; i < totalWeightsMutations; i++)
             {
                 _weightsMutationNoise[_populationWeightNoiseIndexes[i]] = 0f;
@@ -168,15 +166,18 @@ namespace Algorithms.NE
             }
         }
 
+        private int _threadGroupZInputsBackward;
+
         private void InitializeBuffers(float[,] inputShape)
         {
             Output = new float[inputShape.GetLength(0), _neuronNumber];
             InitializeForwardBuffers(inputShape);
             InitializeBackwardsBuffers(new float[1, 1]);
 
-            _shader.GetKernelThreadGroupSizes(_kernelHandleInputsBackward, out var x, out var y, out _);
+            _shader.GetKernelThreadGroupSizes(_kernelHandleInputsBackward, out var x, out var y, out var z);
             _threadGroupXInputsBackward = Mathf.CeilToInt(_weights.GetLength(0) / (float)x);
-            _threadGroupYInputsBackward = Mathf.CeilToInt(_weights.GetLength(1) / (float)y);
+            _threadGroupYInputsBackward = Mathf.CeilToInt(_neuronNumber / (float)y);
+            _threadGroupZInputsBackward = Mathf.CeilToInt(_populationSize / (float)z);
 
             _shader.SetBuffer(_kernelHandleInputsBackward, "biases", _biasesBuffer);
             _shader.SetBuffer(_kernelHandleInputsBackward, "weights_temp", _weightsTempBuffer);
