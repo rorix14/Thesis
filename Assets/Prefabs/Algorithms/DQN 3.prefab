@@ -55,3 +55,4 @@ MonoBehaviour:
   learningRate: 0.1
   decayRate: 0.001
   neuronNumber: 512
+  weightsInitStd: 0

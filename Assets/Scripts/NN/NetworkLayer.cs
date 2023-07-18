@@ -71,15 +71,17 @@ namespace NN
             _biases = new float[1, nNeurons];
             _isFirstLayer = isFirstLayer;
 
-            //var test = 1f / Mathf.Sqrt(nInputs);
-            //var test = Mathf.Sqrt(6) / Mathf.Sqrt(nInputs + nNeurons);
+            //paramsRange = 1f / Mathf.Sqrt(nInputs);
+            //paramsRange = Mathf.Sqrt(6) / Mathf.Sqrt(nInputs + nNeurons);
             //paramsCoefficient = Mathf.Sqrt(2f / nInputs);
 
             for (int i = 0; i < _weights.GetLength(1); i++)
             {
+                //_biases[0, i] = Random.Range(-paramsRange, paramsRange);
                 _biases[0, i] = paramsCoefficient * Random.Range(-paramsRange, paramsRange) /*NnMath.RandomGaussian(-paramsRange, paramsRange)*/;
                 for (int j = 0; j < _weights.GetLength(0); j++)
                 {
+                    //_weights[j, i] = Random.Range(-paramsRange, paramsRange);
                     _weights[j, i] = paramsCoefficient * Random.Range(-paramsRange, paramsRange) /*NnMath.RandomGaussian(-paramsRange, paramsRange)*/;
                 }
             }

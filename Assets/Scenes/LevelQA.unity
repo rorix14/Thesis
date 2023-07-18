@@ -627,7 +627,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 210297945}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.96, y: 1, z: -4.62}
+  m_LocalPosition: {x: 5.46, y: 1, z: -4.62}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1390772350}
@@ -666,7 +666,7 @@ Transform:
   - {fileID: 959197025}
   - {fileID: 398019433}
   m_Father: {fileID: 1438431765}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &220210687
 MonoBehaviour:
@@ -785,7 +785,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 398019432}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.64, y: 1, z: 3.95}
+  m_LocalPosition: {x: -3.64, y: 1, z: 3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 220210686}
@@ -1058,7 +1058,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 545719277}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.67, y: 1, z: 2.64}
+  m_LocalPosition: {x: 5.46, y: 1, z: 2.64}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1390772350}
@@ -1346,6 +1346,11 @@ MonoBehaviour:
   simulationSpeed: 6
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
   stepNumber: 3
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
   supportSize: 51
@@ -1371,6 +1376,11 @@ MonoBehaviour:
   simulationSpeed: 16
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
   supportSize: 51
   supportMinValue: -25
   supportMaxValue: 63
@@ -1394,6 +1404,11 @@ MonoBehaviour:
   simulationSpeed: 13
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
 --- !u!114 &752207955
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1414,6 +1429,11 @@ MonoBehaviour:
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
 --- !u!114 &752207956
 MonoBehaviour:
@@ -1435,6 +1455,11 @@ MonoBehaviour:
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
 --- !u!114 &752207957
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1455,6 +1480,11 @@ MonoBehaviour:
   simulationSpeed: 19
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
   stepNumber: 3
 --- !u!114 &752207958
 MonoBehaviour:
@@ -1476,6 +1506,11 @@ MonoBehaviour:
   simulationSpeed: 16
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
 --- !u!114 &752207959
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1496,6 +1531,11 @@ MonoBehaviour:
   simulationSpeed: 20
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
 --- !u!114 &752207960
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1650,7 +1690,7 @@ Transform:
   - {fileID: 2129714401}
   - {fileID: 88369764}
   m_Father: {fileID: 1438431765}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &802990083
 GameObject:
@@ -1676,7 +1716,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 802990083}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.64, y: 1, z: 2.87}
+  m_LocalPosition: {x: -3.64, y: 1, z: 3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 220210686}
@@ -1926,7 +1966,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 959197024}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.13, y: 1, z: 3.95}
+  m_LocalPosition: {x: 2.13, y: 1, z: 3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 220210686}
@@ -2027,7 +2067,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1129803075}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.96, y: 1, z: 2.64}
+  m_LocalPosition: {x: 5.46, y: 1, z: 2.64}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1390772350}
@@ -2159,8 +2199,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   algorithmsPrefabs:
   - {fileID: 2703651450852920366, guid: 0efca29b38e8aae4d9b96c36190ab738, type: 3}
-  testDescriptions:
-  - DQN, 3 layers,  128 neurons, ReLu, 32 batch size, 50 copy network.
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
@@ -2318,8 +2356,8 @@ Transform:
   - {fileID: 3540032}
   - {fileID: 1670888480}
   - {fileID: 1390772350}
-  - {fileID: 798994353}
   - {fileID: 220210686}
+  - {fileID: 798994353}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3405,7 +3443,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1959892165}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.67, y: 1, z: -4.62}
+  m_LocalPosition: {x: 5.46, y: 1, z: -4.62}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1390772350}
@@ -3435,7 +3473,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2005250628}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.13, y: 1, z: 2.87}
+  m_LocalPosition: {x: 2.13, y: 1, z: 3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 220210686}

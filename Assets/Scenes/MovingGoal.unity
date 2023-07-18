@@ -725,10 +725,12 @@ MonoBehaviour:
   simulationSpeed: 20
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
+  weightsInitStd: 0
 --- !u!114 &845216471
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -778,10 +780,12 @@ MonoBehaviour:
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
+  weightsInitStd: 0
   stepNumber: 3
 --- !u!114 &845216474
 MonoBehaviour:
@@ -803,10 +807,12 @@ MonoBehaviour:
   simulationSpeed: 12
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
+  weightsInitStd: 0
 --- !u!114 &845216475
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -827,10 +833,12 @@ MonoBehaviour:
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
+  weightsInitStd: 0
 --- !u!114 &845216476
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -851,10 +859,12 @@ MonoBehaviour:
   simulationSpeed: 16
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
+  weightsInitStd: 0
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
 --- !u!114 &845216477
 MonoBehaviour:
@@ -876,10 +886,12 @@ MonoBehaviour:
   simulationSpeed: 13
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
+  weightsInitStd: 0
 --- !u!114 &845216478
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -900,10 +912,12 @@ MonoBehaviour:
   simulationSpeed: 15
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
+  weightsInitStd: 0
   supportSize: 51
   supportMinValue: -7
   supportMaxValue: 50
@@ -927,10 +941,12 @@ MonoBehaviour:
   simulationSpeed: 6
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
+  weightsInitStd: 0
   stepNumber: 3
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
   supportSize: 51

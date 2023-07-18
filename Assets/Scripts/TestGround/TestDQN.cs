@@ -33,6 +33,7 @@ namespace TestGround
 
         // private Stopwatch _stopwatch;
         // private List<long> _times;
+        [SerializeField] protected int batchSize;
 
         //Only were for testing
         [SerializeField] protected ActivationFunction activationFunction;
@@ -44,8 +45,8 @@ namespace TestGround
         public override string GetDescription()
         {
             return "DQN, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
-                   ", 32 batch size, 50 copy network, lr " + learningRate + ", decay " + decayRate +
-                   ", initialization std " + weightsInitStd;
+                   ", " + batchSize + " batch size, " + targetNetworkCopyPeriod + " copy network, lr " + learningRate +
+                   ", decay " + decayRate + ", initialization std " + weightsInitStd;
         }
 
         private void Awake()
@@ -91,7 +92,8 @@ namespace TestGround
             var targetModel = new NetworkModel(targetLayers, new MeanSquaredError(Instantiate(shader)), learningRate,
                 decayRate);
 
-            _DQN = new ModelDQN(updateModel, targetModel, _env.GetNumberOfActions, _env.GetObservationSize);
+            _DQN = new ModelDQN(updateModel, targetModel, _env.GetNumberOfActions, _env.GetObservationSize,
+                batchSize: batchSize);
 
             _DQN.SetTargetModel();
 
