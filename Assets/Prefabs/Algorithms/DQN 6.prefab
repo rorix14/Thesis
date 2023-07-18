@@ -51,7 +51,10 @@ MonoBehaviour:
   simulationSpeed: 22
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 32
+  gamma: 0.96
   activationFunction: 0
-  learningRate: 0.1
-  decayRate: 0.001
-  neuronNumber: 512
+  learningRate: 0.0005
+  decayRate: 0.00001
+  neuronNumber: 128
+  weightsInitStd: 0.005

@@ -32,8 +32,8 @@ namespace NN
         private ComputeBuffer _sigmaBiasesCacheBuffer;
 
         public NoisyNetworkLayer(int nInputs, int nNeurons, ActivationFunction activationFunction, ComputeShader shader,
-            bool isFirstLayer = false) : base(nInputs, nNeurons, activationFunction, shader, isFirstLayer,
-            1 / Mathf.Sqrt(nInputs), 0.01f)
+            bool isFirstLayer = false) : base(nInputs, nNeurons, activationFunction, shader, isFirstLayer /*,
+            1 / Mathf.Sqrt(nInputs), 0.01f*/)
         {
             _sigmaWeights = new float[nInputs, nNeurons];
             _sigmaBiases = new float[1, nNeurons];
@@ -41,7 +41,8 @@ namespace NN
             _epsilonArrayLenght = _epsilonInputOutput.Length;
 
             //var sigmaInitialValues = 0;
-            var sigmaInitialValues = 0.005f / Mathf.Sqrt(nInputs);
+            var sigmaInitialValues = 0.05f / Mathf.Sqrt(nInputs);
+            //var sigmaInitialValues = 0.5f / Mathf.Sqrt(nInputs);
             for (int i = 0; i < _weights.GetLength(1); i++)
             {
                 _sigmaBiases[0, i] = sigmaInitialValues;

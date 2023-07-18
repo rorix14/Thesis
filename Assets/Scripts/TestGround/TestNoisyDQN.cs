@@ -7,27 +7,41 @@ namespace TestGround
     public class TestNoisyDQN : TestDQN
     {
         [SerializeField] protected ComputeShader noisyShader;
+
+        public override string GetDescription()
+        {
+            return "Noisy DQN, sigma 0.05, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
+                   ", " + batchSize + " batch size, " + gamma + " gamma, " + targetNetworkCopyPeriod +
+                   "  copy network, lr " + learningRate + ", decay " + decayRate + ", initialization std 0.005";
+        }
+
         protected override void Start()
         {
             _currentSate = _env.ResetEnv();
 
             var updateLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.ReLu, Instantiate(shader), true),
-                new NoisyNetworkLayer(128, 128, ActivationFunction.ReLu, Instantiate(noisyShader)),
-                new NoisyNetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(noisyShader))
+                new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true),
+                new NoisyNetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(noisyShader)),
+                new NoisyNetworkLayer(neuronNumber, _env.GetNumberOfActions, ActivationFunction.Linear,
+                    Instantiate(noisyShader))
             };
-            var updateModel = new NetworkModel(updateLayers, new MeanSquaredError(Instantiate(shader)));
+            var updateModel = new NetworkModel(updateLayers, new MeanSquaredError(Instantiate(shader)), learningRate,
+                decayRate);
 
             var targetLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.ReLu, Instantiate(shader), true),
-                new NoisyNetworkLayer(128, 128, ActivationFunction.ReLu, Instantiate(noisyShader)),
-                new NoisyNetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(noisyShader))
+                new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true),
+                new NoisyNetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(noisyShader)),
+                new NoisyNetworkLayer(neuronNumber, _env.GetNumberOfActions, ActivationFunction.Linear,
+                    Instantiate(noisyShader))
             };
-            var targetModel = new NetworkModel(targetLayers, new MeanSquaredError(Instantiate(shader)));
 
-            _DQN = new NoisyDQN(updateModel, targetModel, _env.GetNumberOfActions, _env.GetObservationSize);
+            var targetModel = new NetworkModel(targetLayers, new MeanSquaredError(Instantiate(shader)), learningRate,
+                decayRate);
+
+            _DQN = new NoisyDQN(updateModel, targetModel, _env.GetNumberOfActions, _env.GetObservationSize,
+                batchSize: batchSize, gamma: gamma);
 
             _DQN.SetTargetModel();
 

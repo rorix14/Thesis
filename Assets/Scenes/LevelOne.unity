@@ -223,7 +223,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ea41f288403654408e056b39553576c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   numberOfEpisodes: 10000
   simulationSpeed: 1
 --- !u!4 &82632404
@@ -256,11 +257,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 21
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -282,11 +285,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -308,11 +313,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 19
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -335,11 +342,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -361,11 +370,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -388,11 +399,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 13
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -414,11 +427,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -443,11 +458,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 6
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -473,7 +490,8 @@ MonoBehaviour:
   populationSize: 50
   noiseStandardDeviation: 0.01
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 7
   numberOfEpisodes: 300
 --- !u!114 &82632414
@@ -491,7 +509,8 @@ MonoBehaviour:
   populationSize: 60
   noiseStandardDeviation: 0.01
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 4
   numberOfEpisodes: 300
 --- !u!114 &82632415
@@ -511,7 +530,8 @@ MonoBehaviour:
   tournamentNumber: 6
   mutationNoiseStd: 0.01
   shader: {fileID: 7200000, guid: 010bb3406e14d204c9ef0d83fa08e5c6, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 17
   numberOfEpisodes: 300
 --- !u!1 &149193037
@@ -1080,12 +1100,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   algorithmsPrefabs:
-  - {fileID: 2703651450852920366, guid: 8fe584378fb726c4eb7f9f85205c150d, type: 3}
-  - {fileID: 2703651450852920366, guid: 0efca29b38e8aae4d9b96c36190ab738, type: 3}
+  - {fileID: 2284345657881987280, guid: e50a09c718bf298478a7bfe5f477586f, type: 3}
+  - {fileID: 2284345657881987280, guid: cf5f57a2b085c1b49a6cdce85fdd4749, type: 3}
+  - {fileID: 2284345657881987280, guid: e034a9729634c774f8bcf66eb97d5dc2, type: 3}
+  - {fileID: 2284345657881987280, guid: 4a4ea5aafda0bf74e951d9ec53d8d9da, type: 3}
+  - {fileID: 2284345657881987280, guid: 26cb88b3c940b6349a4f05635a5a2f57, type: 3}
+  - {fileID: 2284345657881987280, guid: 3613370322dbc8d48914f2a2b0a73f06, type: 3}
+  - {fileID: 2284345657881987280, guid: 9d718cc0ae396d04dbc1649e2f16e24c, type: 3}
+  - {fileID: 2284345657881987280, guid: f3b2684c9dc782d40bea59254cd1398f, type: 3}
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: one DQN uniform init Part 1
+  saveFileName: one Noisy DQN sigma Part 3
 --- !u!4 &741151727
 Transform:
   m_ObjectHideFlags: 0

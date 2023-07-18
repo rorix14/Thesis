@@ -657,12 +657,82 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   algorithmsPrefabs:
-  - {fileID: 2703651450852920366, guid: 8fe584378fb726c4eb7f9f85205c150d, type: 3}
-  - {fileID: 2703651450852920366, guid: 0efca29b38e8aae4d9b96c36190ab738, type: 3}
+  - {fileID: 4428158730072379104, guid: 93808e96a60bfe24998566ce18b1da1b, type: 3}
+  - {fileID: 4428158730072379104, guid: e653b15765659034ba093ceb7f49fc2c, type: 3}
+  - {fileID: 4428158730072379104, guid: 6624ac1168db8124aaf20a00c585ca88, type: 3}
+  - {fileID: 4428158730072379104, guid: 59f84aeafa55902458b3a387eac0eaa7, type: 3}
+  - {fileID: 4428158730072379104, guid: 4e57b04e95b29074c85fa18130e73d02, type: 3}
+  - {fileID: 4428158730072379104, guid: 6f354071cfb05a84991daf3c32fe9762, type: 3}
+  - {fileID: 4428158730072379104, guid: 3de96b1a539f91742a0ed15c698fefe3, type: 3}
+  - {fileID: 4428158730072379104, guid: 4cadcf458c8b3b846be43a8e3a5de4d2, type: 3}
+  - {fileID: 4428158730072379104, guid: b524df7815b5c3a438e5e32d654765c7, type: 3}
+  - {fileID: 4428158730072379104, guid: baa5fddeb26b00042bd342b1750f7537, type: 3}
+  - {fileID: 4428158730072379104, guid: 88b6f7272e4272642b3d2b66d60515de, type: 3}
+  - {fileID: 4428158730072379104, guid: ede7e3407c0161b4392200bc3000f8b0, type: 3}
+  - {fileID: 4428158730072379104, guid: 3708b9544249b87428505ffa98cb78b5, type: 3}
+  - {fileID: 4428158730072379104, guid: d251e09633b497c47b2c7d377f37907c, type: 3}
+  - {fileID: 4428158730072379104, guid: d28255409dda617499d41db97922c748, type: 3}
+  - {fileID: 4428158730072379104, guid: be55170514c08c74ab9a77bbdf3de63b, type: 3}
+  - {fileID: 4428158730072379104, guid: c9e6738f85f9d0f449440232bd23acd0, type: 3}
+  - {fileID: 4428158730072379104, guid: f41c3095ee26886439154a52cedff3a1, type: 3}
+  - {fileID: 4428158730072379104, guid: f252185c702e3224ca4347ce96079d1d, type: 3}
+  - {fileID: 4428158730072379104, guid: dd2d9fbbc27931a449d9682bc825eb90, type: 3}
+  - {fileID: 4428158730072379104, guid: 5070603bf10ab2f41a7b371f4703b482, type: 3}
+  - {fileID: 4428158730072379104, guid: ed601f5e0c6cb504481fd97a7feaadad, type: 3}
+  - {fileID: 4428158730072379104, guid: b55815ff549975943b9190c6a4c33d9b, type: 3}
+  - {fileID: 4428158730072379104, guid: 989a50bb9d768b04a8e7a2cc65b00a55, type: 3}
+  - {fileID: 4428158730072379104, guid: e9d5a5e6519419d45873c3621401ff39, type: 3}
+  - {fileID: 4428158730072379104, guid: fc403bc42a3323c43a5a67db81057abb, type: 3}
+  - {fileID: 4428158730072379104, guid: e08279de7d2cf9a4592c4a38285b2eec, type: 3}
+  - {fileID: 4428158730072379104, guid: 97d5899a3657cfa4e8a4c9414127bea2, type: 3}
+  - {fileID: 4428158730072379104, guid: bf0edb144eb1b9e4fb404593428194de, type: 3}
+  - {fileID: 4428158730072379104, guid: 994a6eee74e7aeb44a67b15f4a7dd827, type: 3}
+  - {fileID: 4428158730072379104, guid: cd7dc08db14549144a8cd5e7c77047b1, type: 3}
+  - {fileID: 4428158730072379104, guid: 007e837722afdfd4bb1ca99017ceadba, type: 3}
+  - {fileID: 4428158730072379104, guid: 22c02ce8c9d63a8418f5caf56504ef7f, type: 3}
+  - {fileID: 4428158730072379104, guid: 881e97cef72e508408b4e13a1ce3d71c, type: 3}
+  - {fileID: 4428158730072379104, guid: 8a2bd8254ff3ece42864780af7f4abff, type: 3}
+  - {fileID: 4428158730072379104, guid: fd1538b63b3832d4698e1436393ec60a, type: 3}
+  - {fileID: 4428158730072379104, guid: 693d6ad182aeeec4195dccf3611cd177, type: 3}
+  - {fileID: 4428158730072379104, guid: 93a07ab9f665a1146b3e15c696484468, type: 3}
+  - {fileID: 4428158730072379104, guid: 0d7d234a601d30742ab1ccab8e98310c, type: 3}
+  - {fileID: 4428158730072379104, guid: aaaa6d6570970a746958df0fe9b3fce6, type: 3}
+  - {fileID: 4428158730072379104, guid: 53ef1d7031312a84b947399ea20d905b, type: 3}
+  - {fileID: 4428158730072379104, guid: bc0a15c9023d6434cb75782adb9bd1cb, type: 3}
+  - {fileID: 4428158730072379104, guid: 8ed11edaed8013a42a81165e3c361bb5, type: 3}
+  - {fileID: 4428158730072379104, guid: ab838ef7579b7f64fa1d4a6f90a9734b, type: 3}
+  - {fileID: 4428158730072379104, guid: f07cae6139fa3854caa9ae8b1691c453, type: 3}
+  - {fileID: 4428158730072379104, guid: 3125e4806700ef348a88f46dd5f98d1d, type: 3}
+  - {fileID: 4428158730072379104, guid: f86cad99573e28e479ce20763f0ddf3a, type: 3}
+  - {fileID: 4428158730072379104, guid: fc14eb82f99bdaa4ba7d314b9cc03896, type: 3}
+  - {fileID: 4428158730072379104, guid: 786c611fb13304848926a75b18c395b5, type: 3}
+  - {fileID: 4428158730072379104, guid: 1b132f74ef7fba44db04b5da5065cd2d, type: 3}
+  - {fileID: 4428158730072379104, guid: 0bc354103c356fb4296876fd56197928, type: 3}
+  - {fileID: 4428158730072379104, guid: 4ace08c83d4354c4f9ee16219d05be02, type: 3}
+  - {fileID: 4428158730072379104, guid: f0520055168e2654ba83e3a2f8d395b5, type: 3}
+  - {fileID: 4428158730072379104, guid: d0170e31ae593e442a95c7a495d2307d, type: 3}
+  - {fileID: 4428158730072379104, guid: ff7416183f5dff6488acb877129305c5, type: 3}
+  - {fileID: 4428158730072379104, guid: b9ec8f20412ed3b46881749eff2c6001, type: 3}
+  - {fileID: 4428158730072379104, guid: 530dd64cc6dc80447bfc59ad12c0e21e, type: 3}
+  - {fileID: 4428158730072379104, guid: 22de76a77c0a0264bb7be1ad9d30e981, type: 3}
+  - {fileID: 4428158730072379104, guid: b9ab8eb3743e5494c999c7bce673d1b5, type: 3}
+  - {fileID: 4428158730072379104, guid: df0776b81c508984bae2a6c7f406dcf5, type: 3}
+  - {fileID: 4428158730072379104, guid: 20934862dbaacf044b65c0a816bfa28d, type: 3}
+  - {fileID: 4428158730072379104, guid: a2ebd880e92eaac4db803d59bc3d360c, type: 3}
+  - {fileID: 4428158730072379104, guid: d75d9923239682444886aab21cc02b01, type: 3}
+  - {fileID: 4428158730072379104, guid: 001f516c3e84aca49861365e1d710060, type: 3}
+  - {fileID: 4428158730072379104, guid: 6c687866d0b4003498e68a8f6e2f5242, type: 3}
+  - {fileID: 4428158730072379104, guid: 68d143d252b91564098587711d88a150, type: 3}
+  - {fileID: 4428158730072379104, guid: a83176d25899e9047a42acb5ba9e04e1, type: 3}
+  - {fileID: 4428158730072379104, guid: 087b1b6604341fe47a8c667f26794a63, type: 3}
+  - {fileID: 4428158730072379104, guid: 580c04119be5d004fb2af54f5bf4503d, type: 3}
+  - {fileID: 4428158730072379104, guid: 66a5023214468d743a3fae983042b116, type: 3}
+  - {fileID: 4428158730072379104, guid: 2ca18e05806d9b542849da4c63d4dd5b, type: 3}
+  - {fileID: 4428158730072379104, guid: 999e20e550a597f4eb83ffc04ea082a9, type: 3}
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: goal  DQN unifrom init Part 1
+  saveFileName: goal N-step DQN n-step Part 1
 --- !u!4 &797145189
 Transform:
   m_ObjectHideFlags: 0
@@ -721,11 +791,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 20
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -743,7 +815,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ea41f288403654408e056b39553576c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   numberOfEpisodes: 300
   simulationSpeed: 1
 --- !u!4 &845216472
@@ -776,11 +849,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -803,11 +878,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 12
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -829,11 +906,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -855,11 +934,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -882,11 +963,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 13
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -908,11 +991,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 15
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -937,11 +1022,13 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 6
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -967,7 +1054,8 @@ MonoBehaviour:
   populationSize: 50
   noiseStandardDeviation: 0.01
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 17
   numberOfEpisodes: 300
 --- !u!114 &845216481
@@ -985,7 +1073,8 @@ MonoBehaviour:
   populationSize: 50
   noiseStandardDeviation: 0.01
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 4
   numberOfEpisodes: 300
 --- !u!114 &845216482
@@ -1005,7 +1094,8 @@ MonoBehaviour:
   tournamentNumber: 6
   mutationNoiseStd: 0.01
   shader: {fileID: 7200000, guid: 010bb3406e14d204c9ef0d83fa08e5c6, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
 --- !u!1 &905310493

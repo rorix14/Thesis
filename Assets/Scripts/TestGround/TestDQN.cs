@@ -18,7 +18,7 @@ namespace TestGround
         [SerializeField] private WindowGraph windowGraphPrefab;
         [SerializeField] protected float simulationSpeed;
         [SerializeField] private int numberOfEpisodes;
-        [SerializeField] private int targetNetworkCopyPeriod;
+        [SerializeField] protected int targetNetworkCopyPeriod;
         private int _episodeIndex;
         protected float[] _currentSate;
         private int _totalIteration;
@@ -33,7 +33,9 @@ namespace TestGround
 
         // private Stopwatch _stopwatch;
         // private List<long> _times;
+
         [SerializeField] protected int batchSize;
+        [SerializeField] protected float gamma;
 
         //Only were for testing
         [SerializeField] protected ActivationFunction activationFunction;
@@ -45,8 +47,9 @@ namespace TestGround
         public override string GetDescription()
         {
             return "DQN, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
-                   ", " + batchSize + " batch size, " + targetNetworkCopyPeriod + " copy network, lr " + learningRate +
-                   ", decay " + decayRate + ", initialization std " + weightsInitStd;
+                   ", " + batchSize + " batch size, " + gamma + " gamma, " + targetNetworkCopyPeriod +
+                   "  copy network, lr " + learningRate + ", decay " + decayRate + ", initialization std " +
+                   weightsInitStd;
         }
 
         private void Awake()
@@ -93,7 +96,7 @@ namespace TestGround
                 decayRate);
 
             _DQN = new ModelDQN(updateModel, targetModel, _env.GetNumberOfActions, _env.GetObservationSize,
-                batchSize: batchSize);
+                batchSize: batchSize, gamma: gamma);
 
             _DQN.SetTargetModel();
 
