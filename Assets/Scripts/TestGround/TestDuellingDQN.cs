@@ -12,46 +12,49 @@ namespace TestGround
 
             var inputLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.ReLu, Instantiate(shader), true),
+                new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true),
             };
-            var inputModel = new NetworkModel(inputLayers, new NoLoss(Instantiate(shader)));
+            var inputModel = new NetworkModel(inputLayers, new NoLoss(Instantiate(shader)), learningRate, decayRate);
 
             var valueLayers = new NetworkLayer[]
             {
-                new NetworkLayer(128, 128, ActivationFunction.ReLu, Instantiate(shader)),
-                new NetworkLayer(128, 1, ActivationFunction.Linear, Instantiate(shader)),
+                new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
+                new NetworkLayer(neuronNumber, 1, ActivationFunction.Linear, Instantiate(shader)),
             };
-            var valueModel = new NetworkModel(valueLayers, new NoLoss(Instantiate(shader)));
+            var valueModel = new NetworkModel(valueLayers, new NoLoss(Instantiate(shader)), learningRate, decayRate);
 
             var advantageLayers = new NetworkLayer[]
             {
-                new NetworkLayer(128, 128, ActivationFunction.ReLu, Instantiate(shader)),
-                new NetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
+                new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
+                new NetworkLayer(neuronNumber, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
             };
-            var advantageModel = new NetworkModel(advantageLayers, new NoLoss(Instantiate(shader)));
+            var advantageModel =
+                new NetworkModel(advantageLayers, new NoLoss(Instantiate(shader)), learningRate, decayRate);
 
-            DuellingNetwork updateModel = new DuellingNetwork(inputModel, valueModel, advantageModel);
+            var updateModel = new DuellingNetwork(inputModel, valueModel, advantageModel);
 
             // target creation
             var inputTargetLayers = new NetworkLayer[]
             {
-                new NetworkLayer(_env.GetObservationSize, 128, ActivationFunction.ReLu, Instantiate(shader), true),
+                new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true),
             };
-            var inputTargetModel = new NetworkModel(inputTargetLayers, new NoLoss(Instantiate(shader)));
+            var inputTargetModel = new NetworkModel(inputTargetLayers, new NoLoss(Instantiate(shader)), learningRate,
+                decayRate);
 
             var valueTargetLayers = new NetworkLayer[]
             {
-                new NetworkLayer(128, 128, ActivationFunction.ReLu, Instantiate(shader)),
-                new NetworkLayer(128, 1, ActivationFunction.Linear, Instantiate(shader)),
+                new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
+                new NetworkLayer(neuronNumber, 1, ActivationFunction.Linear, Instantiate(shader)),
             };
             var valueTargetModel = new NetworkModel(valueTargetLayers, new NoLoss(Instantiate(shader)));
 
             var advantageTargetLayers = new NetworkLayer[]
             {
-                new NetworkLayer(128, 128, ActivationFunction.ReLu, Instantiate(shader)),
-                new NetworkLayer(128, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
+                new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
+                new NetworkLayer(neuronNumber, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
             };
-            var advantageTargetModel = new NetworkModel(advantageTargetLayers, new NoLoss(Instantiate(shader)));
+            var advantageTargetModel = new NetworkModel(advantageTargetLayers, new NoLoss(Instantiate(shader)),
+                learningRate, decayRate);
 
             DuellingNetwork targetModel = new DuellingNetwork(inputTargetModel, valueTargetModel, advantageTargetModel);
 
