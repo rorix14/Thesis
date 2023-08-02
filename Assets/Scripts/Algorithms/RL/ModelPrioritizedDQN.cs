@@ -20,8 +20,7 @@ namespace Algorithms.RL
 
         private readonly SumTree _sumTree;
 
-        public ModelPrioritizedDQN(NetworkModel networkModel, NetworkModel targetModel,
-            int numberOfActions,
+        public ModelPrioritizedDQN(NetworkModel networkModel, NetworkModel targetModel, int numberOfActions,
             int stateSize, float beta = 0.4f, float alpha = 0.6f, int maxExperienceSize = 10000,
             int minExperienceSize = 100, int batchSize = 32,
             float gamma = 0.99f) : base(networkModel, targetModel, numberOfActions, stateSize, maxExperienceSize,

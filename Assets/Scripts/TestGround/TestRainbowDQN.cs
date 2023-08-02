@@ -11,6 +11,17 @@ namespace TestGround
         [SerializeField] private int supportSize;
         [SerializeField] private float supportMinValue;
         [SerializeField] private int supportMaxValue;
+        [SerializeField] private float beta;
+        [SerializeField] private float alpha;
+        [SerializeField] private float sigma;
+
+        public override string GetDescription()
+        {
+            return "PER DQN, n-step " + stepNumber + ", alpha " + alpha + ", beta " + beta + ", sigma " + sigma + " , 3 layers, " + neuronNumber + " neurons, " +
+                   activationFunction + ", " + batchSize + " batch size, " + gamma + " gamma, " +
+                   targetNetworkCopyPeriod + "  copy network, lr " + learningRate + ", decay " + decayRate +
+                   ", initialization std " + weightsInitStd;
+        }
 
         protected override void Start()
         {

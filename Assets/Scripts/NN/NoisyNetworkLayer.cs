@@ -11,7 +11,7 @@ namespace NN
         private readonly float[] _epsilonInputOutput;
 
         private readonly float[] _noiseSamplesBuffer;
-        
+
         // Cashed variables
         private readonly int _epsilonArrayLenght;
         private readonly int _noiseSamplesSize;
@@ -32,8 +32,8 @@ namespace NN
         private ComputeBuffer _sigmaBiasesCacheBuffer;
 
         public NoisyNetworkLayer(int nInputs, int nNeurons, ActivationFunction activationFunction, ComputeShader shader,
-            bool isFirstLayer = false) : base(nInputs, nNeurons, activationFunction, shader, isFirstLayer /*,
-            1 / Mathf.Sqrt(nInputs), 0.01f*/)
+            float sigma = 0.01f, bool isFirstLayer = false) : base(nInputs, nNeurons, activationFunction, shader,
+            isFirstLayer, 1 / Mathf.Sqrt(nInputs), 1f /*0.01f*/)
         {
             _sigmaWeights = new float[nInputs, nNeurons];
             _sigmaBiases = new float[1, nNeurons];
@@ -41,8 +41,7 @@ namespace NN
             _epsilonArrayLenght = _epsilonInputOutput.Length;
 
             //var sigmaInitialValues = 0;
-            var sigmaInitialValues = 0.05f / Mathf.Sqrt(nInputs);
-            //var sigmaInitialValues = 0.5f / Mathf.Sqrt(nInputs);
+            var sigmaInitialValues = sigma / Mathf.Sqrt(nInputs);
             for (int i = 0; i < _weights.GetLength(1); i++)
             {
                 _sigmaBiases[0, i] = sigmaInitialValues;
@@ -57,9 +56,9 @@ namespace NN
                 case ActivationFunction.ReLu:
                     _kernelHandleBiasesBackward = _shader.FindKernel("backwards_pass_ReLU_biases_Adam");
                     break;
-                 case ActivationFunction.Tanh:
-                     _kernelHandleBiasesBackward = _shader.FindKernel("backwards_pass_Tanh_biases_Adam");
-                     break;
+                case ActivationFunction.Tanh:
+                    _kernelHandleBiasesBackward = _shader.FindKernel("backwards_pass_Tanh_biases_Adam");
+                    break;
                 case ActivationFunction.Linear:
                     _kernelHandleBiasesBackward = _shader.FindKernel("backwards_pass_linear_biases_Adam");
                     break;
@@ -72,7 +71,7 @@ namespace NN
             _sigmaBiasesBuffer.SetData(_sigmaBiases);
 
             _epsilonInputOutputBuffer = new ComputeBuffer(_epsilonInputOutput.Length, sizeof(float));
-            
+
             _noiseSamplesSize = 10000000;
             _noiseSamplesBuffer = new float[_noiseSamplesSize];
             for (int i = 0; i < _noiseSamplesSize; i++)
@@ -121,7 +120,7 @@ namespace NN
             _sigmaWeightsBuffer?.Dispose();
             _sigmaBiasesBuffer?.Dispose();
             _epsilonInputOutputBuffer?.Dispose();
-            
+
             _sigmaWeightsMomentumBuffer?.Dispose();
             _sigmaWeightsCacheBuffer?.Dispose();
             _sigmaBiasesMomentumBuffer?.Dispose();
