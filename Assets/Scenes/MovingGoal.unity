@@ -656,11 +656,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f35cae125de164c4f9223ab9b6c7e196, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  algorithmsPrefabs: []
+  algorithmsPrefabs:
+  - {fileID: -4589656829319374267, guid: 2e8dd5cb906dab44eb4c00984e4722c4, type: 3}
+  - {fileID: -4589656829319374267, guid: 090ef00a46038194faaa9d593f3ff10c, type: 3}
+  - {fileID: -4589656829319374267, guid: 95a45eeb85e43f6489a895a44970d123, type: 3}
+  - {fileID: -4589656829319374267, guid: 24da300de33dfd24684e3a4ec0aeb48d, type: 3}
+  - {fileID: -4589656829319374267, guid: 21cdf6be48a196e4dbc15647267ff00c, type: 3}
+  - {fileID: -4589656829319374267, guid: 3eaf00c9aead4a14cb0de089abc11324, type: 3}
+  - {fileID: -4589656829319374267, guid: f51b527c45abd254c9af437460d2aabf, type: 3}
+  - {fileID: -4589656829319374267, guid: d3dde692c6ff5f5429afb7a77334ad81, type: 3}
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: goal DQN Part 1
+  saveFileName: goal Noizy Value Rainbow DQN Part 1
 --- !u!4 &797145189
 Transform:
   m_ObjectHideFlags: 0
@@ -719,8 +727,7 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 20
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
@@ -743,8 +750,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ea41f288403654408e056b39553576c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   numberOfEpisodes: 300
   simulationSpeed: 1
 --- !u!4 &845216472
@@ -777,8 +783,7 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
@@ -806,8 +811,7 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 12
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
@@ -834,8 +838,7 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
@@ -864,8 +867,7 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
@@ -894,8 +896,7 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 13
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
@@ -922,8 +923,7 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 15
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
@@ -953,8 +953,7 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 6
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
@@ -988,8 +987,7 @@ MonoBehaviour:
   populationSize: 50
   noiseStandardDeviation: 0.01
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 17
   numberOfEpisodes: 300
 --- !u!114 &845216481
@@ -1007,8 +1005,7 @@ MonoBehaviour:
   populationSize: 50
   noiseStandardDeviation: 0.01
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 4
   numberOfEpisodes: 300
 --- !u!114 &845216482
@@ -1028,8 +1025,7 @@ MonoBehaviour:
   tournamentNumber: 6
   mutationNoiseStd: 0.01
   shader: {fileID: 7200000, guid: 010bb3406e14d204c9ef0d83fa08e5c6, type: 3}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
-    type: 3}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
 --- !u!1 &905310493
