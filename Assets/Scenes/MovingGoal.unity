@@ -668,7 +668,7 @@ MonoBehaviour:
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: goal Noizy Value Rainbow DQN Part 1
+  saveFileName: goal Noizy Advantage Rainbow DQN Part 1
 --- !u!4 &797145189
 Transform:
   m_ObjectHideFlags: 0
