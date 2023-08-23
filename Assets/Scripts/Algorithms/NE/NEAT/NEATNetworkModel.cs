@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using NN.CPU_Single;
 using UnityEngine;
 
-public class NEATNeworkModel
+public class NEATNetworkModel
 {
     public List<NEATNeuron> neurons;
     public List<Links> neuronLinks;
-
-
-    public float CompatabilityScore(NEATNeworkModel networkToCompare)
+    
+    public float CompatabilityScore(NEATNetworkModel networkToCompare)
     {
         float disjointNumber = 0;
         float excessNumber = 0;
