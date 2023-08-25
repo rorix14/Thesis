@@ -16,8 +16,10 @@ namespace Algorithms.NE.NEAT
         private readonly float[] _episodeRewardUpdate;
         private int _finishedIndividuals;
         private float _episodeRewardMean;
+        private float _episodeBestReward;
         
         public float EpisodeRewardMean => _episodeRewardMean;
+        public float EpisodeBestReward => _episodeBestReward;
         public float FinishedIndividuals => _finishedIndividuals;
 
         public NEAT(NEATModel neatModel, int numberOfActions, int batchSize)
@@ -46,7 +48,7 @@ namespace Algorithms.NE.NEAT
                     continue;
                 }
 
-                var individualStartIndex = i * _batchSize;
+                var individualStartIndex = i * _numberOfActions;
                 var maxAction = _modelPredictions[individualStartIndex];
                 var maxIndex = 0;
                 for (int j = 1; j < _numberOfActions; j++)
@@ -80,18 +82,19 @@ namespace Algorithms.NE.NEAT
         public void Train()
         {
             _episodeRewardMean = 0f;
+            _episodeBestReward = float.MinValue;
             for (int i = 0; i < _batchSize; i++)
             {
-                var reward = _episodeRewards[i];
-                _episodeRewardMean += reward;
-                _episodeRewardUpdate[i] = reward;
-            
+                var episodeReward = _episodeRewards[i];
+                _episodeRewardUpdate[i] = episodeReward;
+                _episodeRewardMean += episodeReward;
+                _episodeBestReward = episodeReward > _episodeBestReward ? episodeReward : _episodeBestReward;
                 _episodeRewards[i] = 0f;
                 _completedAgents[i] = false;
             }
 
-            _finishedIndividuals = 0;
             _episodeRewardMean /= _batchSize;
+            _finishedIndividuals = 0;
             
             _neatModel.Update(_episodeRewardUpdate);
         }

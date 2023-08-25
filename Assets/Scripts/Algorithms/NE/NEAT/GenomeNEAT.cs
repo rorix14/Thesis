@@ -69,7 +69,7 @@ namespace Algorithms.NE.NEAT
                 var inputNeuronId = _neurons[i].Id;
                 for (int j = 0; j < outputNumber; j++)
                 {
-                    _links.Add(new LinkGene(innovationNumber++, inputNeuronId, _neurons[j].Id,
+                    _links.Add(new LinkGene(innovationNumber++, inputNeuronId, _neurons[inputNumber + j].Id,
                         0.005f * Random.Range(-4f, 4f), true, false));
                 }
             }
@@ -111,6 +111,7 @@ namespace Algorithms.NE.NEAT
                 if (!link.IsEnabled) continue;
 
                 var toNeuron = link.ToNeuron;
+                //TODO: to neuron index is repeated
                 _neuronsWeights[GetElementPos(toNeuron)].Add(link.Weight);
                 _neuronsOutputIndexes[GetElementPos(toNeuron)].Add(GetElementPos(link.FromNeuron));
             }
@@ -120,13 +121,13 @@ namespace Algorithms.NE.NEAT
         {
             //TODO: reuse variables 
             var networkOutputs = new float[_outputNumber];
-            var outputNeuronStart = _neurons.Count - _outputNumber - 1;
+            var outputNeuronStart = _neurons.Count - _outputNumber;
             for (int i = 0; i < _inputNumber; i++)
             {
                 _neuronOutputs[i] = input[i];
             }
 
-            for (int i = 0; i < _neuronsWeights.Length; i++)
+            for (int i = _inputNumber; i < _neuronsWeights.Length; i++)
             {
                 var sum = 0f;
                 for (int j = 0; j < _neuronsWeights[i].Count; j++)
@@ -134,14 +135,18 @@ namespace Algorithms.NE.NEAT
                     sum += _neuronsWeights[i][j] * _neuronOutputs[_neuronsOutputIndexes[i][j]];
                 }
 
-                var expPos = (float)Math.Exp(sum);
-                var expNeg = (float)Math.Exp(-sum);
-                var result = (expPos - expNeg) / (expPos + expNeg);
-                _neuronOutputs[i] = result;
+                if (i < outputNeuronStart)
+                {
+                    var expPos = (float)Math.Exp(sum);
+                    var expNeg = (float)Math.Exp(-sum);
+                    sum = (expPos - expNeg) / (expPos + expNeg);
+                }
+                else
+                {
+                    networkOutputs[i % outputNeuronStart] = sum;
+                }
 
-                if (i < outputNeuronStart) continue;
-
-                networkOutputs[i % outputNeuronStart] = result;
+                _neuronOutputs[i] = sum;
             }
 
             return networkOutputs;
@@ -186,10 +191,11 @@ namespace Algorithms.NE.NEAT
                     neuron2Id = neuron2.Id;
 
                     //TODO: might also need to check for depth
-                    if (!(DuplicateLink(neuron1Id, neuron2Id) || neuron1Id == neuron2Id))
+                    if (!(DuplicateLink(neuron1Id, neuron2Id) || neuron1Id == neuron2Id ||
+                          Math.Abs(neuron1.SplitX - neuron2.SplitX) < 0f))
                     {
                         //TODO: equals =, not in original implementation
-                        if (neuron1.SplitX >= neuron2.SplitX)
+                        if (neuron1.SplitX > neuron2.SplitX)
                         {
                             isRecurrent = true;
                         }
@@ -286,7 +292,7 @@ namespace Algorithms.NE.NEAT
         public void MutateWeights(float mutationRate, float weightReplaceRate)
         {
             if (Random.value > mutationRate) return;
-            
+
             for (int i = 0; i < _links.Count; i++)
             {
                 //TODO: create buffers for both random variables, put those buffers in the NEAT Model class
@@ -364,9 +370,38 @@ namespace Algorithms.NE.NEAT
         }
 
         //TODO: test this code
+        public void Test()
+        {
+            _neurons.Sort((a, b) =>
+            {
+                if (a.NeuronType == NeuronType.Hidden)
+                {
+                    return a.SplitX.CompareTo(b.SplitX);
+                }
+                else if(a.NeuronType == NeuronType.Output)
+                {
+                    if (b.NeuronType == NeuronType.Hidden || b.NeuronType == NeuronType.Input)
+                    {
+                        return a.SplitX.CompareTo(b.SplitX);
+                    }
+
+                    return a.Id.CompareTo(b.Id);
+                }
+                else if(a.NeuronType == NeuronType.Input)
+                {
+                    if (b.NeuronType == NeuronType.Input)
+                    {
+                        return a.Id.CompareTo(b.Id);
+                    }
+                    
+                    return a.SplitX.CompareTo(b.SplitX);
+                }
+                
+                return 0;
+            });
+        }
         public void SortGenes()
         {
-            _neurons.Sort((a, b) => a.SplitX.CompareTo(b.SplitX));
             _links.Sort((a, b) => a.InnovationID.CompareTo(b.InnovationID));
         }
 

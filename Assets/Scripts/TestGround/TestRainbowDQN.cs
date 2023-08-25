@@ -37,16 +37,16 @@ namespace TestGround
             //Value model might not need to have a noisy shader since it does not affect the chosen action
             var valueLayers = new NetworkLayer[]
             {
-                new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
-                new NetworkLayer(neuronNumber, supportSize, ActivationFunction.Linear, Instantiate(shader)),
+                new NoisyNetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(noisyShader), sigma),
+                new NoisyNetworkLayer(neuronNumber, supportSize, ActivationFunction.Linear, Instantiate(noisyShader), sigma),
             };
             var valueModel = new NetworkModel(valueLayers, new NoLoss(Instantiate(shader)), learningRate, decayRate);
 
             var advantageLayers = new NetworkLayer[]
             {
-                new NoisyNetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(noisyShader), sigma),
-                new NoisyNetworkLayer(neuronNumber, _env.GetNumberOfActions * supportSize, ActivationFunction.Linear,
-                    Instantiate(noisyShader), sigma)
+                new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
+                new NetworkLayer(neuronNumber, _env.GetNumberOfActions * supportSize, ActivationFunction.Linear,
+                    Instantiate(shader))
             };
             var advantageModel =
                 new NetworkModel(advantageLayers, new NoLoss(Instantiate(shader)), learningRate, decayRate);
@@ -63,16 +63,16 @@ namespace TestGround
 
             var valueTargetLayers = new NetworkLayer[]
             {
-                new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
-                new NetworkLayer(neuronNumber, supportSize, ActivationFunction.Linear, Instantiate(shader)),
+                new NoisyNetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(noisyShader), sigma),
+                new NoisyNetworkLayer(neuronNumber, supportSize, ActivationFunction.Linear, Instantiate(noisyShader), sigma),
             };
             var valueTargetModel = new NetworkModel(valueTargetLayers, new NoLoss(Instantiate(shader)));
 
             var advantageTargetLayers = new NetworkLayer[]
             {
-                new NoisyNetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(noisyShader), sigma),
-                new NoisyNetworkLayer(neuronNumber, _env.GetNumberOfActions * supportSize, ActivationFunction.Linear,
-                    Instantiate(noisyShader), sigma)
+                new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
+                new NetworkLayer(neuronNumber, _env.GetNumberOfActions * supportSize, ActivationFunction.Linear,
+                    Instantiate(shader))
             };
             var advantageTargetModel = new NetworkModel(advantageTargetLayers, new NoLoss(Instantiate(shader)));
 

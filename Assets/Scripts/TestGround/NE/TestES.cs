@@ -4,15 +4,17 @@ using Algorithms.NE;
 using Graphs;
 using Gym;
 using NN;
+using TestGround.Base;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace TestGround.NE
 {
-    public class TestES : MonoBehaviour
+    public class TestES : TestAlgorithmBase
     {
         [SerializeField] protected int populationSize;
         [SerializeField] protected float noiseStandardDeviation;
+        [SerializeField] protected int requiredSimulations;
         [SerializeField] protected ComputeShader shader;
         [SerializeField] private WindowGraph windowGraphPrefab;
         [SerializeField] protected float simulationSpeed;
@@ -25,19 +27,35 @@ namespace TestGround.NE
 
         protected ES _neModel;
 
-        private List<float> _rewardsMeanOverTime;
+        //private List<float> _rewardsMeanOverTime;
         private WindowGraph _graphReward;
 
         protected float[,] _currentSates;
+
+        //Only were for testing
+        [SerializeField] protected ActivationFunction activationFunction;
+        [SerializeField] protected float learningRate;
+        [SerializeField] protected float decayRate;
+        [SerializeField] protected int neuronNumber;
+        [SerializeField] protected float weightsInitStd;
+
+        public override string GetDescription()
+        {
+            return "DQN, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
+                   ", " + populationSize + " population size, noise std " + noiseStandardDeviation + ", lr " +
+                   learningRate + ", decay " + decayRate + ", initialization std " + weightsInitStd;
+        }
 
         private void Awake()
         {
             _env = FindObjectOfType<JobStealthGameEnv>();
             //_env = FindObjectOfType<DistributedStealthGameEnv>();
-            _rewardsMeanOverTime = new List<float>(numberOfEpisodes);
-            for (int i = 0; i < _rewardsMeanOverTime.Capacity; i++)
+            Rewards = new List<float>(numberOfEpisodes);
+            Loss = new List<float>(numberOfEpisodes);
+            for (int i = 0; i < Rewards.Capacity; i++)
             {
-                _rewardsMeanOverTime.Add(0f);
+                Rewards.Add(0f);
+                Loss.Add(0f);
             }
         }
 
@@ -53,16 +71,17 @@ namespace TestGround.NE
 
             var network = new NetworkLayer[]
             {
-                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, _env.GetObservationSize, 128,
-                    ActivationFunction.ReLu, Instantiate(shader)),
-                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, 128, 128,
-                    ActivationFunction.ReLu,
-                    Instantiate(shader)),
-                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, 128, _env.GetNumberOfActions,
-                    ActivationFunction.Linear, Instantiate(shader))
+                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, _env.GetObservationSize,
+                    neuronNumber,
+                    activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
+                // new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, neuronNumber, neuronNumber,
+                //     activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
+                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, neuronNumber,
+                    _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader),
+                    paramsCoefficient: weightsInitStd)
             };
 
-            var neModel = new ESModel(network);
+            var neModel = new ESModel(network, learningRate, decayRate);
             _neModel = new ES(neModel, _env.GetNumberOfActions, populationSize);
 
             Time.timeScale = simulationSpeed;
@@ -72,10 +91,10 @@ namespace TestGround.NE
         {
             if (_episodeIndex >= numberOfEpisodes)
             {
-                if (!_env) return;
-
-                _env.Close();
-                PlotTrainingData();
+                IsFinished = true;
+                //if (!_env) return;
+                //_env.Close();
+                //PlotTrainingData();
                 return;
             }
 
@@ -87,16 +106,20 @@ namespace TestGround.NE
 
             if (_neModel.FinishedIndividuals < populationSize) return;
 
-            _neModel.Train();
-            // if (_episodeIndex == 260)
-            // {
-            //     _neModel.ReduceNoise(noiseStandardDeviation);
-            // }
-
-            _rewardsMeanOverTime[_episodeIndex] = _neModel.EpisodeRewardMean;
+            Rewards[_episodeIndex] = _neModel.EpisodeRewardMean;
+            Loss[_episodeIndex] = _neModel.EpisodeBestReward;
 
             _currentSates = _env.DistributedResetEnv();
             ++_episodeIndex;
+            
+            if (_episodeIndex % requiredSimulations == 0)
+            {
+                _neModel.Train();
+            }
+            else
+            {
+                _neModel.SoftReset();
+            }
         }
 
         private void PlotTrainingData()
@@ -104,7 +127,7 @@ namespace TestGround.NE
             Time.timeScale = 1;
 
             float rewardSum = 0.0f;
-            foreach (var reward in _rewardsMeanOverTime)
+            foreach (var reward in Rewards)
             {
                 rewardSum += reward;
             }
@@ -115,7 +138,7 @@ namespace TestGround.NE
             //     timeSum += time;
             // }
 
-            print("Average Reward: " + rewardSum / _rewardsMeanOverTime.Count);
+            print("Average Reward: " + rewardSum / Rewards.Count);
             //print("Average Time: " + timeSum / _times.Count);
 
             var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
@@ -127,15 +150,15 @@ namespace TestGround.NE
         {
             yield return new WaitForSeconds(0.1f);
 
-            _graphReward.SetGraph(null, _rewardsMeanOverTime, GraphType.LineGraph,
+            _graphReward.SetGraph(null, Rewards, GraphType.LineGraph,
                 "Rewards per Episode", "episodes", "rewards");
         }
 
         private void OnDestroy()
         {
-            Time.timeScale = 1;
+            //Time.timeScale = 1;
             _neModel?.Dispose();
-            if (_env) _env.Close();
+            //if (_env) _env.Close();
         }
     }
 }

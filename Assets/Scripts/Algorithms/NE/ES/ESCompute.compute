@@ -105,8 +105,8 @@ void ES_backwards_pass(uint3 id : SV_DispatchThreadID)
 
     for (unsigned int i = 0; i < input_column_size; ++i)
     {
-        //const float normalized_reward = (d_values[i] - reward_mean) / reward_std;
-        const float normalized_reward = d_values[i];
+        const float normalized_reward = (d_values[i] - reward_mean) / reward_std;
+        //const float normalized_reward = d_values[i];
 
         const float mirror = i < half_population_size ? 1.0f : -1.0f;
         // d_weight += mirror * weight_noise[weight_noise_column_index + i % half_population_size * weights_row_size] *

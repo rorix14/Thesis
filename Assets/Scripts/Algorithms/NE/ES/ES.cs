@@ -21,12 +21,12 @@ namespace Algorithms.NE
         protected readonly float[,] _episodeRewardUpdate;
         protected int _finishedIndividuals;
         protected float _episodeRewardMean;
+        protected float _episodeBestReward;
 
         private readonly int[] _rewardsIndexKeys;
 
         public float EpisodeRewardMean => _episodeRewardMean;
-
-        //public float EpisodeRewardMean => _networkModel.RewardMean;
+        public float EpisodeBestReward => _episodeBestReward;
         public float FinishedIndividuals => _finishedIndividuals;
 
         public ES(NetworkModel networkModel, int numberOfActions, int batchSize)
@@ -88,18 +88,33 @@ namespace Algorithms.NE
             }
         }
 
+        public void SoftReset()
+        {
+            for (int i = 0; i < _batchSize; i++)
+            {
+                _completedAgents[i] = false;
+            }
+
+            _finishedIndividuals = 0;
+        }
+
         public virtual void Train()
         {
-            // for (int i = 0; i < _batchSize; i++)
-            // {
-            //     _episodeRewardUpdate[0, i] = _episodeRewards[i];
-            //
-            //     _episodeRewards[i] = 0f;
-            //     _completedAgents[i] = false;
-            // }
+            _episodeRewardMean = 0f;
+            _episodeBestReward = float.MinValue;
+            for (int i = 0; i < _batchSize; i++)
+            {
+                var episodeReward = _episodeRewards[i];
+                _episodeRewardUpdate[0, i] = episodeReward;
+                _episodeRewardMean += episodeReward;
+                _episodeBestReward = episodeReward > _episodeBestReward ? episodeReward : _episodeBestReward;
+                _episodeRewards[i] = 0f;
+                _completedAgents[i] = false;
+            }
 
-            RankRewards();
+            //RankRewards();
 
+            _episodeRewardMean /= _batchSize;
             _finishedIndividuals = 0;
 
             _networkModel.Update(_episodeRewardUpdate);
@@ -115,12 +130,15 @@ namespace Algorithms.NE
             var dupCount = 0;
 
             _episodeRewardMean = 0f;
+            _episodeBestReward = float.MinValue;
 
             for (int i = 0; i < _batchSize; i++)
             {
                 sumRanks += i;
                 dupCount += 1;
-                if (i == _batchSize - 1 || Math.Abs(_episodeRewards[i] - _episodeRewards[i + 1]) > 0.0f)
+
+                var episodeReward = _episodeRewards[i];
+                if (i == _batchSize - 1 || Math.Abs(episodeReward - _episodeRewards[i + 1]) > 0.0f)
                 {
                     var averageRank = sumRanks / (float)dupCount + 1;
                     for (int j = i - dupCount + 1; j < i + 1; j++)
@@ -132,13 +150,11 @@ namespace Algorithms.NE
                     dupCount = 0;
                 }
 
-                _episodeRewardMean += _episodeRewards[i];
-
+                _episodeRewardMean += episodeReward;
+                _episodeBestReward = episodeReward > _episodeBestReward ? episodeReward : _episodeBestReward;
                 _episodeRewards[i] = 0f;
                 _completedAgents[i] = false;
             }
-
-            _episodeRewardMean /= _batchSize;
         }
 
         public void ReduceNoise(float noiseStd)

@@ -80,7 +80,7 @@ namespace Algorithms.NE.NEAT
                 total += adjustedFitness;
                 member.AdjustedFitness = adjustedFitness;
 
-                if (_currentMinFitness > member.Fitness) continue;
+                if (_currentMinFitness < member.Fitness) continue;
                 _currentMinFitness = member.Fitness;
             }
 

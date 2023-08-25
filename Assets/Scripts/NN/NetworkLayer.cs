@@ -60,6 +60,10 @@ namespace NN
         private ComputeBuffer _weightsCacheBuffer;
         protected ComputeBuffer _biasesMomentumBuffer;
         protected ComputeBuffer _biasesCacheBuffer;
+        // cashed variables
+        private readonly int _currentLearningRateID;
+        private readonly int _beta1CorrectedID;
+        private readonly int _beta2CorrectedID;
 
         public NetworkLayer(int nInputs, int nNeurons, ActivationFunction activationFunction, ComputeShader shader,
             bool isFirstLayer = false, float paramsRange = 4.0f, float paramsCoefficient = 0.005f, int headNumber = 1)
@@ -124,6 +128,10 @@ namespace NN
             _biasesBuffer = new ComputeBuffer(_biases.Length, sizeof(float));
             _weightsBuffer.SetData(_weights);
             _biasesBuffer.SetData(_biases);
+            
+            _currentLearningRateID = Shader.PropertyToID("current_learning_rate");
+            _beta1CorrectedID = Shader.PropertyToID("beta_1_corrected");
+            _beta2CorrectedID = Shader.PropertyToID("beta_2_corrected");
         }
 
         public virtual void Forward(float[,] inputs)
@@ -152,9 +160,9 @@ namespace NN
                 InitializeBackwardsBuffers(dValues);
             }
 
-            _shader.SetFloat("current_learning_rate", currentLearningRate);
-            _shader.SetFloat("beta_1_corrected", beta1Corrected);
-            _shader.SetFloat("beta_2_corrected", beta2Corrected);
+            _shader.SetFloat(_currentLearningRateID, currentLearningRate);
+            _shader.SetFloat(_beta1CorrectedID, beta1Corrected);
+            _shader.SetFloat(_beta2CorrectedID, beta2Corrected);
 
             _dValuesBuffer.SetData(dValues);
 

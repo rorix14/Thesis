@@ -79,8 +79,9 @@ namespace TestGround.NE
 
             _neat.Train();
 
-            _rewardsMeanOverTime[_episodeIndex] = _neat.EpisodeRewardMean;
-
+            Rewards[_episodeIndex] = _neat.EpisodeRewardMean;
+            Loss[_episodeIndex] = _neat.EpisodeBestReward;
+            
             _currentSates = _env.DistributedResetEnv();
             ++_episodeIndex;
         }
@@ -90,7 +91,7 @@ namespace TestGround.NE
             Time.timeScale = 1;
 
             float rewardSum = 0.0f;
-            foreach (var reward in _rewardsMeanOverTime)
+            foreach (var reward in Rewards)
             {
                 rewardSum += reward;
             }
@@ -102,7 +103,7 @@ namespace TestGround.NE
                 bestIndividualSum += loss;
             }
 
-            print("Average population reward: " + rewardSum / _rewardsMeanOverTime.Count);
+            print("Average population reward: " + rewardSum / Rewards.Count);
             print("Average best individual reward: " + bestIndividualSum / Loss.Count);
 
             var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
@@ -116,7 +117,7 @@ namespace TestGround.NE
         {
             yield return new WaitForSeconds(0.1f);
 
-            _graphReward.SetGraph(null, _rewardsMeanOverTime, GraphType.LineGraph,
+            _graphReward.SetGraph(null, Rewards, GraphType.LineGraph,
                 "Population Rewards per Episode", "episodes", "rewards");
 
             _graphBestIndividualReward.SetGraph(null, Loss, GraphType.LineGraph,

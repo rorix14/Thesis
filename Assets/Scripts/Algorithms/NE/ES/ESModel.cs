@@ -10,7 +10,7 @@ namespace Algorithms.NE
         private readonly float _epsilon;
 
         public float RewardMean => _rewardMean;
-        
+
         public ESModel(NetworkLayer[] layers, float learningRate = 0.005f,
             float decay = 0.001f, float beta1 = 0.9f, float beta2 = 0.999f, float epsilon = 1E-07f) : base(layers,
             new NoLoss(null), learningRate, decay, beta1, beta2, epsilon)
@@ -24,15 +24,6 @@ namespace Algorithms.NE
             {
                 var layer = (ESNetworkLayer)_layers[i];
                 layer.SetNoiseStd(noiseStd);
-            }
-        }
-        
-        public void SetBestIndex(int bestIndex)
-        {
-            for (int i = 0; i < _layers.Length; i++)
-            {
-                var layer = (ESNetworkLayer)_layers[i];
-                layer.SetBestIndex(bestIndex);
             }
         }
 
@@ -67,16 +58,16 @@ namespace Algorithms.NE
             _bata1Corrected *= _beta1;
             _bata2Corrected *= _beta2;
 
-            // _rewardMean = NnMath.MatrixMean(yTarget);
-            //float rewardStd = NnMath.StandardDivination(yTarget, _rewardMean);
-            // rewardStd = Mathf.Abs(rewardStd) < _epsilon ? _epsilon : rewardStd;
-            
+            _rewardMean = NnMath.MatrixMean(yTarget);
+            float rewardStd = NnMath.StandardDivination(yTarget, _rewardMean);
+            rewardStd = Mathf.Abs(rewardStd) < _epsilon ? _epsilon : rewardStd;
+
             for (int i = 0; i < _layers.Length; i++)
             {
-                //var layer = (ESNetworkLayer)_layers[i];
-                //layer.SetNeParameters(_rewardMean, rewardStd);
-                //layer.Backward(yTarget, _currentLearningRate, _bata1Corrected, _bata2Corrected); 
-                _layers[i].Backward(yTarget, _currentLearningRate, _bata1Corrected, _bata2Corrected);
+                var layer = (ESNetworkLayer)_layers[i];
+                layer.SetNeParameters(_rewardMean, rewardStd);
+                layer.Backward(yTarget, _currentLearningRate, _bata1Corrected, _bata2Corrected);
+                //_layers[i].Backward(yTarget, _currentLearningRate, _bata1Corrected, _bata2Corrected);
             }
 
             return null;

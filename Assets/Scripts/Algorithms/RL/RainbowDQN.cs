@@ -127,6 +127,7 @@ namespace Algorithms.RL
 
         public override int EpsilonGreedySample(float[] state, float eps = 0.1f)
         {
+            //if (!(Random.value > eps)) return Random.Range(0, _numberOfActions);
             for (int i = 0; i < _stateLenght; i++)
             {
                 _predictSate[0, i] = state[i];

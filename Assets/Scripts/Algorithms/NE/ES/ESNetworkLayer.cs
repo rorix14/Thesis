@@ -22,7 +22,11 @@ namespace Algorithms.NE
         private readonly int _noiseInputOutputLenght;
 
         private readonly int _noiseSamplesSize;
-
+        
+        private readonly int _bestPerformerIndexID;
+        private readonly int _rewardMeanID;
+        private readonly int _rewardStdID;
+        
         public ESNetworkLayer(AlgorithmNE algorithmNE, int populationSize, float noiseStD, int nInputs, int nNeurons,
             ActivationFunction activationFunction, ComputeShader shader, float noiseRange = 10.0f,
             bool isFirstLayer = true, float paramsRange = 4.0f, float paramsCoefficient = 0.01f, int headNumber = 1) :
@@ -59,6 +63,10 @@ namespace Algorithms.NE
             _noiseInputOutputBuffer = new ComputeBuffer(_noiseInputOutputLenght, sizeof(float));
 
             SetNoise();
+            
+            _bestPerformerIndexID = Shader.PropertyToID("best_performer_index");
+            _rewardMeanID = Shader.PropertyToID("reward_mean");
+            _rewardStdID = Shader.PropertyToID("reward_std");
         }
 
         public void SetNoiseStd(float noiseStd)
@@ -68,13 +76,13 @@ namespace Algorithms.NE
 
         public void SetBestIndex(int bestIndex)
         {
-            _shader.SetInt("best_performer_index", bestIndex);
+            _shader.SetInt(_bestPerformerIndexID, bestIndex);
         }
 
         public void SetNeParameters(float rewardMean, float rewardStd)
         {
-            _shader.SetFloat("reward_mean", rewardMean);
-            _shader.SetFloat("reward_std", rewardStd);
+            _shader.SetFloat(_rewardMeanID, rewardMean);
+            _shader.SetFloat(_rewardStdID, rewardStd);
         }
 
         public override void Backward(float[,] dValues, float currentLearningRate, float beta1Corrected,

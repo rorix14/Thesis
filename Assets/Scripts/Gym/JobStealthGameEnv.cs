@@ -36,7 +36,11 @@ namespace Gym
 
         public void CreatePopulation(int populationSize)
         {
-            if (!_player || populationSize == 0) return;
+            //TODO should have a better create population method, currently does not support algorithm tests with different
+            //population sizes, a solution would be to check if the previous population size is the same as the new one,
+            //if so there is no need to run this function, if not players and must be created or destroyed accordingly
+            //and array values must be disposed 
+            if (!_player || populationSize == 0 || _populationSize > 0) return;
 
             _populationSize = populationSize;
 
@@ -58,9 +62,6 @@ namespace Gym
             }
 
             var viewPointsLength = _player.ViewPoints.Length;
-
-            _playersTransforms = new TransformAccessArray(tempPlayerTransforms);
-            _playersWallChecks = new NativeArray<RaycastHit>(populationSize * viewPointsLength, Allocator.Persistent);
             _movePlayerJob = new MovePlayerJob
             {
                 ActionLookup = new NativeArray<Vector3>(ActionLookup, Allocator.Persistent),
@@ -78,8 +79,11 @@ namespace Gym
                 FixedDeltaTime = Time.fixedDeltaTime,
                 DegreeToRad = Mathf.Deg2Rad
             };
+
+            _playersTransforms = new TransformAccessArray(tempPlayerTransforms);
+            _playersWallChecks = new NativeArray<RaycastHit>(populationSize * viewPointsLength, Allocator.Persistent);
         }
-        
+
         public override DistributedStepInfo DistributedStep(int[] actions)
         {
             _movePlayerJob.Actions.CopyFrom(actions);
@@ -116,9 +120,9 @@ namespace Gym
                     index += 2;
                 }
             }
-            
+
             playersWallCheckJob.Complete();
-            
+
             for (int i = 0; i < _populationSize; i++)
             {
                 var actionIndex = actions[i];
@@ -243,7 +247,7 @@ namespace Gym
                         continue;
                     }
 
-                    var angleRadians = DegreeToRad  * (ViewStepSize * i);
+                    var angleRadians = DegreeToRad * (ViewStepSize * i);
                     var direction = new Vector3(math.sin(angleRadians), 0f, math.cos(angleRadians));
                     RaycastCommands[playerRaycastIndex + i] =
                         new RaycastCommand(pos, direction, ViewRadius, ObstacleMask);
@@ -263,7 +267,7 @@ namespace Gym
             }
         }
 
-        private void OnDestroy()
+        private void Dispose()
         {
             if (_movePlayerJob.PlayerVelocity.Length == 0) return;
 
@@ -274,6 +278,11 @@ namespace Gym
 
             _playersTransforms.Dispose();
             _playersWallChecks.Dispose();
+        }
+
+        private void OnDestroy()
+        {
+            Dispose();
         }
 
         public override float[,] DistributedResetEnv()
