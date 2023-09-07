@@ -41,7 +41,7 @@ namespace TestGround.NE
 
         public override string GetDescription()
         {
-            return "DQN, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
+            return "DQN, 2 layers, " + neuronNumber + " neurons, " + activationFunction +
                    ", " + populationSize + " population size, noise std " + noiseStandardDeviation + ", lr " +
                    learningRate + ", decay " + decayRate + ", initialization std " + weightsInitStd;
         }
@@ -72,8 +72,7 @@ namespace TestGround.NE
             var network = new NetworkLayer[]
             {
                 new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, _env.GetObservationSize,
-                    neuronNumber,
-                    activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
+                    neuronNumber, activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
                 // new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, neuronNumber, neuronNumber,
                 //     activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
                 new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, neuronNumber,
@@ -111,7 +110,7 @@ namespace TestGround.NE
 
             _currentSates = _env.DistributedResetEnv();
             ++_episodeIndex;
-            
+
             if (_episodeIndex % requiredSimulations == 0)
             {
                 _neModel.Train();

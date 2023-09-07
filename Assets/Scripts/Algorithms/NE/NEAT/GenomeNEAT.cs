@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using NN.CPU_Single;
-using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace Algorithms.NE.NEAT
@@ -16,9 +15,9 @@ namespace Algorithms.NE.NEAT
 
     public class GenomeNEAT
     {
-        private int _genomeId;
-        private List<LinkGene> _links;
-        private List<NeuronGene> _neurons;
+        private readonly int _genomeId;
+        private readonly List<LinkGene> _links;
+        private readonly List<NeuronGene> _neurons;
         private readonly int _inputNumber;
         private readonly int _outputNumber;
 
@@ -30,6 +29,15 @@ namespace Algorithms.NE.NEAT
         private List<int>[] _neuronsOutputIndexes;
         private float[] _neuronOutputs;
 
+        private readonly float _disjointWeight;
+        private readonly float _excessWeight;
+        private readonly float _matchedWeight;
+
+        // cashed variables
+        private float[] _networkOutputs;
+        private int _outputNeuronStart;
+
+        public int GenomeId => _genomeId;
         public int GenomeSize => _links.Count;
 
         public float AdjustedFitness
@@ -41,14 +49,16 @@ namespace Algorithms.NE.NEAT
         public LinkGene GetLinkGene(int index) => _links[index];
         public NeuronGene GetNeuronById(int id) => _neurons[GetElementPos(id)];
 
-        // This might change
-        private NEATNetworkModel _neatNetworkModel;
-
-        public GenomeNEAT(int genomeId, int inputNumber, int outputNumber)
+        public GenomeNEAT(int genomeId, int inputNumber, int outputNumber, float disjointWeight, float excessWeight,
+            float matchedWeight)
         {
             _genomeId = genomeId;
             _inputNumber = inputNumber;
             _outputNumber = outputNumber;
+
+            _disjointWeight = disjointWeight;
+            _excessWeight = excessWeight;
+            _matchedWeight = matchedWeight;
 
             _neurons = new List<NeuronGene>(inputNumber + outputNumber);
             var neuronId = 1;
@@ -76,13 +86,17 @@ namespace Algorithms.NE.NEAT
         }
 
         public GenomeNEAT(int genomeId, List<LinkGene> links, List<NeuronGene> neurons, int inputNumber,
-            int outputNumber)
+            int outputNumber, float disjointWeight, float excessWeight, float matchedWeight)
         {
             _genomeId = genomeId;
             _links = links;
             _neurons = neurons;
             _inputNumber = inputNumber;
             _outputNumber = outputNumber;
+
+            _disjointWeight = disjointWeight;
+            _excessWeight = excessWeight;
+            _matchedWeight = matchedWeight;
         }
 
         public GenomeNEAT(int genomeId, GenomeNEAT genomeToCopy)
@@ -90,16 +104,22 @@ namespace Algorithms.NE.NEAT
             _genomeId = genomeId;
             _links = new List<LinkGene>(genomeToCopy._links);
             _neurons = new List<NeuronGene>(genomeToCopy._neurons);
+
             _inputNumber = genomeToCopy._inputNumber;
             _outputNumber = genomeToCopy._outputNumber;
+
+            _disjointWeight = genomeToCopy._disjointWeight;
+            _excessWeight = genomeToCopy._excessWeight;
+            _matchedWeight = genomeToCopy._matchedWeight;
         }
 
         public void CreatePhenotype()
         {
+            var phenotypeLenght = _neurons.Count - _inputNumber;
             _neuronOutputs = new float[_neurons.Count];
-            _neuronsWeights = new List<float>[_neurons.Count];
-            _neuronsOutputIndexes = new List<int>[_neurons.Count];
-            for (int i = 0; i < _neuronsWeights.Length; i++)
+            _neuronsWeights = new List<float>[phenotypeLenght];
+            _neuronsOutputIndexes = new List<int>[phenotypeLenght];
+            for (int i = 0; i < phenotypeLenght; i++)
             {
                 _neuronsWeights[i] = new List<float>();
                 _neuronsOutputIndexes[i] = new List<int>();
@@ -110,24 +130,23 @@ namespace Algorithms.NE.NEAT
                 var link = _links[i];
                 if (!link.IsEnabled) continue;
 
-                var toNeuron = link.ToNeuron;
-                //TODO: to neuron index is repeated
-                _neuronsWeights[GetElementPos(toNeuron)].Add(link.Weight);
-                _neuronsOutputIndexes[GetElementPos(toNeuron)].Add(GetElementPos(link.FromNeuron));
+                var toNeuronIndex = GetElementPos(link.ToNeuron);
+                _neuronsWeights[toNeuronIndex - _inputNumber].Add(link.Weight);
+                _neuronsOutputIndexes[toNeuronIndex - _inputNumber].Add(GetElementPos(link.FromNeuron));
             }
+
+            _networkOutputs = new float[_outputNumber];
+            _outputNeuronStart = phenotypeLenght - _outputNumber;
         }
 
         public float[] Forward(float[] input)
         {
-            //TODO: reuse variables 
-            var networkOutputs = new float[_outputNumber];
-            var outputNeuronStart = _neurons.Count - _outputNumber;
             for (int i = 0; i < _inputNumber; i++)
             {
                 _neuronOutputs[i] = input[i];
             }
 
-            for (int i = _inputNumber; i < _neuronsWeights.Length; i++)
+            for (int i = 0; i < _neuronsWeights.Length; i++)
             {
                 var sum = 0f;
                 for (int j = 0; j < _neuronsWeights[i].Count; j++)
@@ -135,7 +154,7 @@ namespace Algorithms.NE.NEAT
                     sum += _neuronsWeights[i][j] * _neuronOutputs[_neuronsOutputIndexes[i][j]];
                 }
 
-                if (i < outputNeuronStart)
+                if (i < _outputNeuronStart)
                 {
                     var expPos = (float)Math.Exp(sum);
                     var expNeg = (float)Math.Exp(-sum);
@@ -143,17 +162,17 @@ namespace Algorithms.NE.NEAT
                 }
                 else
                 {
-                    networkOutputs[i % outputNeuronStart] = sum;
+                    _networkOutputs[i - _outputNeuronStart] = sum;
                 }
 
-                _neuronOutputs[i] = sum;
+                _neuronOutputs[_inputNumber + i] = sum;
             }
 
-            return networkOutputs;
+            return _networkOutputs;
         }
 
         public void AddLink(float mutationRate, float recurrentChance, InnovationNEAT innovation, int numTrysToFindLoop,
-            int numTrysToAddLink)
+            int numTrysToAddLink, float[] weightsRandomBuffer)
         {
             if (Random.value > mutationRate) return;
 
@@ -166,16 +185,12 @@ namespace Algorithms.NE.NEAT
                 while (numTrysToFindLoop-- > 0)
                 {
                     var neuronPos = Random.Range(_inputNumber, _neurons.Count);
-                    var neuron = _neurons[neuronPos];
-                    //TODO: might not need to check for neuron recurrence and neuron type 
-                    if (DuplicateLink(neuron.Id, neuron.Id) || neuron.IsRecurrent ||
-                        neuron.NeuronType == NeuronType.Input) continue;
+                    var neuronId = _neurons[neuronPos].Id;
 
-                    neuron1Id = neuron.Id;
-                    neuron2Id = neuron.Id;
+                    if (DuplicateLink(neuronId, neuronId)) continue;
 
-                    neuron.IsRecurrent = true;
-                    _neurons[neuronPos] = neuron;
+                    neuron1Id = neuronId;
+                    neuron2Id = neuronId;
 
                     isRecurrent = true;
                     numTrysToFindLoop = 0;
@@ -190,11 +205,8 @@ namespace Algorithms.NE.NEAT
                     neuron1Id = neuron1.Id;
                     neuron2Id = neuron2.Id;
 
-                    //TODO: might also need to check for depth
-                    if (!(DuplicateLink(neuron1Id, neuron2Id) || neuron1Id == neuron2Id ||
-                          Math.Abs(neuron1.SplitX - neuron2.SplitX) < 0f))
+                    if (!(DuplicateLink(neuron1Id, neuron2Id) || Math.Abs(neuron1.SplitX - neuron2.SplitX) <= 0f))
                     {
-                        //TODO: equals =, not in original implementation
                         if (neuron1.SplitX > neuron2.SplitX)
                         {
                             isRecurrent = true;
@@ -216,17 +228,13 @@ namespace Algorithms.NE.NEAT
             if (linkId < 0)
             {
                 linkId = innovation.CreateNewInnovation(neuron1Id, neuron2Id, NeuronType.None);
-                _links.Add(
-                    new LinkGene(linkId, neuron1Id, neuron2Id, 0.005f * Random.Range(-4f, 4f), true, isRecurrent));
             }
-            else
-            {
-                _links.Add(
-                    new LinkGene(linkId, neuron1Id, neuron2Id, 0.005f * Random.Range(-4f, 4f), true, isRecurrent));
-            }
+
+            _links.Add(new LinkGene(linkId, neuron1Id, neuron2Id,
+                weightsRandomBuffer[Random.Range(0, weightsRandomBuffer.Length)], true, isRecurrent));
         }
 
-        public void AddNeuron(float mutationRate, InnovationNEAT innovation, int numTrysToFindOldLink)
+        public void AddNeuron(float mutationRate, InnovationNEAT innovation)
         {
             if (Random.value > mutationRate) return;
 
@@ -252,59 +260,39 @@ namespace Algorithms.NE.NEAT
             var toNeuron = chosenLink.ToNeuron;
             var newDepth = (_neurons[GetElementPos(fromNeuron)].SplitX + _neurons[GetElementPos(toNeuron)].SplitX) / 2f;
 
+            int link1Id;
+            int link2Id;
             var newNeuronId = innovation.CheckInnovation(fromNeuron, toNeuron, NeuronType.Hidden);
 
-            //TODO: if condition can be joined with the conditions bellow, but must switch conditions around   
-            if (newNeuronId >= 0 && GetElementPos(newNeuronId) >= 0)
+            if (newNeuronId >= 0 && GetElementPos(newNeuronId) < 0)
             {
-                newNeuronId = -1;
-            }
-
-            if (newNeuronId < 0)
-            {
-                newNeuronId = innovation.CreateNewInnovation(fromNeuron, toNeuron, NeuronType.Hidden);
-                _neurons.Add(new NeuronGene(newNeuronId, NeuronType.Hidden, newDepth));
-
-                var link1Id = innovation.CreateNewInnovation(fromNeuron, newNeuronId, NeuronType.None);
-                _links.Add(new LinkGene(link1Id, fromNeuron, newNeuronId, 1f, true, false));
-
-                var link2Id = innovation.CreateNewInnovation(newNeuronId, toNeuron, NeuronType.None);
-                _links.Add(new LinkGene(link2Id, newNeuronId, toNeuron, originalWeight, true, false));
+                link1Id = innovation.CheckInnovation(fromNeuron, newNeuronId, NeuronType.None);
+                link2Id = innovation.CheckInnovation(newNeuronId, toNeuron, NeuronType.None);
             }
             else
             {
-                var link1Id = innovation.CheckInnovation(fromNeuron, newNeuronId, NeuronType.None);
-                var link2Id = innovation.CheckInnovation(newNeuronId, toNeuron, NeuronType.None);
-
-                //TODO: temporary check, remove when it is clear this condition is never true
-                if (link1Id < 0 && link2Id < 0)
-                {
-                    Debug.Log("While creating an existing neuron some links could not be found");
-                    return;
-                }
-
-                _neurons.Add(new NeuronGene(newNeuronId, NeuronType.Hidden, newDepth));
-                _links.Add(new LinkGene(link1Id, fromNeuron, newNeuronId, 1f, true, false));
-                _links.Add(new LinkGene(link2Id, newNeuronId, toNeuron, originalWeight, true, false));
+                newNeuronId = innovation.CreateNewInnovation(fromNeuron, toNeuron, NeuronType.Hidden);
+                link1Id = innovation.CreateNewInnovation(fromNeuron, newNeuronId, NeuronType.None);
+                link2Id = innovation.CreateNewInnovation(newNeuronId, toNeuron, NeuronType.None);
             }
+
+            _neurons.Add(new NeuronGene(newNeuronId, NeuronType.Hidden, newDepth));
+            _links.Add(new LinkGene(link1Id, fromNeuron, newNeuronId, 1f, true, false));
+            _links.Add(new LinkGene(link2Id, newNeuronId, toNeuron, originalWeight, true, false));
         }
 
-        public void MutateWeights(float mutationRate, float weightReplaceRate)
+        public void MutateWeights(float mutationRate, float weightReplaceRate, float[] weightsRandomBuffer,
+            float[] noiseRandomBuffer)
         {
             if (Random.value > mutationRate) return;
 
+            var bufferLenght = weightsRandomBuffer.Length;
             for (int i = 0; i < _links.Count; i++)
             {
-                //TODO: create buffers for both random variables, put those buffers in the NEAT Model class
                 var link = _links[i];
-                if (Random.value < weightReplaceRate)
-                {
-                    link.Weight = 0.005f * Random.Range(-4f, 4f);
-                }
-                else
-                {
-                    link.Weight += 0.01f * NnMath.RandomGaussian(-10, 10);
-                }
+                link.Weight = Random.value < weightReplaceRate
+                    ? weightsRandomBuffer[Random.Range(0, bufferLenght)]
+                    : link.Weight + noiseRandomBuffer[Random.Range(0, bufferLenght)];
 
                 _links[i] = link;
             }
@@ -360,25 +348,27 @@ namespace Algorithms.NE.NEAT
             }
 
             var longestGenome = genome1Size > genome2Size ? genome1Size : genome2Size;
-            //TODO: should be settable parameters
-            const float disjointWeight = 1;
-            const float excessWeight = 1;
-            const float matchedWeight = 0.4f;
-
-            return excessNumber * excessWeight / longestGenome + disjointNumber * disjointWeight / longestGenome +
-                   weightDifference * matchedWeight / matchedNumber;
+            return excessNumber * _excessWeight / longestGenome + disjointNumber * _disjointWeight / longestGenome +
+                   weightDifference * _matchedWeight / matchedNumber;
         }
 
-        //TODO: test this code
-        public void Test()
+        public void SortGenes()
         {
+            _links.Sort((a, b) => a.InnovationID.CompareTo(b.InnovationID));
+
             _neurons.Sort((a, b) =>
             {
                 if (a.NeuronType == NeuronType.Hidden)
                 {
+                    //TODO: This comparison is probably not needed
+                    if (b.NeuronType == NeuronType.Hidden && Math.Abs(a.SplitX - b.SplitX) <= 0f)
+                    {
+                        return a.Id.CompareTo(b.Id);
+                    }
+
                     return a.SplitX.CompareTo(b.SplitX);
                 }
-                else if(a.NeuronType == NeuronType.Output)
+                else if (a.NeuronType == NeuronType.Output)
                 {
                     if (b.NeuronType == NeuronType.Hidden || b.NeuronType == NeuronType.Input)
                     {
@@ -387,22 +377,18 @@ namespace Algorithms.NE.NEAT
 
                     return a.Id.CompareTo(b.Id);
                 }
-                else if(a.NeuronType == NeuronType.Input)
+                else if (a.NeuronType == NeuronType.Input)
                 {
                     if (b.NeuronType == NeuronType.Input)
                     {
                         return a.Id.CompareTo(b.Id);
                     }
-                    
+
                     return a.SplitX.CompareTo(b.SplitX);
                 }
-                
+
                 return 0;
             });
-        }
-        public void SortGenes()
-        {
-            _links.Sort((a, b) => a.InnovationID.CompareTo(b.InnovationID));
         }
 
         private bool DuplicateLink(int neuronIn, int neuronOut)
@@ -418,7 +404,14 @@ namespace Algorithms.NE.NEAT
 
         private int GetElementPos(int neuronId)
         {
-            for (int i = 0; i < _neurons.Count; i++)
+            //TODO: consider doing an else if where we check if we have an id of an output neuron, neuronCount - outputNumber
+            var searchStart = 0;
+            if (neuronId > _inputNumber)
+            {
+                searchStart = _inputNumber;
+            }
+
+            for (int i = searchStart; i < _neurons.Count; i++)
             {
                 var currentNeuron = _neurons[i];
                 if (currentNeuron.Id == neuronId) return i;
@@ -454,18 +447,14 @@ namespace Algorithms.NE.NEAT
         public readonly NeuronType NeuronType;
         public readonly float SplitX;
 
-        // Might not be needed
-        public bool IsRecurrent;
-
         // Not in the original implementation
         //public ActivationFunction ActivationFunction;
         //public float Bias;
-        public NeuronGene(int id, NeuronType neuronType, float splitX, bool isRecurrent = false)
+        public NeuronGene(int id, NeuronType neuronType, float splitX)
         {
             Id = id;
             NeuronType = neuronType;
             SplitX = splitX;
-            IsRecurrent = isRecurrent;
         }
     }
 }

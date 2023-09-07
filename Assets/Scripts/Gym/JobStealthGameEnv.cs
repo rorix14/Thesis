@@ -36,7 +36,7 @@ namespace Gym
 
         public void CreatePopulation(int populationSize)
         {
-            //TODO should have a better create population method, currently does not support algorithm tests with different
+            //TODO: should have a better create population method, currently does not support algorithm tests with different
             //population sizes, a solution would be to check if the previous population size is the same as the new one,
             //if so there is no need to run this function, if not players and must be created or destroyed accordingly
             //and array values must be disposed 

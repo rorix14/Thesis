@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NN.CPU_Single;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -23,10 +24,15 @@ namespace Algorithms.NE.NEAT
         private readonly float _speciesOldPenalty;
         private readonly int _speciesYoungThreshold;
         private readonly float _speciesYoungBonus;
+        private readonly float _compatabilityDisjointWeight;
+        private readonly float _compatabilityExcessWeight;
+        private readonly float _compatabilityMatchedWeight;
+
+        private readonly float[] _weightsRandomBuffer;
+        private readonly float[] _noiseRandomBuffer;
 
         private readonly InnovationNEAT _innovationDB;
         private readonly GenomeNEAT[] _populationGenomes;
-        private readonly float[] _populationFitness;
         private readonly List<SpeciesNEAT> _species;
 
         private SpeciesNEAT _bestSpecie;
@@ -34,11 +40,17 @@ namespace Algorithms.NE.NEAT
         private int _genomeCount;
         private int _speciesCount;
 
-        public NEATModel(int populationSize, int inputNumber, int outputNumber, int numGensAllowedNoImprovement = 75,
-            float addLinkRate = 0.07f, float addRecurrentLinkRate = 0.05f, float addNeuronRate = 0.5f,
-            float weightMutationRate = 0.1f, float weightReplaceRate = 0.1f, float crossOverRate = 0.8f,
-            float speciesCompatibilityThreshold = 0.26f, int speciesOldThreshold = 50, float speciesOldPenalty = 0.3f,
-            int speciesYoungThreshold = 10, float speciesYoungBonus = 0.3f)
+        // cashed variables
+        private readonly float[] _populationOutput;
+        private readonly float[] _individualInput;
+
+        public NEATModel(int populationSize, int inputNumber, int outputNumber, float neuronWeightStd = 0.005f,
+            float noiseStd = 0.01f, int numGensAllowedNoImprovement = 75, float addLinkRate = 0.15f,
+            float addRecurrentLinkRate = 0.05f, float addNeuronRate = 0.1f, float weightMutationRate = 0.15f,
+            float weightReplaceRate = 0.1f, float crossOverRate = 0.8f, float speciesCompatibilityThreshold = 0.26f,
+            int speciesOldThreshold = 50, float speciesOldPenalty = 0.3f, int speciesYoungThreshold = 10,
+            float speciesYoungBonus = 0.3f, float compatabilityDisjointWeight = 1f,
+            float compatabilityExcessWeight = 1f, float compatabilityMatchedWeight = 0.4f)
         {
             _populationSize = populationSize;
             _inputNumber = inputNumber;
@@ -55,25 +67,41 @@ namespace Algorithms.NE.NEAT
             _speciesOldPenalty = speciesOldPenalty;
             _speciesYoungThreshold = speciesYoungThreshold;
             _speciesYoungBonus = speciesYoungBonus;
+            _compatabilityDisjointWeight = compatabilityDisjointWeight;
+            _compatabilityExcessWeight = compatabilityExcessWeight;
+            _compatabilityMatchedWeight = compatabilityMatchedWeight;
 
             _genomeCount = 0;
             _speciesCount = 0;
 
+            _populationOutput = new float[populationSize * outputNumber];
+            _individualInput = new float[inputNumber];
+
+            _weightsRandomBuffer = new float[10000000];
+            _noiseRandomBuffer = new float[10000000];
+            for (int i = 0; i < 10000000; i++)
+            {
+                _weightsRandomBuffer[i] = neuronWeightStd * Random.Range(-4f, 4f);
+                _noiseRandomBuffer[i] = noiseStd * NnMath.RandomGaussian(-10, 10);
+            }
+
             _species = new List<SpeciesNEAT>()
             {
-                new SpeciesNEAT(new GenomeNEAT(_genomeCount++, inputNumber, outputNumber), _speciesCount++,
-                    _speciesYoungThreshold, _speciesYoungBonus, _speciesOldThreshold, _speciesOldPenalty)
+                new SpeciesNEAT(
+                    new GenomeNEAT(_genomeCount++, inputNumber, outputNumber, compatabilityDisjointWeight,
+                        compatabilityExcessWeight, compatabilityMatchedWeight), _speciesCount++, _speciesYoungThreshold,
+                    _speciesYoungBonus, _speciesOldThreshold, _speciesOldPenalty)
             };
 
             _bestSpecie = _species[0];
 
             _innovationDB = new InnovationNEAT(inputNumber, outputNumber);
             _populationGenomes = new GenomeNEAT[populationSize];
-            _populationFitness = new float[populationSize];
 
             for (int i = 0; i < populationSize; i++)
             {
-                var newGenome = new GenomeNEAT(_genomeCount++, inputNumber, outputNumber);
+                var newGenome = new GenomeNEAT(_genomeCount++, inputNumber, outputNumber, compatabilityDisjointWeight,
+                    compatabilityExcessWeight, compatabilityMatchedWeight);
                 newGenome.CreatePhenotype();
                 _populationGenomes[i] = newGenome;
             }
@@ -81,30 +109,26 @@ namespace Algorithms.NE.NEAT
 
         public float[] Predict(float[,] input)
         {
-            //TODO: can be a class array
-            var populationOutput = new float[_populationSize * _outputNumber];
-            var individualInput = new float[_inputNumber];
             for (int i = 0; i < _populationSize; i++)
             {
                 for (int j = 0; j < _inputNumber; j++)
                 {
-                    individualInput[j] = input[i, j];
+                    _individualInput[j] = input[i, j];
                 }
 
-                var individualActions = _populationGenomes[i].Forward(individualInput);
+                var individualActions = _populationGenomes[i].Forward(_individualInput);
                 var individualStartIndex = _outputNumber * i;
                 for (int j = 0; j < _outputNumber; j++)
                 {
-                    populationOutput[individualStartIndex + j] = individualActions[j];
+                    _populationOutput[individualStartIndex + j] = individualActions[j];
                 }
             }
 
-            return populationOutput;
+            return _populationOutput;
         }
 
         public void Update(float[] populationFitness)
         {
-            //Destroy all phenotypes
             for (int i = _species.Count - 1; i >= 0; i--)
             {
                 var specie = _species[i];
@@ -131,10 +155,7 @@ namespace Algorithms.NE.NEAT
             for (int i = 0; i < _populationSize; i++)
             {
                 var currentGenome = _populationGenomes[i];
-
-                //TODO: might not be necessary
-                currentGenome.SortGenes();
-                currentGenome.Test();
+                // currentGenome.SortGenes();
 
                 var hasSpecies = false;
                 for (int j = 0; j < _species.Count; j++)
@@ -165,7 +186,6 @@ namespace Algorithms.NE.NEAT
             GenomeNEAT offSpring;
             var numSpawnedSoFar = 0;
 
-            //TODO: must see if this works and outputs near the population size
             populationAdjustedFitness /= _populationSize;
             for (int i = 0; i < _species.Count; i++)
             {
@@ -173,7 +193,6 @@ namespace Algorithms.NE.NEAT
 
                 var specie = _species[i];
                 var numToSpawn = Mathf.RoundToInt(specie.CalculateSpawnAmount(populationAdjustedFitness));
-                //TODO: the book puts the species leader into the new population, witch is not done here
                 while (numToSpawn > 0)
                 {
                     if (specie.SpecieMemberCount == 1)
@@ -193,15 +212,14 @@ namespace Algorithms.NE.NEAT
                             offSpring = new GenomeNEAT(_genomeCount++, parent1);
                         }
 
-                        offSpring.AddNeuron(_addNeuronRate, _innovationDB, 5);
-                        //offSpring.AddLink(_addLinkRate, _addRecurrentLinkRate, _innovationDB, 5, 5);
-                        offSpring.MutateWeights(_weightMutationRate, _weightReplaceRate);
+                        offSpring.AddNeuron(_addNeuronRate, _innovationDB);
+                        offSpring.AddLink(_addLinkRate, _addRecurrentLinkRate, _innovationDB, 5, 5,
+                            _weightsRandomBuffer);
+                        offSpring.MutateWeights(_weightMutationRate, _weightReplaceRate, _weightsRandomBuffer,
+                            _noiseRandomBuffer);
                     }
 
-                    //TODO: might not be necessary
-                    offSpring.Test();
                     offSpring.SortGenes();
-
                     offSpring.CreatePhenotype();
                     _populationGenomes[numSpawnedSoFar] = offSpring;
 
@@ -221,35 +239,26 @@ namespace Algorithms.NE.NEAT
             }
         }
 
-        public GenomeNEAT Crossover(GenomeNEAT parent1, GenomeNEAT parent2)
+        private GenomeNEAT Crossover(GenomeNEAT parent1, GenomeNEAT parent2)
         {
             GenomeNEAT bestParent;
             var parent1Size = parent1.GenomeSize;
             var parent2Size = parent2.GenomeSize;
 
-            if (Math.Abs(parent1.Fitness - parent2.Fitness) < 0.0f)
+            if (Math.Abs(parent1.Fitness - parent2.Fitness) <= 0.0f)
             {
-                //TODO: could probably made shorter
                 if (parent1Size == parent2Size)
                 {
                     bestParent = Random.Range(0, 2) == 0 ? parent1 : parent2;
                 }
-                else if (parent1Size < parent2Size)
-                {
-                    bestParent = parent1;
-                }
                 else
                 {
-                    bestParent = parent2;
+                    bestParent = parent1Size < parent2Size ? parent1 : parent2;
                 }
-            }
-            else if (parent1.Fitness > parent2.Fitness)
-            {
-                bestParent = parent1;
             }
             else
             {
-                bestParent = parent2;
+                bestParent = parent1.Fitness > parent2.Fitness ? parent1 : parent2;
             }
 
             var offspringNeurons = new List<NeuronGene>(_inputNumber + _outputNumber);
@@ -259,13 +268,12 @@ namespace Algorithms.NE.NEAT
             var parent1GeneIndex = 0;
             var parent2GeneIndex = 0;
 
+            LinkGene parent1Gene;
+            LinkGene parent2Gene;
             var selectedGene = new LinkGene();
-            //TODO: consider converting this condition into something more simple, as in Genome.GetCompatabilityScore
-            while (!(parent1GeneIndex == parent1Size && parent2GeneIndex == parent2Size))
-            {
-                //var parent1Gene = parent1.GetLinkGene(parent1GeneIndex);
-                //var parent2Gene = parent2.GetLinkGene(parent2GeneIndex);
 
+            while (parent1GeneIndex < parent1Size || parent2GeneIndex < parent2Size)
+            {
                 if (parent1GeneIndex == parent1Size && parent2GeneIndex != parent2Size)
                 {
                     if (bestParent == parent2)
@@ -284,36 +292,36 @@ namespace Algorithms.NE.NEAT
 
                     parent1GeneIndex++;
                 }
-                else if (parent1.GetLinkGene(parent1GeneIndex).InnovationID <
+                else if ((parent1Gene = parent1.GetLinkGene(parent1GeneIndex)).InnovationID <
                          parent2.GetLinkGene(parent2GeneIndex).InnovationID)
                 {
                     if (bestParent == parent1)
                     {
-                        selectedGene = parent1.GetLinkGene(parent1GeneIndex);
+                        selectedGene = parent1Gene;
                     }
 
                     parent1GeneIndex++;
                 }
-                else if (parent2.GetLinkGene(parent2GeneIndex).InnovationID <
+                else if ((parent2Gene = parent2.GetLinkGene(parent2GeneIndex)).InnovationID <
                          parent1.GetLinkGene(parent1GeneIndex).InnovationID)
                 {
                     if (bestParent == parent2)
                     {
-                        selectedGene = parent2.GetLinkGene(parent2GeneIndex);
+                        selectedGene = parent2Gene;
                     }
 
                     parent2GeneIndex++;
                 }
-                else if (parent1.GetLinkGene(parent1GeneIndex).InnovationID ==
-                         parent2.GetLinkGene(parent2GeneIndex).InnovationID)
+                else
                 {
                     selectedGene = Random.value < 0.5f
                         ? parent1.GetLinkGene(parent1GeneIndex)
                         : parent2.GetLinkGene(parent2GeneIndex);
+
                     parent1GeneIndex++;
                     parent2GeneIndex++;
                 }
-                
+
                 if (offspringLinks.Count == 0)
                 {
                     offspringLinks.Add(selectedGene);
@@ -332,7 +340,8 @@ namespace Algorithms.NE.NEAT
                     {
                         hasFromNeuronId = true;
                     }
-                    else if (neuronId == selectedGene.ToNeuron)
+
+                    if (neuronId == selectedGene.ToNeuron)
                     {
                         hasToNeuronId = true;
                     }
@@ -351,14 +360,14 @@ namespace Algorithms.NE.NEAT
                 }
             }
 
-            //TODO: there is no need to sort neuron Ids but must test first
             neuronsIds.Sort();
             for (int i = 0; i < neuronsIds.Count; i++)
             {
                 offspringNeurons.Add(bestParent.GetNeuronById(neuronsIds[i]));
             }
 
-            return new GenomeNEAT(_genomeCount++, offspringLinks, offspringNeurons, _inputNumber, _outputNumber);
+            return new GenomeNEAT(_genomeCount++, offspringLinks, offspringNeurons, _inputNumber, _outputNumber,
+                _compatabilityDisjointWeight, _compatabilityExcessWeight, _compatabilityMatchedWeight);
         }
     }
 }

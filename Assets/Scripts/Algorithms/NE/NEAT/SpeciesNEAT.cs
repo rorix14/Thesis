@@ -46,8 +46,7 @@ namespace Algorithms.NE.NEAT
 
         public void AddMember(GenomeNEAT newMember)
         {
-            //TODO: comparing Ids could be faster
-            if (newMember == _leader) return;
+            if (newMember.GenomeId == _leader.GenomeId) return;
 
             _members.Add(newMember);
             if (newMember.Fitness > _leader.Fitness)

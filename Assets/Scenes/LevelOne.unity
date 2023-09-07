@@ -211,7 +211,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &82632403
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -554,7 +554,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 82632402}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b032d2ee4b37cae4aae7f6072bb05d83, type: 3}
   m_Name: 
@@ -563,7 +563,7 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 24
+  simulationSpeed: 28
   numberOfEpisodes: 300
   populationSize: 50
   mutationNoiseStd: 0.01
@@ -1119,7 +1119,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &741151726
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1133,21 +1133,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   algorithmsPrefabs:
-  - {fileID: 8048831427862802974, guid: 3f4de5a6950cbbd4285364d0740a3388, type: 3}
-  - {fileID: 8048831427862802974, guid: 9705f04d82808fc4c8ebf56d1df8af05, type: 3}
-  - {fileID: 8048831427862802974, guid: edb39763ae2b7694f9d31d726fc79515, type: 3}
-  - {fileID: 8048831427862802974, guid: dedb16233e179b74d860bfae322bed0f, type: 3}
-  - {fileID: 8048831427862802974, guid: eab5e5f5cfa325048b7f527975191285, type: 3}
-  - {fileID: 8048831427862802974, guid: 46c2ba703e1982a4abca1076bb66b2d9, type: 3}
-  - {fileID: 8048831427862802974, guid: b1b7fc65bf925e54a9ea3e2b3f605aea, type: 3}
-  - {fileID: 8048831427862802974, guid: 161607148aa7e5d4bab705ad631f40e1, type: 3}
-  - {fileID: 8048831427862802974, guid: edbab2573aa413d4cb759bd848d98a59, type: 3}
-  - {fileID: 8048831427862802974, guid: 731c5cdd8372c974181122f3697371bb, type: 3}
-  - {fileID: 8048831427862802974, guid: 00b37932ddf79b44aa5ec4dca52f3be0, type: 3}
-  - {fileID: 8048831427862802974, guid: fb07b8f1c2a9c8c48808fe4e288c7a52, type: 3}
-  - {fileID: 8048831427862802974, guid: 3db9b15855765d54796adfaa1cc3f9a4, type: 3}
-  - {fileID: 8048831427862802974, guid: 4e967a5ac1db65142a7c8ce936596643, type: 3}
-  - {fileID: 8048831427862802974, guid: b41e515a5130bce448470efda101827c, type: 3}
   - {fileID: 8048831427862802974, guid: a139f77e280f9c4478e0cb933d9ebb3d, type: 3}
   - {fileID: 8048831427862802974, guid: 7a5565cef81df3d4d941a5bb956d2572, type: 3}
   - {fileID: 8048831427862802974, guid: 48880dd096993d64792365bd535ee37c, type: 3}
@@ -1156,11 +1141,10 @@ MonoBehaviour:
   - {fileID: 8048831427862802974, guid: 9edf97e6f8d19cc4dbee945b60f12e66, type: 3}
   - {fileID: 8048831427862802974, guid: 530ca9fa311005247aa7a0b08949539e, type: 3}
   - {fileID: 8048831427862802974, guid: 6aef11611c7af3a42b1b2f76d3cce078, type: 3}
-  - {fileID: 8048831427862802974, guid: 61fc3d149667120479a2fbc895d1797b, type: 3}
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: one ES noise std Part 2
+  saveFileName: one ES population Part 2
 --- !u!4 &741151727
 Transform:
   m_ObjectHideFlags: 0

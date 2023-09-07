@@ -19,22 +19,22 @@ namespace Algorithms.NE.NEAT
             var neuronId = 1;
             for (int i = 0; i < inputNumber; i++)
             {
-                _innovations.Add(new Innovation(-1, -1, -1, neuronId++, NeuronType.Input));
+                _innovations.Add(new Innovation(neuronId++, -1, -1, NeuronType.Input));
             }
 
             for (int i = 0; i < outputNumber; i++)
             {
-                _innovations.Add(new Innovation(-1, -1, -1, neuronId++, NeuronType.Output));
+                _innovations.Add(new Innovation(neuronId++, -1, -1, NeuronType.Output));
             }
 
             _neuronIdCount = neuronId;
             var innovationNumber = 1;
             for (int i = 0; i < inputNumber; i++)
             {
-                var inputNeuronId = _innovations[i].NeuronId;
+                var inputNeuronId = _innovations[i].Id;
                 for (int j = 0; j < outputNumber; j++)
                 {
-                    _innovations.Add(new Innovation(innovationNumber++, inputNeuronId, _innovations[j].NeuronId, -1,
+                    _innovations.Add(new Innovation(innovationNumber++, inputNeuronId, _innovations[j].Id,
                         NeuronType.None));
                 }
             }
@@ -44,14 +44,14 @@ namespace Algorithms.NE.NEAT
 
         public int CheckInnovation(int neuron1Id, int neuron2Id, NeuronType neuronType)
         {
-            var searchStart = _inputNumber + _outputNumber + _inputNumber * _outputNumber - _innovations.Count;
-            for (int i = 0; i < searchStart; i++)
+            var searchStart = _inputNumber + _outputNumber + _inputNumber * _outputNumber;
+            for (int i = searchStart; i < _innovations.Count; i++)
             {
                 var innovation = _innovations[i];
 
                 if (innovation.NeuronType == neuronType && innovation.NeuronIn == neuron1Id &&
                     innovation.NeuronOut == neuron2Id)
-                    return neuronType == NeuronType.None ? innovation.InnovationId : innovation.NeuronId;
+                    return innovation.Id;
             }
 
             return -1;
@@ -63,12 +63,12 @@ namespace Algorithms.NE.NEAT
             if (neuronType == NeuronType.None)
             {
                 id = _innovationIdCount++;
-                _innovations.Add(new Innovation(id, neuron1Id, neuron2Id, -1, neuronType));
+                _innovations.Add(new Innovation(id, neuron1Id, neuron2Id, neuronType));
             }
             else
             {
                 id = _neuronIdCount++;
-                _innovations.Add(new Innovation(-1, neuron1Id, neuron2Id, id, neuronType));
+                _innovations.Add(new Innovation(id, neuron1Id, neuron2Id, neuronType));
             }
 
             return id;
@@ -77,18 +77,16 @@ namespace Algorithms.NE.NEAT
 
     public struct Innovation
     {
-        public readonly int InnovationId;
+        public readonly int Id;
         public readonly int NeuronIn;
         public readonly int NeuronOut;
-        public readonly int NeuronId;
         public readonly NeuronType NeuronType;
 
-        public Innovation(int innovationId, int neuronIn, int neuronOut, int neuronId, NeuronType neuronType)
+        public Innovation(int id, int neuronIn, int neuronOut, NeuronType neuronType)
         {
-            InnovationId = innovationId;
+            Id = id;
             NeuronIn = neuronIn;
             NeuronOut = neuronOut;
-            NeuronId = neuronId;
             NeuronType = neuronType;
         }
     }
