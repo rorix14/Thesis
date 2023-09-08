@@ -1,5 +1,8 @@
-﻿using NN;
+﻿using System;
+using System.Collections.Generic;
+using NN;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Algorithms.NE
 {
@@ -20,6 +23,15 @@ namespace Algorithms.NE
         private readonly int[] _tournamentIndexes;
         private readonly float[] _elitismFitness;
         private readonly float[] _populationFitness;
+        
+        //NS
+        private readonly List<Vector2> _archive;
+        private float _noveltyThreshold;
+        private readonly float _noveltyThresholdMinValue;
+        private int _timeout;
+        private readonly int _neighboursToCheck;
+
+        private readonly List<float>[] _agentsArchiveDistances;
 
         public GA(NetworkModel networkModel, int numberOfActions, int batchSize, int elitism, int tournamentSize,
             float mutationMax = 0.10f,
@@ -41,39 +53,83 @@ namespace Algorithms.NE
             {
                 _elitismFitness[i] = float.MinValue;
             }
+            
+            //NS 
+            _archive = new List<Vector2>(batchSize);
+            // one third of the max possible distance
+            _noveltyThreshold = 5f;
+            _noveltyThresholdMinValue = 1f;
+            _timeout = 0;
+            _neighboursToCheck = 10;
+            _agentsArchiveDistances = new List<float>[batchSize];
         }
 
-        //Only use if the softmax activation function is used in the output layer
-        // public override int[] SamplePopulationActions(float[,] states)
-        // {
-        //     _modelPredictions = _networkModel.Predict(states);
-        //     
-        //     for (int i = 0; i < _batchSize; i++)
-        //     {
-        //         if (_completedAgents[i])
-        //         {
-        //             _sampledActions[i] = -1;
-        //             continue;
-        //         }
-        //
-        //         var randomPoint = Random.value;
-        //         _sampledActions[i] = 0;
-        //         for (int j = 0; j < _numberOfActions; j++)
-        //         {
-        //             var probability = _modelPredictions[i, j];
-        //             if (randomPoint < probability)
-        //             {
-        //                 _sampledActions[i] = j;
-        //                 break;
-        //             }
-        //             
-        //             randomPoint -= probability;
-        //         }
-        //     }
-        //
-        //     return _sampledActions;
-        // }
+        public void DoNoveltySearch(Vector2[] agentsFinalPositions)
+        {
+            var addedToArchive = 0;
+            for (int i = 0; i < _batchSize; i++)
+            {
+                var agentPosition = agentsFinalPositions[i];
+                var archiveSize = _archive.Count;
+                _agentsArchiveDistances[i] = new List<float>(archiveSize + _batchSize);
+                    
+                var minDistance = float.MaxValue;
+                for (int j = 0; j < archiveSize; j++)
+                {
+                    //TODO: make custom function
+                    var currentDistance = Vector2.Distance(agentPosition, _archive[j]);
+                    _agentsArchiveDistances[i].Add(currentDistance);
+                    
+                    if (minDistance > currentDistance)
+                    {
+                        minDistance = currentDistance;
+                    }
+                }
 
+                if (minDistance <= _noveltyThreshold) continue;
+                
+                _archive.Add(agentPosition);
+                addedToArchive++;
+            }
+            
+            _timeout = addedToArchive == 0 ? _timeout + 1 : 0;
+            if (_timeout > 10)
+            {
+                _timeout = 0;
+                _noveltyThreshold *= 0.9f;
+                if (_noveltyThreshold < _noveltyThresholdMinValue)
+                {
+                    _noveltyThreshold = _noveltyThresholdMinValue;
+                }
+            }
+
+            if (addedToArchive > 4)
+            {
+                _noveltyThreshold *= 1.2f;
+            }
+            
+            //Set fitness values
+            for (int i = 0; i < _batchSize; i++)
+            {
+                var agentPosition = agentsFinalPositions[i];
+                for (int j = 0; j < _batchSize; j++)
+                {
+                    var currentDistance = Vector2.Distance(agentPosition, agentsFinalPositions[j]);
+                    _agentsArchiveDistances[i].Add(currentDistance);
+                }
+                
+                _agentsArchiveDistances[i].Sort();
+
+                var distancesSum = 0f;
+                for (int j = 0; j < _neighboursToCheck; j++)
+                {
+                    distancesSum += _agentsArchiveDistances[i][j];
+                }
+
+                _episodeRewards[i] = distancesSum / _neighboursToCheck;
+            }
+        }
+        
         public override void Train()
         {
             for (int i = 0; i < _batchSize; i++)
@@ -101,7 +157,15 @@ namespace Algorithms.NE
             }
 
             _episodeRewardMean /= _batchSize;
+            _finishedIndividuals = 0;
 
+            Crossover();
+            _gaModel.Update(_crossoverInfos, _mutationsVolume);
+        }
+
+        private void Crossover()
+        {
+             //TODO: This could be done using multithreading, although it might not be worth it    
             for (int i = _elitism; i < _batchSize; i += 2)
             {
                 var crossoverInfo = new CrossoverInfo();
@@ -143,6 +207,8 @@ namespace Algorithms.NE
                         crossoverInfo.Parent2 = individual;
                     }
 
+                    
+                    //TODO: this part must be outside the while loop!!
                     _crossoverInfos[i] = crossoverInfo;
 
                     var mutationVolume = (fitness1 < _episodeRewardMean ? _mutationMax : _mutationMin) +
@@ -162,10 +228,37 @@ namespace Algorithms.NE
                 _crossoverInfos[i] = new CrossoverInfo(parent, parent, 0);
                 _elitismFitness[i] = float.MinValue;
             }
-
-            _finishedIndividuals = 0;
-
-            _gaModel.Update(_crossoverInfos, _mutationsVolume);
         }
+        
+        //Only use if the softmax activation function is used in the output layer
+        // public override int[] SamplePopulationActions(float[,] states)
+        // {
+        //     _modelPredictions = _networkModel.Predict(states);
+        //     
+        //     for (int i = 0; i < _batchSize; i++)
+        //     {
+        //         if (_completedAgents[i])
+        //         {
+        //             _sampledActions[i] = -1;
+        //             continue;
+        //         }
+        //
+        //         var randomPoint = Random.value;
+        //         _sampledActions[i] = 0;
+        //         for (int j = 0; j < _numberOfActions; j++)
+        //         {
+        //             var probability = _modelPredictions[i, j];
+        //             if (randomPoint < probability)
+        //             {
+        //                 _sampledActions[i] = j;
+        //                 break;
+        //             }
+        //             
+        //             randomPoint -= probability;
+        //         }
+        //     }
+        //
+        //     return _sampledActions;
+        // }
     }
 }

@@ -84,6 +84,7 @@ namespace TestGround.NE
 
             if (_gaModel.FinishedIndividuals < populationSize) return;
 
+            //_gaModel.DoNoveltySearch(_env.GetPlayersPositions());
             _gaModel.Train();
 
             _rewardsMeanOverTime[_episodeIndex] = _gaModel.EpisodeRewardMean;

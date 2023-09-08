@@ -267,24 +267,6 @@ namespace Gym
             }
         }
 
-        private void Dispose()
-        {
-            if (_movePlayerJob.PlayerVelocity.Length == 0) return;
-
-            _movePlayerJob.Actions.Dispose();
-            _movePlayerJob.ActionLookup.Dispose();
-            _movePlayerJob.RaycastCommands.Dispose();
-            _movePlayerJob.PlayerVelocity.Dispose();
-
-            _playersTransforms.Dispose();
-            _playersWallChecks.Dispose();
-        }
-
-        private void OnDestroy()
-        {
-            Dispose();
-        }
-
         public override float[,] DistributedResetEnv()
         {
             if (!_envStarted)
@@ -358,6 +340,37 @@ namespace Gym
             Physics.SyncTransforms();
 
             return _resetObservationBatch;
+        }
+
+        public Vector2[] GetPlayersPositions()
+        {
+            //TODO: positions array only needs to be created once
+            var positions = new Vector2[_populationSize];
+            for (int i = 0; i < _populationSize; i++)
+            {
+                var position = _playersTransforms[i].position;
+                positions[i] = new Vector2(position.x, position.z);
+            }
+
+            return positions;
+        }
+
+        private void Dispose()
+        {
+            if (_movePlayerJob.PlayerVelocity.Length == 0) return;
+
+            _movePlayerJob.Actions.Dispose();
+            _movePlayerJob.ActionLookup.Dispose();
+            _movePlayerJob.RaycastCommands.Dispose();
+            _movePlayerJob.PlayerVelocity.Dispose();
+
+            _playersTransforms.Dispose();
+            _playersWallChecks.Dispose();
+        }
+
+        private void OnDestroy()
+        {
+            Dispose();
         }
     }
 }
