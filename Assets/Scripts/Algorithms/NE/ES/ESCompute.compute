@@ -114,11 +114,15 @@ void ES_backwards_pass(uint3 id : SV_DispatchThreadID)
 
         const float epsilon_output = noise_input_output_buffer[input_row_size + id.y + i % half_population_size *
             weights_row_size];
-        d_weight += noise_std * mirror * (epsilon_input * epsilon_output) * normalized_reward;
 
+        //d_weight += noise_std * mirror * (epsilon_input * epsilon_output) * normalized_reward;
+        d_weight += mirror * (epsilon_input * epsilon_output) * normalized_reward;
+        
         if (id.x != 0) continue;
+        
+        //d_bias += noise_std * mirror * epsilon_output * normalized_reward;
+        d_bias += mirror * epsilon_output * normalized_reward;
 
-        d_bias += noise_std * mirror * epsilon_output * normalized_reward;
     }
 
     d_weight /= noise_normalizer;

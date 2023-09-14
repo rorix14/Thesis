@@ -1048,14 +1048,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23f445959184e9241a163ee53f0cadde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   populationSize: 50
-  eliteNumber: 3
-  tournamentNumber: 6
-  mutationNoiseStd: 0.01
+  noiseStandardDeviation: 0
+  requiredSimulations: 0
   shader: {fileID: 7200000, guid: 010bb3406e14d204c9ef0d83fa08e5c6, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 17
+  simulationSpeed: 19
   numberOfEpisodes: 300
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
+  eliteNumber: 3
+  tournamentNumber: 6
 --- !u!114 &400505078
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2342,19 +2351,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f35cae125de164c4f9223ab9b6c7e196, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  algorithmsPrefabs:
-  - {fileID: 8048831427862802974, guid: 161607148aa7e5d4bab705ad631f40e1, type: 3}
-  - {fileID: 8048831427862802974, guid: edbab2573aa413d4cb759bd848d98a59, type: 3}
-  - {fileID: 8048831427862802974, guid: 731c5cdd8372c974181122f3697371bb, type: 3}
-  - {fileID: 8048831427862802974, guid: 00b37932ddf79b44aa5ec4dca52f3be0, type: 3}
-  - {fileID: 8048831427862802974, guid: fb07b8f1c2a9c8c48808fe4e288c7a52, type: 3}
-  - {fileID: 8048831427862802974, guid: 3db9b15855765d54796adfaa1cc3f9a4, type: 3}
-  - {fileID: 8048831427862802974, guid: 4e967a5ac1db65142a7c8ce936596643, type: 3}
-  - {fileID: 8048831427862802974, guid: b41e515a5130bce448470efda101827c, type: 3}
+  algorithmsPrefabs: []
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: maze ES population Part 2
+  saveFileName: maze RS neurons Part 1
 --- !u!4 &1932842573
 Transform:
   m_ObjectHideFlags: 0

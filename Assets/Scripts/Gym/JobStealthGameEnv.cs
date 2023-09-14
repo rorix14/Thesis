@@ -25,6 +25,8 @@ namespace Gym
 
         private float[,] _resetObservationBatch;
 
+        private Vector2[] _playerPositions;
+
         protected override void Start()
         {
             base.Start();
@@ -43,6 +45,8 @@ namespace Gym
             if (!_player || populationSize == 0 || _populationSize > 0) return;
 
             _populationSize = populationSize;
+
+            _playerPositions = new Vector2[populationSize];
 
             _agentAssassinated = new EnemyAgent[populationSize * _enemyCount];
 
@@ -344,15 +348,13 @@ namespace Gym
 
         public Vector2[] GetPlayersPositions()
         {
-            //TODO: positions array only needs to be created once
-            var positions = new Vector2[_populationSize];
             for (int i = 0; i < _populationSize; i++)
             {
                 var position = _playersTransforms[i].position;
-                positions[i] = new Vector2(position.x, position.z);
+                _playerPositions[i] = new Vector2(position.x, position.z);
             }
 
-            return positions;
+            return _playerPositions;
         }
 
         private void Dispose()

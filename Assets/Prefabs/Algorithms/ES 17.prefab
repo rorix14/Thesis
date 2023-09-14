@@ -56,5 +56,5 @@ MonoBehaviour:
   activationFunction: 1
   learningRate: 0.01
   decayRate: 0.001
-  neuronNumber: 128
+  neuronNumber: 256
   weightsInitStd: 0.005

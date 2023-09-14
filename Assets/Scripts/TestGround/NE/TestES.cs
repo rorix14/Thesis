@@ -21,17 +21,14 @@ namespace TestGround.NE
         [SerializeField] private int numberOfEpisodes;
 
         private int _episodeIndex;
-
         protected JobStealthGameEnv _env;
-        //private DistributedStealthGameEnv _env;
-
         protected ES _neModel;
 
-        //private List<float> _rewardsMeanOverTime;
-        private WindowGraph _graphReward;
-
         protected float[,] _currentSates;
-
+        
+        private WindowGraph _graphReward;
+        private WindowGraph _graphBestIndividualReward;
+        
         //Only were for testing
         [SerializeField] protected ActivationFunction activationFunction;
         [SerializeField] protected float learningRate;
@@ -49,7 +46,7 @@ namespace TestGround.NE
         private void Awake()
         {
             _env = FindObjectOfType<JobStealthGameEnv>();
-            //_env = FindObjectOfType<DistributedStealthGameEnv>();
+            
             Rewards = new List<float>(numberOfEpisodes);
             Loss = new List<float>(numberOfEpisodes);
             for (int i = 0; i < Rewards.Capacity; i++)
@@ -57,14 +54,16 @@ namespace TestGround.NE
                 Rewards.Add(0f);
                 Loss.Add(0f);
             }
-        }
-
-        protected virtual void Start()
-        {
+            
             if (populationSize % 2 != 0)
             {
                 populationSize++;
             }
+        }
+
+        protected virtual void Start()
+        {
+            //Random.InitState(42);
 
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();
@@ -91,9 +90,9 @@ namespace TestGround.NE
             if (_episodeIndex >= numberOfEpisodes)
             {
                 IsFinished = true;
-                //if (!_env) return;
-                //_env.Close();
-                //PlotTrainingData();
+                if (!_env) return;
+                _env.Close();
+                PlotTrainingData();
                 return;
             }
 
@@ -105,20 +104,23 @@ namespace TestGround.NE
 
             if (_neModel.FinishedIndividuals < populationSize) return;
 
+            //_gaModel.DoNoveltySearch(_env.GetPlayersPositions());
+            _neModel.Train();
+            
             Rewards[_episodeIndex] = _neModel.EpisodeRewardMean;
             Loss[_episodeIndex] = _neModel.EpisodeBestReward;
 
             _currentSates = _env.DistributedResetEnv();
             ++_episodeIndex;
 
-            if (_episodeIndex % requiredSimulations == 0)
-            {
-                _neModel.Train();
-            }
-            else
-            {
-                _neModel.SoftReset();
-            }
+            // if (_episodeIndex % requiredSimulations == 0)
+            // {
+            //     _neModel.Train();
+            // }
+            // else
+            // {
+            //     _neModel.SoftReset();
+            // }
         }
 
         private void PlotTrainingData()
@@ -131,17 +133,20 @@ namespace TestGround.NE
                 rewardSum += reward;
             }
 
-            // float timeSum = 0.0f;
-            // foreach (var time in _times)
-            // {
-            //     timeSum += time;
-            // }
-
-            print("Average Reward: " + rewardSum / Rewards.Count);
-            //print("Average Time: " + timeSum / _times.Count);
-
+            float bestIndividualSum = 0.0f;
+            for (int i = 0; i < Loss.Count; i++)
+            {
+                var loss = Loss[i];
+                bestIndividualSum += loss;
+            }
+            
+            print("Average population reward: " + rewardSum / Rewards.Count);
+            print("Average best individual reward: " + bestIndividualSum / Loss.Count);
+            
             var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
             _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
+            _graphBestIndividualReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
+
             StartCoroutine(ShowGraphs());
         }
 
@@ -151,13 +156,16 @@ namespace TestGround.NE
 
             _graphReward.SetGraph(null, Rewards, GraphType.LineGraph,
                 "Rewards per Episode", "episodes", "rewards");
+            
+            _graphBestIndividualReward.SetGraph(null, Loss, GraphType.LineGraph,
+                "Best Individual Rewards per Episode", "episodes", "loss");
         }
 
         private void OnDestroy()
         {
-            //Time.timeScale = 1;
+            Time.timeScale = 1;
             _neModel?.Dispose();
-            //if (_env) _env.Close();
+            if (_env) _env.Close();
         }
     }
 }

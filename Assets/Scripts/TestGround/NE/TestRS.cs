@@ -1,34 +1,38 @@
 using Algorithms.NE;
 using NN;
-using TestGround.NE;
 using UnityEngine;
 
-public class TestRS : TestES
+namespace TestGround.NE
 {
-    protected override void Start()
+    public class TestRS : TestES
     {
-        if (populationSize % 2 != 0)
+        public override string GetDescription()
         {
-            populationSize++;
+            return "RS, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
+                   ", " + populationSize + " population size, noise std " + noiseStandardDeviation +
+                   ", initialization std " + weightsInitStd;
         }
 
-        _env.CreatePopulation(populationSize);
-        _currentSates = _env.DistributedResetEnv();
-
-
-        var network = new NetworkLayer[]
+        protected override void Start()
         {
-            new ESNetworkLayer(AlgorithmNE.RS, populationSize, noiseStandardDeviation, _env.GetObservationSize, 128,
-                ActivationFunction.ReLu, Instantiate(shader), 25f),
-            new ESNetworkLayer(AlgorithmNE.RS, populationSize, noiseStandardDeviation, 128, 128,
-                ActivationFunction.ReLu, Instantiate(shader), 25f),
-            new ESNetworkLayer(AlgorithmNE.RS, populationSize, noiseStandardDeviation, 128, _env.GetNumberOfActions,
-                ActivationFunction.Linear, Instantiate(shader), 25f)
-        };
+            _env.CreatePopulation(populationSize);
+            _currentSates = _env.DistributedResetEnv();
 
-        var neModel = new ESModel(network);
-        _neModel = new RS(neModel, _env.GetNumberOfActions, populationSize);
+            var network = new NetworkLayer[]
+            {
+                new ESNetworkLayer(AlgorithmNE.RS, populationSize, noiseStandardDeviation, _env.GetObservationSize,
+                    neuronNumber, activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
+                new ESNetworkLayer(AlgorithmNE.RS, populationSize, noiseStandardDeviation, neuronNumber, neuronNumber,
+                    activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
+                new ESNetworkLayer(AlgorithmNE.RS, populationSize, noiseStandardDeviation, neuronNumber,
+                    _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader),
+                    paramsCoefficient: weightsInitStd)
+            };
 
-        Time.timeScale = simulationSpeed;
+            var neModel = new ESModel(network);
+            _neModel = new RS(neModel, _env.GetNumberOfActions, populationSize);
+
+            Time.timeScale = simulationSpeed;
+        }
     }
 }

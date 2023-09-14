@@ -23,13 +23,14 @@ namespace Algorithms.NE
         private readonly int[] _tournamentIndexes;
         private readonly float[] _elitismFitness;
         private readonly float[] _populationFitness;
-        
+
         //NS
         private readonly List<Vector2> _archive;
         private float _noveltyThreshold;
         private readonly float _noveltyThresholdMinValue;
         private int _timeout;
         private readonly int _neighboursToCheck;
+        private readonly float[] _noveltyScores;
 
         private readonly List<float>[] _agentsArchiveDistances;
 
@@ -53,7 +54,7 @@ namespace Algorithms.NE
             {
                 _elitismFitness[i] = float.MinValue;
             }
-            
+
             //NS 
             _archive = new List<Vector2>(batchSize);
             // one third of the max possible distance
@@ -61,40 +62,65 @@ namespace Algorithms.NE
             _noveltyThresholdMinValue = 1f;
             _timeout = 0;
             _neighboursToCheck = 10;
+            _noveltyScores = new float[batchSize];
             _agentsArchiveDistances = new List<float>[batchSize];
         }
 
         public void DoNoveltySearch(Vector2[] agentsFinalPositions)
         {
+            //TODO: needs to work if we want to do multiple episodes before training, example Moving Goal scene
             var addedToArchive = 0;
             for (int i = 0; i < _batchSize; i++)
             {
                 var agentPosition = agentsFinalPositions[i];
                 var archiveSize = _archive.Count;
                 _agentsArchiveDistances[i] = new List<float>(archiveSize + _batchSize);
-                    
+
                 var minDistance = float.MaxValue;
                 for (int j = 0; j < archiveSize; j++)
                 {
-                    //TODO: make custom function
-                    var currentDistance = Vector2.Distance(agentPosition, _archive[j]);
+                    var archivePos = _archive[j];
+                    var xDist = agentPosition.x - archivePos.x;
+                    var yDist = agentPosition.y - archivePos.y;
+                    var currentDistance = (float)Math.Sqrt(xDist * xDist + yDist * yDist);
                     _agentsArchiveDistances[i].Add(currentDistance);
-                    
-                    if (minDistance > currentDistance)
-                    {
-                        minDistance = currentDistance;
-                    }
+
+                    if (minDistance < currentDistance) continue;
+
+                    minDistance = currentDistance;
                 }
 
-                if (minDistance <= _noveltyThreshold) continue;
-                
-                _archive.Add(agentPosition);
-                addedToArchive++;
+                if (minDistance > _noveltyThreshold)
+                {
+                    _archive.Add(agentPosition);
+                    addedToArchive++;
+                }
+
+                for (int j = 0; j < _batchSize; j++)
+                {
+                    var currentPos = agentsFinalPositions[j];
+                    var xDist = agentPosition.x - currentPos.x;
+                    var yDist = agentPosition.y - currentPos.y;
+                    var currentDistance = (float)Math.Sqrt(xDist * xDist + yDist * yDist);
+                    _agentsArchiveDistances[i].Add(currentDistance);
+                }
+
+                _agentsArchiveDistances[i].Sort();
+
+                var distancesSum = 0f;
+                for (int j = 1; j < _neighboursToCheck; j++)
+                {
+                    distancesSum += _agentsArchiveDistances[i][j];
+                }
+
+                _noveltyScores[i] = (distancesSum + 1) / (_neighboursToCheck - 1);
             }
-            
-            _timeout = addedToArchive == 0 ? _timeout + 1 : 0;
-            if (_timeout > 10)
+
+            if (addedToArchive == 0)
             {
+                _timeout++;
+                if (_timeout <= 10) return;
+
                 _timeout = 0;
                 _noveltyThreshold *= 0.9f;
                 if (_noveltyThreshold < _noveltyThresholdMinValue)
@@ -102,54 +128,42 @@ namespace Algorithms.NE
                     _noveltyThreshold = _noveltyThresholdMinValue;
                 }
             }
-
-            if (addedToArchive > 4)
+            else
             {
-                _noveltyThreshold *= 1.2f;
-            }
-            
-            //Set fitness values
-            for (int i = 0; i < _batchSize; i++)
-            {
-                var agentPosition = agentsFinalPositions[i];
-                for (int j = 0; j < _batchSize; j++)
+                _timeout = 0;
+                if (addedToArchive > 4)
                 {
-                    var currentDistance = Vector2.Distance(agentPosition, agentsFinalPositions[j]);
-                    _agentsArchiveDistances[i].Add(currentDistance);
+                    _noveltyThreshold *= 1.2f;
                 }
-                
-                _agentsArchiveDistances[i].Sort();
-
-                var distancesSum = 0f;
-                for (int j = 0; j < _neighboursToCheck; j++)
-                {
-                    distancesSum += _agentsArchiveDistances[i][j];
-                }
-
-                _episodeRewards[i] = distancesSum / _neighboursToCheck;
             }
         }
-        
+
         public override void Train()
         {
+            _episodeRewardMean = 0f;
+            _episodeBestReward = float.MinValue;
             for (int i = 0; i < _batchSize; i++)
             {
                 var individualFitness = _episodeRewards[i];
                 _episodeRewardMean += individualFitness;
-                _populationFitness[i] = individualFitness;
+                _episodeBestReward = individualFitness > _episodeBestReward ? individualFitness : _episodeBestReward;
                 _episodeRewards[i] = 0f;
                 _completedAgents[i] = false;
+
+                //TODO: 8 is a magic number, this should be done differently, for example: _noveltyBonus * _noveltyScores[i] + individualFitness
+                //individualFitness = (individualFitness + 8) * _noveltyScores[i];
+                _populationFitness[i] = individualFitness;
 
                 for (int j = 0; j < _elitism; j++)
                 {
                     if (_elitismFitness[j] >= individualFitness) continue;
-                    
+
                     for (int k = _elitism - 1; k > j; k--)
                     {
                         _elitismFitness[k] = _elitismFitness[k - 1];
-                        _elitismIndexes[k] =  _elitismIndexes[k - 1];
+                        _elitismIndexes[k] = _elitismIndexes[k - 1];
                     }
-                        
+
                     _elitismFitness[j] = individualFitness;
                     _elitismIndexes[j] = i;
                     break;
@@ -165,7 +179,7 @@ namespace Algorithms.NE
 
         private void Crossover()
         {
-             //TODO: This could be done using multithreading, although it might not be worth it    
+            //TODO: This could be done using multithreading, although it might not be worth it    
             for (int i = _elitism; i < _batchSize; i += 2)
             {
                 var crossoverInfo = new CrossoverInfo();
@@ -206,20 +220,18 @@ namespace Algorithms.NE
                         fitness2 = individualFitness;
                         crossoverInfo.Parent2 = individual;
                     }
-
-                    
-                    //TODO: this part must be outside the while loop!!
-                    _crossoverInfos[i] = crossoverInfo;
-
-                    var mutationVolume = (fitness1 < _episodeRewardMean ? _mutationMax : _mutationMin) +
-                                         (fitness2 < _episodeRewardMean ? _mutationMax : _mutationMin);
-                    _mutationsVolume[i] = mutationVolume;
-
-                    if (i + 1 >= _batchSize) continue;
-
-                    _crossoverInfos[i + 1] = new CrossoverInfo(crossoverInfo.Parent2, crossoverInfo.Parent1, 0);
-                    _mutationsVolume[i + 1] = mutationVolume;
                 }
+
+                _crossoverInfos[i] = crossoverInfo;
+
+                var mutationVolume = (fitness1 < _episodeRewardMean ? _mutationMax : _mutationMin) +
+                                     (fitness2 < _episodeRewardMean ? _mutationMax : _mutationMin);
+                _mutationsVolume[i] = mutationVolume;
+
+                if (i + 1 >= _batchSize) continue;
+
+                _crossoverInfos[i + 1] = new CrossoverInfo(crossoverInfo.Parent2, crossoverInfo.Parent1, 0);
+                _mutationsVolume[i + 1] = mutationVolume;
             }
 
             for (int i = 0; i < _elitism; i++)
@@ -229,7 +241,7 @@ namespace Algorithms.NE
                 _elitismFitness[i] = float.MinValue;
             }
         }
-        
+
         //Only use if the softmax activation function is used in the output layer
         // public override int[] SamplePopulationActions(float[,] states)
         // {

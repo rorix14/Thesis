@@ -22,12 +22,10 @@ namespace TestGround.NE
         private JobStealthGameEnv _env;
         private NEAT _neat;
 
-        private List<float> _rewardsMeanOverTime;
-        private List<float> _bestIndividualRewardsMeanOverTime;
+        private float[,] _currentSates;
+
         private WindowGraph _graphReward;
         private WindowGraph _graphBestIndividualReward;
-
-        private float[,] _currentSates;
 
         public override string GetDescription()
         {
@@ -37,6 +35,7 @@ namespace TestGround.NE
         private void Awake()
         {
             _env = FindObjectOfType<JobStealthGameEnv>();
+            
             Rewards = new List<float>(numberOfEpisodes);
             Loss = new List<float>(numberOfEpisodes);
             for (int i = 0; i < Rewards.Capacity; i++)
