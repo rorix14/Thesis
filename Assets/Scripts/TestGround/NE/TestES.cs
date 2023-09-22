@@ -38,7 +38,7 @@ namespace TestGround.NE
 
         public override string GetDescription()
         {
-            return "DQN, 2 layers, " + neuronNumber + " neurons, " + activationFunction +
+            return "ES, 4 layers, " + neuronNumber + " neurons, " + activationFunction +
                    ", " + populationSize + " population size, noise std " + noiseStandardDeviation + ", lr " +
                    learningRate + ", decay " + decayRate + ", initialization std " + weightsInitStd;
         }
@@ -72,8 +72,8 @@ namespace TestGround.NE
             {
                 new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, _env.GetObservationSize,
                     neuronNumber, activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
-                // new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, neuronNumber, neuronNumber,
-                //     activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
+                new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, neuronNumber, neuronNumber,
+                    activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
                 new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, neuronNumber,
                     _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader),
                     paramsCoefficient: weightsInitStd)
@@ -90,9 +90,9 @@ namespace TestGround.NE
             if (_episodeIndex >= numberOfEpisodes)
             {
                 IsFinished = true;
-                if (!_env) return;
-                _env.Close();
-                PlotTrainingData();
+                // if (!_env) return;
+                // _env.Close();
+                // PlotTrainingData();
                 return;
             }
 
@@ -163,9 +163,9 @@ namespace TestGround.NE
 
         private void OnDestroy()
         {
-            Time.timeScale = 1;
+            //Time.timeScale = 1;
             _neModel?.Dispose();
-            if (_env) _env.Close();
+            //if (_env) _env.Close();
         }
     }
 }
