@@ -35,8 +35,7 @@ namespace Algorithms.NE
         private readonly List<float>[] _agentsArchiveDistances;
 
         public GA(NetworkModel networkModel, int numberOfActions, int batchSize, int elitism, int tournamentSize,
-            float mutationMax = 0.10f,
-            float mutationMin = 0.02f) : base(networkModel, numberOfActions, batchSize)
+            float mutationMax = 0.10f, float mutationMin = 0.02f) : base(networkModel, numberOfActions, batchSize)
         {
             _gaModel = (GAModel)networkModel;
             _crossoverInfos = new CrossoverInfo[batchSize];

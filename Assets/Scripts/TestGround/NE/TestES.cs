@@ -38,7 +38,7 @@ namespace TestGround.NE
 
         public override string GetDescription()
         {
-            return "ES, 4 layers, " + neuronNumber + " neurons, " + activationFunction +
+            return "ES, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
                    ", " + populationSize + " population size, noise std " + noiseStandardDeviation + ", lr " +
                    learningRate + ", decay " + decayRate + ", initialization std " + weightsInitStd;
         }

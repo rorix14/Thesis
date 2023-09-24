@@ -12,13 +12,13 @@ namespace TestGround.NE
         public override string GetDescription()
         {
             return "GA, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
-                   ", " + populationSize + " population size, noise std " + noiseStandardDeviation +
-                   ", initialization std " + weightsInitStd;
+                   ", " + populationSize + " population size, noise std " + noiseStandardDeviation + ", elite number " +
+                   eliteNumber + ", tournament number " + tournamentNumber + ", initialization std " + weightsInitStd;
         }
 
         protected override void Start()
         {
-            Random.InitState(42);
+            //Random.InitState(42);
 
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();

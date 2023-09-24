@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3006157079894222475}
-  - component: {fileID: 8048831427862802974}
+  - component: {fileID: -3853046103869150412}
   m_Layer: 0
-  m_Name: ES 23
+  m_Name: GA 4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -31,7 +31,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8048831427862802974
+--- !u!114 &-3853046103869150412
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -40,21 +40,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 8713717557610204580}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 005f50db4c0485841b4d3788d2e957c5, type: 3}
+  m_Script: {fileID: 11500000, guid: 23f445959184e9241a163ee53f0cadde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   IsFinished: 0
   Rewards: []
   Loss: []
-  populationSize: 25
+  populationSize: 50
   noiseStandardDeviation: 0.015
   requiredSimulations: 1
-  shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
+  shader: {fileID: 7200000, guid: 010bb3406e14d204c9ef0d83fa08e5c6, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 26
+  simulationSpeed: 21
   numberOfEpisodes: 300
-  activationFunction: 1
-  learningRate: 0.005
-  decayRate: 0.000001
-  neuronNumber: 256
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 128
   weightsInitStd: 0.005
+  eliteNumber: 3
+  tournamentNumber: 6

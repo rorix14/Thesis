@@ -103,14 +103,14 @@ namespace Algorithms.NE
             for (int i = 0; i < _batchSize; i++)
             {
                 var episodeReward = _episodeRewards[i];
-                //_episodeRewardUpdate[0, i] = episodeReward;
+                _episodeRewardUpdate[0, i] = episodeReward;
                 _episodeRewardMean += episodeReward;
                 _episodeBestReward = episodeReward > _episodeBestReward ? episodeReward : _episodeBestReward;
                 _completedAgents[i] = false;
-                //_episodeRewards[i] = 0f;
+                _episodeRewards[i] = 0f;
             }
 
-            RankRewards();
+            //RankRewards();
 
             _episodeRewardMean /= _batchSize;
             _finishedIndividuals = 0;

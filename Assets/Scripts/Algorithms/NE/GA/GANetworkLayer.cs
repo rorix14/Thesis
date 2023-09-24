@@ -1,10 +1,7 @@
-using System.Collections.Generic;
-using System.Diagnostics;
 using NN;
 using NN.CPU_Single;
 using UnityEngine;
 using ActivationFunction = NN.ActivationFunction;
-using Debug = UnityEngine.Debug;
 
 namespace Algorithms.NE
 {
