@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NN.CPU_Single;
 using UnityEngine;
+using ActivationFunction = NN.ActivationFunction;
 using Random = UnityEngine.Random;
 
 namespace Algorithms.NE.NEAT
@@ -40,17 +41,19 @@ namespace Algorithms.NE.NEAT
         private int _genomeCount;
         private int _speciesCount;
 
+        private ActivationFunction _activationFunction;
+
         // cashed variables
         private readonly float[] _populationOutput;
         private readonly float[] _individualInput;
 
-        public NEATModel(int populationSize, int inputNumber, int outputNumber, float neuronWeightStd = 0.005f,
+        public NEATModel(int populationSize, int inputNumber, int outputNumber, ActivationFunction activationFunction, float neuronWeightStd = 0.005f,
             float noiseStd = 0.01f, int numGensAllowedNoImprovement = 75, float addLinkRate = 0.15f,
             float addRecurrentLinkRate = 0.05f, float addNeuronRate = 0.1f, float weightMutationRate = 0.15f,
             float weightReplaceRate = 0.1f, float crossOverRate = 0.8f, float speciesCompatibilityThreshold = 0.26f,
             int speciesOldThreshold = 50, float speciesOldPenalty = 0.3f, int speciesYoungThreshold = 10,
-            float speciesYoungBonus = 0.3f, float compatabilityDisjointWeight = 1f,
-            float compatabilityExcessWeight = 1f, float compatabilityMatchedWeight = 0.4f)
+            float speciesYoungBonus = 0.3f, float compatabilityDisjointWeight = 8.5f,
+            float compatabilityExcessWeight = 8.5f, float compatabilityMatchedWeight = 4f)
         {
             _populationSize = populationSize;
             _inputNumber = inputNumber;
@@ -70,6 +73,7 @@ namespace Algorithms.NE.NEAT
             _compatabilityDisjointWeight = compatabilityDisjointWeight;
             _compatabilityExcessWeight = compatabilityExcessWeight;
             _compatabilityMatchedWeight = compatabilityMatchedWeight;
+            _activationFunction = activationFunction;
 
             _genomeCount = 0;
             _speciesCount = 0;
@@ -116,7 +120,7 @@ namespace Algorithms.NE.NEAT
                     _individualInput[j] = input[i, j];
                 }
 
-                var individualActions = _populationGenomes[i].Forward(_individualInput);
+                var individualActions = _populationGenomes[i].Forward(_individualInput, _activationFunction);
                 var individualStartIndex = _outputNumber * i;
                 for (int j = 0; j < _outputNumber; j++)
                 {
@@ -129,6 +133,7 @@ namespace Algorithms.NE.NEAT
 
         public void Update(float[] populationFitness)
         {
+            var sepciess = _species.Count;
             for (int i = _species.Count - 1; i >= 0; i--)
             {
                 var specie = _species[i];
@@ -151,7 +156,13 @@ namespace Algorithms.NE.NEAT
             {
                 _populationGenomes[i].Fitness = populationFitness[i];
             }
+            
+            if (_species.Count < sepciess)
+            {
+                Debug.Log("Removed = " + _species.Count);
+            }
 
+            var bestCompaScore = 0f;
             for (int i = 0; i < _populationSize; i++)
             {
                 var currentGenome = _populationGenomes[i];
@@ -161,7 +172,11 @@ namespace Algorithms.NE.NEAT
                 for (int j = 0; j < _species.Count; j++)
                 {
                     var specie = _species[j];
-                    if (currentGenome.CompatabilityScore(specie.Leader) > _speciesCompatibilityThreshold) continue;
+                    var compatabilityScore = currentGenome.CompatabilityScore(specie.Leader);
+                    if (compatabilityScore > bestCompaScore)
+                        bestCompaScore = compatabilityScore;
+                    
+                    if (compatabilityScore > _speciesCompatibilityThreshold) continue;
 
                     specie.AddMember(currentGenome);
                     hasSpecies = true;
@@ -230,6 +245,12 @@ namespace Algorithms.NE.NEAT
 
                     numToSpawn = 0;
                 }
+            }
+
+            Debug.Log("Highest compa score: " + bestCompaScore);
+            if (_species.Count > 1)
+            {
+                Debug.Log("Number of species = " + _species.Count);
             }
 
             //TODO: test this condition and then remove

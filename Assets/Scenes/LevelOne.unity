@@ -211,7 +211,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &82632403
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -563,7 +563,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 82632402}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b032d2ee4b37cae4aae7f6072bb05d83, type: 3}
   m_Name: 
@@ -571,11 +571,18 @@ MonoBehaviour:
   IsFinished: 0
   Rewards: []
   Loss: []
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 28
-  numberOfEpisodes: 300
   populationSize: 50
-  mutationNoiseStd: 0.01
+  noiseStandardDeviation: 0.01
+  requiredSimulations: 1
+  shader: {fileID: 0}
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
+  simulationSpeed: 16
+  numberOfEpisodes: 300
+  activationFunction: 1
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0.005
 --- !u!1 &149193037
 GameObject:
   m_ObjectHideFlags: 0
@@ -1128,7 +1135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &741151726
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1143,15 +1150,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   algorithmsPrefabs:
   - {fileID: -3853046103869150412, guid: 7183b5f4b2397ca47a697f209dcb5905, type: 3}
-  - {fileID: -3853046103869150412, guid: 9e6bada88d3e87f4fb86a6da6a19bee9, type: 3}
-  - {fileID: -3853046103869150412, guid: 92244b0297f3c05489d80e7487e8c136, type: 3}
-  - {fileID: -3853046103869150412, guid: cdfcc7051ec7e1f49808241070981086, type: 3}
-  - {fileID: -3853046103869150412, guid: ddb1a5b15a3be0448b0a32bb75ef2111, type: 3}
-  - {fileID: -3853046103869150412, guid: 35488464971e9d649bce29b2206fb250, type: 3}
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: one GA tounament size Part 1
+  saveFileName: one GA neuron size Part 1
 --- !u!4 &741151727
 Transform:
   m_ObjectHideFlags: 0

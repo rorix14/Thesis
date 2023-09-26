@@ -90,9 +90,9 @@ namespace TestGround.NE
             if (_episodeIndex >= numberOfEpisodes)
             {
                 IsFinished = true;
-                // if (!_env) return;
-                // _env.Close();
-                // PlotTrainingData();
+                if (!_env) return;
+                _env.Close();
+                PlotTrainingData();
                 return;
             }
 
@@ -163,9 +163,9 @@ namespace TestGround.NE
 
         private void OnDestroy()
         {
-            //Time.timeScale = 1;
+            Time.timeScale = 1;
             _neModel?.Dispose();
-            //if (_env) _env.Close();
+            if (_env) _env.Close();
         }
     }
 }

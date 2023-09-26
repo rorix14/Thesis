@@ -33,6 +33,7 @@ namespace Algorithms.NE
         // Cashed variables
         private readonly int _populationSize;
         private readonly int _neuronNumber;
+        private readonly int _inputNumber;
         private readonly int _individualWeightSize;
         private readonly int _populationNeuronLenght;
 
@@ -52,6 +53,7 @@ namespace Algorithms.NE
         {
             _populationSize = populationSize;
             _neuronNumber = nNeurons;
+            _inputNumber = nInputs;
             _individualWeightSize = nInputs * nNeurons;
             _populationNeuronLenght = populationSize * nNeurons;
 
@@ -121,7 +123,7 @@ namespace Algorithms.NE
 
                 for (int j = 0; j < weightsMutationVolume; j++)
                 {
-                    var randomIndex = Random.Range(0, _populationSize) * _populationNeuronLenght +
+                    var randomIndex = Random.Range(0, _inputNumber) * _populationNeuronLenght +
                                       Random.Range(rangeMin, rangeMax);
 
                     _weightsMutationNoise[randomIndex] = _noiseSamplesBuffer[Random.Range(0, _noiseSamplesSize)];

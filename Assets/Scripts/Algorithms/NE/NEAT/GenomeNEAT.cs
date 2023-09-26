@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using NN.CPU_Single;
+using ActivationFunction = NN.ActivationFunction;
 using Random = UnityEngine.Random;
 
 namespace Algorithms.NE.NEAT
@@ -139,7 +139,7 @@ namespace Algorithms.NE.NEAT
             _outputNeuronStart = phenotypeLenght - _outputNumber;
         }
 
-        public float[] Forward(float[] input)
+        public float[] Forward(float[] input, ActivationFunction activationFunction)
         {
             for (int i = 0; i < _inputNumber; i++)
             {
@@ -156,9 +156,16 @@ namespace Algorithms.NE.NEAT
 
                 if (i < _outputNeuronStart)
                 {
-                    var expPos = (float)Math.Exp(sum);
-                    var expNeg = (float)Math.Exp(-sum);
-                    sum = (expPos - expNeg) / (expPos + expNeg);
+                    if (activationFunction == ActivationFunction.Tanh)
+                    {
+                        var expPos = (float)Math.Exp(sum);
+                        var expNeg = (float)Math.Exp(-sum);
+                        sum = (expPos - expNeg) / (expPos + expNeg);
+                    }
+                    else
+                    {
+                        sum = sum < 0.0f ? 0.0f : sum;
+                    }
                 }
                 else
                 {
