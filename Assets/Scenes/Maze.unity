@@ -1080,11 +1080,18 @@ MonoBehaviour:
   IsFinished: 0
   Rewards: []
   Loss: []
+  populationSize: 50
+  noiseStandardDeviation: 0
+  requiredSimulations: 0
+  shader: {fileID: 0}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 26
   numberOfEpisodes: 300
-  populationSize: 50
-  mutationNoiseStd: 0.01
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
 --- !u!1 &449518215
 GameObject:
   m_ObjectHideFlags: 0
@@ -2352,16 +2359,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   algorithmsPrefabs:
-  - {fileID: -3853046103869150412, guid: 7183b5f4b2397ca47a697f209dcb5905, type: 3}
-  - {fileID: -3853046103869150412, guid: 9e6bada88d3e87f4fb86a6da6a19bee9, type: 3}
-  - {fileID: -3853046103869150412, guid: 92244b0297f3c05489d80e7487e8c136, type: 3}
-  - {fileID: -3853046103869150412, guid: cdfcc7051ec7e1f49808241070981086, type: 3}
-  - {fileID: -3853046103869150412, guid: ddb1a5b15a3be0448b0a32bb75ef2111, type: 3}
-  - {fileID: -3853046103869150412, guid: 35488464971e9d649bce29b2206fb250, type: 3}
+  - {fileID: 8293544776632624489, guid: 4f4cbc2c8ecf28b48942a80688fa3d2a, type: 3}
+  - {fileID: 8293544776632624489, guid: 46e96a2b00a7f884c8a72cd67b2fd0d5, type: 3}
+  - {fileID: 8293544776632624489, guid: 43b0684b293d9b74b9098e9c224cbb00, type: 3}
+  - {fileID: 8293544776632624489, guid: 28de47677aabfeb42a55d8418e0cf5fd, type: 3}
+  - {fileID: 8293544776632624489, guid: 2e834fc8da03bc5489c6c8ad314ceebd, type: 3}
+  - {fileID: 8293544776632624489, guid: 272ddb21adca5994bbe95386915c7327, type: 3}
+  - {fileID: 8293544776632624489, guid: 692c47dcf04fa08479d1ba8103351ffc, type: 3}
+  - {fileID: 8293544776632624489, guid: f18c2af1e2257dd4186790a46ca65e81, type: 3}
+  - {fileID: 8293544776632624489, guid: 0c17dd9c56eec664d9b1c46d26cd6a3c, type: 3}
+  - {fileID: 8293544776632624489, guid: debece9779629db4195644bd2459a1f9, type: 3}
+  - {fileID: 8293544776632624489, guid: 4b7acb5fd98633f468bc45a046673793, type: 3}
+  - {fileID: 8293544776632624489, guid: 82c9be676cec64d44a68d05497212823, type: 3}
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: maze GA neuron size Part 1
+  saveFileName: maze NEAT noise std Part 1
 --- !u!4 &1932842573
 Transform:
   m_ObjectHideFlags: 0

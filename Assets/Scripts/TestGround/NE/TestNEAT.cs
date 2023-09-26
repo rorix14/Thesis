@@ -13,7 +13,7 @@ namespace TestGround.NE
 
         protected override void Start()
         {
-            Random.InitState(42);
+            //Random.InitState(42);
 
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();
