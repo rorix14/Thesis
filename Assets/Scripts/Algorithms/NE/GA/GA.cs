@@ -24,16 +24,6 @@ namespace Algorithms.NE
         private readonly float[] _elitismFitness;
         private readonly float[] _populationFitness;
 
-        //NS
-        private readonly List<Vector2> _archive;
-        private float _noveltyThreshold;
-        private readonly float _noveltyThresholdMinValue;
-        private int _timeout;
-        private readonly int _neighboursToCheck;
-        private readonly float[] _noveltyScores;
-
-        private readonly List<float>[] _agentsArchiveDistances;
-
         public GA(NetworkModel networkModel, int numberOfActions, int batchSize, int elitism, int tournamentSize,
             float mutationMax = 0.10f, float mutationMin = 0.02f) : base(networkModel, numberOfActions, batchSize)
         {
@@ -52,88 +42,6 @@ namespace Algorithms.NE
             for (int i = 0; i < elitism; i++)
             {
                 _elitismFitness[i] = float.MinValue;
-            }
-
-            //NS 
-            _archive = new List<Vector2>(batchSize);
-            // one third of the max possible distance
-            _noveltyThreshold = 5f;
-            _noveltyThresholdMinValue = 1f;
-            _timeout = 0;
-            _neighboursToCheck = 10;
-            _noveltyScores = new float[batchSize];
-            _agentsArchiveDistances = new List<float>[batchSize];
-        }
-
-        public void DoNoveltySearch(Vector2[] agentsFinalPositions)
-        {
-            //TODO: needs to work if we want to do multiple episodes before training, example Moving Goal scene
-            var addedToArchive = 0;
-            for (int i = 0; i < _batchSize; i++)
-            {
-                var agentPosition = agentsFinalPositions[i];
-                var archiveSize = _archive.Count;
-                _agentsArchiveDistances[i] = new List<float>(archiveSize + _batchSize);
-
-                var minDistance = float.MaxValue;
-                for (int j = 0; j < archiveSize; j++)
-                {
-                    var archivePos = _archive[j];
-                    var xDist = agentPosition.x - archivePos.x;
-                    var yDist = agentPosition.y - archivePos.y;
-                    var currentDistance = (float)Math.Sqrt(xDist * xDist + yDist * yDist);
-                    _agentsArchiveDistances[i].Add(currentDistance);
-
-                    if (minDistance < currentDistance) continue;
-
-                    minDistance = currentDistance;
-                }
-
-                if (minDistance > _noveltyThreshold)
-                {
-                    _archive.Add(agentPosition);
-                    addedToArchive++;
-                }
-
-                for (int j = 0; j < _batchSize; j++)
-                {
-                    var currentPos = agentsFinalPositions[j];
-                    var xDist = agentPosition.x - currentPos.x;
-                    var yDist = agentPosition.y - currentPos.y;
-                    var currentDistance = (float)Math.Sqrt(xDist * xDist + yDist * yDist);
-                    _agentsArchiveDistances[i].Add(currentDistance);
-                }
-
-                _agentsArchiveDistances[i].Sort();
-
-                var distancesSum = 0f;
-                for (int j = 1; j < _neighboursToCheck; j++)
-                {
-                    distancesSum += _agentsArchiveDistances[i][j];
-                }
-
-                _noveltyScores[i] = (distancesSum + 1) / (_neighboursToCheck - 1);
-            }
-
-            if (addedToArchive == 0)
-            {
-                _timeout++;
-                if (_timeout <= 10) return;
-
-                _timeout = 0;
-                _noveltyThreshold *= 0.9f;
-                if (_noveltyThreshold < _noveltyThresholdMinValue)
-                {
-                    _noveltyThreshold = _noveltyThresholdMinValue;
-                }
-            }
-            else
-            {
-                _timeout = 0;
-                if (addedToArchive > 4)
-                {
-                    _noveltyThreshold *= 1.2f;
-                }
             }
         }
 

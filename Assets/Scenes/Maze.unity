@@ -720,7 +720,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &400505064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1072,7 +1072,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 400505063}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b032d2ee4b37cae4aae7f6072bb05d83, type: 3}
   m_Name: 
@@ -1081,17 +1081,17 @@ MonoBehaviour:
   Rewards: []
   Loss: []
   populationSize: 50
-  noiseStandardDeviation: 0
-  requiredSimulations: 0
+  noiseStandardDeviation: 0.015
+  requiredSimulations: 1
   shader: {fileID: 0}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 26
+  simulationSpeed: 16
   numberOfEpisodes: 300
-  activationFunction: 0
+  activationFunction: 1
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
-  weightsInitStd: 0
+  weightsInitStd: 0.005
 --- !u!1 &449518215
 GameObject:
   m_ObjectHideFlags: 0
@@ -2345,7 +2345,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1932842572
 MonoBehaviour:
   m_ObjectHideFlags: 0

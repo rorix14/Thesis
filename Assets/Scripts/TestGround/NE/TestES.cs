@@ -19,6 +19,7 @@ namespace TestGround.NE
         [SerializeField] private WindowGraph windowGraphPrefab;
         [SerializeField] protected float simulationSpeed;
         [SerializeField] private int numberOfEpisodes;
+        [SerializeField] protected float noveltyRelevance;
 
         private int _episodeIndex;
         protected JobStealthGameEnv _env;
@@ -80,7 +81,7 @@ namespace TestGround.NE
             };
 
             var neModel = new ESModel(network, learningRate, decayRate);
-            _neModel = new ES(neModel, _env.GetNumberOfActions, populationSize);
+            _neModel = new ES(neModel, _env.GetNumberOfActions, populationSize, noveltyRelevance);
 
             Time.timeScale = simulationSpeed;
         }

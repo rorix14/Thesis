@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using NN;
+using UnityEngine;
 
 namespace Algorithms.NE
 {
@@ -24,11 +26,23 @@ namespace Algorithms.NE
 
         private readonly int[] _rewardsIndexKeys;
 
+        protected readonly float[] _adjustedPopulationFitness;
+
+        //Novelty Search
+        private readonly List<Vector2> _archive;
+        private float _noveltyThreshold;
+        private readonly float _noveltyThresholdMinValue;
+        private int _timeout;
+        private readonly int _neighboursToCheck;
+        private readonly float[] _noveltyScores;
+        private readonly List<float>[] _agentsArchiveDistances;
+        private readonly float _noveltyRelevance;
+
         public float EpisodeRewardMean => _episodeRewardMean;
         public float EpisodeBestReward => _episodeBestReward;
         public float FinishedIndividuals => _finishedIndividuals;
 
-        public ES(NetworkModel networkModel, int numberOfActions, int batchSize)
+        public ES(NetworkModel networkModel, int numberOfActions, int batchSize, float noveltyRelevance = 0)
         {
             _networkModel = networkModel;
             _numberOfActions = numberOfActions;
@@ -42,6 +56,19 @@ namespace Algorithms.NE
             _episodeRewardUpdate = new float[1, batchSize];
 
             _rewardsIndexKeys = new int[batchSize];
+
+            _adjustedPopulationFitness = new float[batchSize];
+
+            //NS 
+            _archive = new List<Vector2>(batchSize);
+            _noveltyRelevance = noveltyRelevance;
+            // one fourth of the max possible distance
+            _noveltyThreshold = 98f;
+            _noveltyThresholdMinValue = 20f;
+            _timeout = 0;
+            _neighboursToCheck = 10;
+            _noveltyScores = new float[batchSize];
+            _agentsArchiveDistances = new List<float>[batchSize];
         }
 
         public virtual int[] SamplePopulationActions(float[,] states)
@@ -118,6 +145,124 @@ namespace Algorithms.NE
             _networkModel.Update(_episodeRewardUpdate);
         }
 
+        public void DoNoveltySearch(Vector2[] agentsFinalPositions)
+        {
+            //TODO: needs to work if we want to do multiple episodes before training, example Moving Goal scene
+            var addedToArchive = 0;
+            for (int i = 0; i < _batchSize; i++)
+            {
+                var agentPosition = agentsFinalPositions[i];
+                var archiveSize = _archive.Count;
+                _agentsArchiveDistances[i] = new List<float>(archiveSize + _batchSize);
+
+                var minDistance = float.MaxValue;
+                for (int j = 0; j < archiveSize; j++)
+                {
+                    var archivePos = _archive[j];
+                    var xDist = agentPosition.x - archivePos.x;
+                    var yDist = agentPosition.y - archivePos.y;
+                    var currentDistance = xDist * xDist + yDist * yDist;
+                    _agentsArchiveDistances[i].Add(currentDistance);
+
+                    if (minDistance < currentDistance) continue;
+
+                    minDistance = currentDistance;
+                }
+
+                if (minDistance > _noveltyThreshold)
+                {
+                    _archive.Add(agentPosition);
+                    addedToArchive++;
+                }
+
+                for (int j = 0; j < _batchSize; j++)
+                {
+                    var currentPos = agentsFinalPositions[j];
+                    var xDist = agentPosition.x - currentPos.x;
+                    var yDist = agentPosition.y - currentPos.y;
+                    var currentDistance = xDist * xDist + yDist * yDist;
+                    _agentsArchiveDistances[i].Add(currentDistance);
+                }
+
+                _agentsArchiveDistances[i].Sort();
+
+                var distancesSum = 0f;
+                for (int j = 1; j < _neighboursToCheck; j++)
+                {
+                    distancesSum += _agentsArchiveDistances[i][j];
+                }
+
+                _noveltyScores[i] = (distancesSum + 1) / (_neighboursToCheck - 1);
+            }
+
+            NormalizeRewards();
+
+            if (addedToArchive == 0)
+            {
+                _timeout++;
+                if (_timeout <= 10) return;
+
+                _timeout = 0;
+                _noveltyThreshold *= 0.9f;
+                if (_noveltyThreshold < _noveltyThresholdMinValue)
+                {
+                    _noveltyThreshold = _noveltyThresholdMinValue;
+                }
+            }
+            else
+            {
+                _timeout = 0;
+                if (addedToArchive > 4)
+                {
+                    _noveltyThreshold *= 1.2f;
+                }
+            }
+        }
+
+        private void NormalizeRewards()
+        {
+            var rewardMin = float.MaxValue;
+            var rewardMax = float.MinValue;
+            var noveltyMin = float.MaxValue;
+            var noveltyMax = float.MinValue;
+            for (int i = 0; i < _batchSize; i++)
+            {
+                var currentReward = _episodeRewards[i];
+                if (rewardMin > currentReward)
+                {
+                    rewardMin = currentReward;
+                }
+
+                if (rewardMax < currentReward)
+                {
+                    rewardMax = currentReward;
+                }
+
+                var currentNovelty = _noveltyScores[i];
+                if (noveltyMin > currentNovelty)
+                {
+                    noveltyMin = currentNovelty;
+                }
+
+                if (noveltyMax < currentNovelty)
+                {
+                    noveltyMax = currentNovelty;
+                }
+            }
+
+            var rewardRange = rewardMax - rewardMin;
+            var noveltyRange = noveltyMax - noveltyMin;
+
+            var rewardIsDifferent = Math.Abs(rewardMax - rewardMin) > 0f;
+            var noveltyIsDifferent = Math.Abs(noveltyMax - noveltyMin) > 0f;
+            for (int i = 0; i < _batchSize; i++)
+            {
+                var normReward = rewardIsDifferent ? (_episodeRewards[i] - rewardMin) / rewardRange : 0.5f;
+                var normNovelty = noveltyIsDifferent ? (_noveltyScores[i] - noveltyMin) / noveltyRange : 0.5f;
+                _adjustedPopulationFitness[i] = (1 - _noveltyRelevance) * normReward + _noveltyRelevance * normNovelty;
+            }
+        }
+
         private void RankRewards()
         {
             for (int i = 0; i < _batchSize; i++) _rewardsIndexKeys[i] = i;
@@ -126,7 +271,7 @@ namespace Algorithms.NE
 
             var sumRanks = 0;
             var dupCount = 0;
-            
+
             for (int i = 0; i < _batchSize; i++)
             {
                 sumRanks += i;

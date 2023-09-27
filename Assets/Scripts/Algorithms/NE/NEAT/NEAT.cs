@@ -8,7 +8,8 @@ namespace Algorithms.NE.NEAT
         private new float[] _modelPredictions;
         private new readonly float[] _episodeRewardUpdate;
 
-        public NEAT(NEATModel neatModel, int numberOfActions, int batchSize) : base(null, numberOfActions, batchSize)
+        public NEAT(NEATModel neatModel, int numberOfActions, int batchSize, float noveltyRelevance = 0) : base(null,
+            numberOfActions, batchSize, noveltyRelevance)
         {
             _neatModel = neatModel;
             _episodeRewardUpdate = new float[batchSize];
@@ -43,7 +44,7 @@ namespace Algorithms.NE.NEAT
 
             return _sampledActions;
         }
-        
+
         public override void Train()
         {
             _episodeRewardMean = 0f;
