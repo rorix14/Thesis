@@ -50,8 +50,9 @@ MonoBehaviour:
   noiseStandardDeviation: 0.025
   requiredSimulations: 1
   shader: {fileID: 0}
-  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 16
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32,
+    type: 3}
+  simulationSpeed: 33
   numberOfEpisodes: 300
   activationFunction: 1
   learningRate: 0

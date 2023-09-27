@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace Algorithms.NE.NEAT
@@ -100,7 +101,8 @@ namespace Algorithms.NE.NEAT
         public GenomeNEAT GetRandomMember(GenomeNEAT memberNotToUse = null)
         {
             float sum = 0;
-            for (int i = 0; i < _members.Count; i++)
+            var membersNumber = _members.Count;
+            for (int i = 0; i < membersNumber; i++)
             {
                 var member = _members[i];
                 if(member == memberNotToUse) continue;
@@ -108,17 +110,25 @@ namespace Algorithms.NE.NEAT
                 sum += member.Fitness - _currentMinFitness + 1;
             }
             
-            var randomProbability = Random.Range(1e-20f, sum);
+            var test = Random.Range(1e-20f, sum);
+            var randomProbability = test;
             var index = -1;
             while (randomProbability > 0f)
             {
-                var member = _members[++index];
+                index++;
+                if (index >= membersNumber)
+                {
+                    index = membersNumber - 1;
+                    break;
+                }
+                
+                var member = _members[index];
                 if(member == memberNotToUse) continue;
                 
-                //TODO: Might not go up to the sum value
                 randomProbability -= member.Fitness - _currentMinFitness + 1;
             }
-
+            
+          
             return _members[index];
         }
 
