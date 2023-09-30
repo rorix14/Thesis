@@ -9,27 +9,27 @@ namespace Utils
 {
     public class AlgorithmTester : MonoBehaviour
     {
-        [SerializeField] private TestAlgorithmBase[] algorithmsPrefabs;
-        private string[] _testDescriptions;
-        [SerializeField] private int testNumber;
+        [SerializeField] protected TestAlgorithmBase[] algorithmsPrefabs;
+        protected string[] _testDescriptions;
+        [SerializeField] protected int testNumber;
         [SerializeField] private int generatorSeed = 42;
-        [SerializeField] private bool saveInfo;
+        [SerializeField] protected bool saveInfo;
         [SerializeField] private string saveFileName;
 
-        private TestAlgorithmBase _currentAlgorithm;
-        private int _currentAlgorithmIndex;
-        private int _currenTest;
-        private int[] _testSeeds;
-        private bool _testsFinished;
+        protected TestAlgorithmBase _currentAlgorithm;
+        protected int _currentAlgorithmIndex;
+        protected int _currenTest;
+        protected int[] _testSeeds;
+        protected bool _testsFinished;
 
         private TestResultsSavable[] _testResults;
 
-        private float _rewardAverageFinal;
-        private float _lossAverageFinal;
+        protected float _rewardAverageFinal;
+        protected float _lossAverageFinal;
 
         private Stopwatch _stopwatch;
 
-        private void Awake()
+        protected virtual void Awake()
         {
             Random.InitState(generatorSeed);
 
@@ -66,7 +66,7 @@ namespace Utils
             _stopwatch = new Stopwatch();
         }
 
-        private void Start()
+        protected virtual void Start()
         {
             if (algorithmsPrefabs.Length == 0) return;
 
@@ -77,7 +77,7 @@ namespace Utils
             _stopwatch.Start();
         }
 
-        private void FixedUpdate()
+        protected virtual void FixedUpdate()
         {
             if (_testsFinished || !_currentAlgorithm.IsFinished) return;
 

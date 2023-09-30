@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3006157079894222475}
-  - component: {fileID: -4589656829319374267}
+  - component: {fileID: 1865656198717489510}
   m_Layer: 0
-  m_Name: Rainbow DQN
+  m_Name: Double DQN 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -31,7 +31,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &-4589656829319374267
+--- !u!114 &1865656198717489510
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -40,7 +40,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8713717557610204580}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8805df05c1022894ebb6b8b32910cc2f, type: 3}
+  m_Script: {fileID: 11500000, guid: faa416fe8ab61db40a3bcdd7389c854d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   IsFinished: 0
@@ -48,21 +48,13 @@ MonoBehaviour:
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 6
+  simulationSpeed: 11
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
   batchSize: 32
   gamma: 0.99
-  activationFunction: 1
-  learningRate: 0.0005
-  decayRate: 0.00001
+  activationFunction: 0
+  learningRate: 0.0001
+  decayRate: 0.0000001
   neuronNumber: 128
   weightsInitStd: 0.005
-  stepNumber: 3
-  noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
-  supportSize: 51
-  supportMinValue: -25
-  supportMaxValue: 63
-  beta: 0.6
-  alpha: 0.2
-  sigma: 0.05

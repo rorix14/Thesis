@@ -720,7 +720,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &400505064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1004,6 +1004,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 17
   numberOfEpisodes: 300
+  noveltyRelevance: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -1031,6 +1032,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 5
   numberOfEpisodes: 300
+  noveltyRelevance: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -1058,6 +1060,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 19
   numberOfEpisodes: 300
+  noveltyRelevance: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -1087,6 +1090,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
+  noveltyRelevance: 0
   activationFunction: 1
   learningRate: 0
   decayRate: 0
@@ -2345,7 +2349,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1932842572
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2359,12 +2363,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   algorithmsPrefabs:
-  - {fileID: 8293544776632624489, guid: 4f4cbc2c8ecf28b48942a80688fa3d2a, type: 3}
-  - {fileID: 8293544776632624489, guid: 46e96a2b00a7f884c8a72cd67b2fd0d5, type: 3}
+  - {fileID: 4810890153074692661, guid: 9e565f2c2fd3d544d84dc14d65e3caf8, type: 3}
+  - {fileID: 4810890153074692661, guid: 419756f44c97b804f9cce8852c425fdd, type: 3}
+  - {fileID: 1865656198717489510, guid: c95ce06ba72bd0740a6c7a051e26cf66, type: 3}
+  - {fileID: 1865656198717489510, guid: 1d15d019a483cd2459805e3bb99803e1, type: 3}
+  - {fileID: 7363805175022022706, guid: 2694569156c880c47a37b5d97d5ecd76, type: 3}
+  - {fileID: 7363805175022022706, guid: 9656370f542e75d4faa051fccb50c0fa, type: 3}
+  - {fileID: -7914093410445437040, guid: 3a8c9c0f66c60d94f8e265d276454743, type: 3}
+  - {fileID: -7914093410445437040, guid: 00f19995bbf666e4eb4981bf4e7cf7c7, type: 3}
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: maze NEAT population Part 1
+  saveFileName: maze DQN best Part 1
 --- !u!4 &1932842573
 Transform:
   m_ObjectHideFlags: 0

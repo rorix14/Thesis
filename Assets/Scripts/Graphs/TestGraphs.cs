@@ -72,22 +72,22 @@ namespace Graphs
                 // print("Test lower: " + test);
                 // print("Test upper: " + test2);
 
-                 var b = (tz + 10f) / delta;
-                 var l = (int)b;
-                 var u = Mathf.CeilToInt(b);
-                
-                 if (l == u)
-                 {
-                     dist[l] += preds[i];
-                     print("Lower: " + preds[i]);
-                 }
-                 else
-                 {
-                     dist[l] += preds[i] * (u - b);
-                     dist[u] += preds[i] * (b - l);
-                     print("Lower: " + preds[i] * (u - b));
-                     print("Upper: " + preds[i] * (b - l));
-                 }
+                var b = (tz + 10f) / delta;
+                var l = (int)b;
+                var u = Mathf.CeilToInt(b);
+
+                if (l == u)
+                {
+                    dist[l] += preds[i];
+                    //print("Lower: " + preds[i]);
+                }
+                else
+                {
+                    dist[l] += preds[i] * (u - b);
+                    dist[u] += preds[i] * (b - l);
+                    //print("Lower: " + preds[i] * (u - b));
+                    //print("Upper: " + preds[i] * (b - l));
+                }
             }
             // var b =  Mathf.RoundToInt((reward + 10f) / delta);
             // b = Mathf.Clamp(b, 0, 4);
@@ -117,13 +117,30 @@ namespace Graphs
 
             for (int i = 0; i < 6; i++)
             {
-                print("pred: " + preds[i] + ", dist: " + dist[i]);
+                //print("pred: " + preds[i] + ", dist: " + dist[i]);
                 //print("pred: " + preds[i] + ", m: " + m[i]);
             }
 
+            var test = new float[5][];
+            test[0] = new float[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+            test[1] = new float[] { 2, 5, 10, 1, 3, 2, 7, 10, 9, 6, 2, 10, 6, 5, 4, 9, 8 };
+            test[2] = new float[] { 0, 1, 2, 10, 10, 6, 5, 4, 9, 8, 8, 2, 5, 10, 1, 3, 2 };
+            test[3] = new float[17];
+            test[4] = new float[17];
+            for (int i = 0; i < test[0].Length; i++)
+            {
+                test[3][i] = Random.Range(0, 17);
+                test[4][i] = Random.Range(0, 17);
+            }
+
+            var labels = new string[] { "DQN", "Rainbow DQN", "NEAT", "PER DQN", "CMA-ES-NS" };
+
             var graph = FindObjectOfType<WindowGraph>();
             if (graph)
-                graph.SetGraph(new List<float>(), preds, GraphType.BarGraph, "Sin Wave", "Frequency", "Amplitude");
+            {
+                //graph.SetGraph(new List<float>(), preds, GraphType.BarGraph, "Sin Wave", "Frequency", "Amplitude");
+                graph.SetStaticGraph(test, "Sin Wave", "Frequency", "Amplitude", labels);
+            }
         }
 
         private IEnumerator RunEverySecond(WindowGraph graph)

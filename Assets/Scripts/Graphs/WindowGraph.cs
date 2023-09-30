@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,6 +24,9 @@ namespace Graphs
         [SerializeField] private RectTransform labelTemplateY;
         [SerializeField] private RectTransform dashTemplateX;
         [SerializeField] private RectTransform dashTemplateY;
+        [SerializeField] private RectTransform algorithmLabelContainer;
+        [SerializeField] private RectTransform algorithmLabelTemplate;
+        [SerializeField] private Color[] colors;
         private List<RectTransform> _xLabelList;
         private List<RectTransform> _yLabelList;
         private List<RectTransform> _xDashList;
@@ -47,6 +51,137 @@ namespace Graphs
 
             _xValueList = new List<float>();
             _yValueList = new List<float>();
+        }
+
+        private GraphVisual[] _graphsVisuals;
+
+        public void SetStaticGraph(IEnumerable<IEnumerable<float>> valuesLists, string title,
+            string xLabel, string yLabel, IEnumerable<string> graphsLabels)
+        {
+            if (_graphsVisuals != null && _graphsVisuals.Length > 1)
+            {
+                foreach (var graphVisual in _graphsVisuals)
+                {
+                    graphVisual?.CleanUp();
+                }
+            }
+
+            var ttt = valuesLists.ToArray();
+            var valuesListsTt = new float[ttt.Length][];
+            _graphsVisuals = new GraphVisual[ttt.Length];
+
+            for (int i = 0; i < ttt.Length; i++)
+            {
+                valuesListsTt[i] = ttt[i].ToArray();
+                _graphsVisuals[i] = new LineGraphVisual(graphContainer, colors[i], 5f, 0f);
+            }
+
+            graphTitle.text = title;
+            xGraphLabel.text = string.Concat("x= ", xLabel);
+            yGraphLabel.text = string.Concat("y= ", yLabel);
+            
+            var algorithmLabels = graphsLabels.ToArray();
+            //TODO: should destroy any previous label, should also save the label objects 
+            for (int i = 0; i < algorithmLabels.Length; i++)
+            {
+                var algorithmLabel = Instantiate(algorithmLabelTemplate, algorithmLabelContainer, false);
+                algorithmLabel.gameObject.SetActive(true);
+                algorithmLabel.GetComponentInChildren<TextMeshProUGUI>().text = algorithmLabels[i];
+                algorithmLabel.GetComponentInChildren<Image>().color = colors[i];
+            }
+
+            InitializeStaticGraph(valuesListsTt);
+        }
+
+        private void InitializeStaticGraph(float[][] valuesLists)
+        {
+            foreach (var xLabel in _xLabelList)
+                Destroy(xLabel.gameObject);
+
+            foreach (var yLabel in _yLabelList)
+                Destroy(yLabel.gameObject);
+
+            foreach (var xDash in _xDashList)
+                Destroy(xDash.gameObject);
+
+            foreach (var yDash in _yDashList)
+                Destroy(yDash.gameObject);
+
+            _xLabelList.Clear();
+            _yLabelList.Clear();
+            _xDashList.Clear();
+            _yDashList.Clear();
+
+            int valueListSize = valuesLists[0].Length;
+            var sizeDelta = graphContainer.rect.size;
+            float graphWidth = sizeDelta.x;
+            float graphHeight = sizeDelta.y;
+            float xSize = graphWidth / valueListSize;
+            var xPadding = xSize * _graphsVisuals[0].PaddingPercentage;
+
+            bool valueIsLess = valueListSize <= xMaxSeparatorCount;
+            int separatorCount = valueIsLess ? valueListSize : xMaxSeparatorCount;
+
+            for (int i = 0; i < separatorCount; i++)
+            {
+                float normalizedValue = i / (float)separatorCount;
+                float xPos = valueIsLess ? xPadding + i * xSize : xPadding + normalizedValue * graphWidth;
+                var dashX = Instantiate(dashTemplateX, graphContainer, false);
+                dashX.gameObject.SetActive(true);
+                dashX.anchoredPosition = new Vector2(xPos, 0);
+                dashX.sizeDelta = new Vector2(graphHeight * 100, 3);
+                _xDashList.Add(dashX);
+
+                var labelX = Instantiate(labelTemplateX, graphContainer, false);
+                labelX.gameObject.SetActive(true);
+                labelX.anchoredPosition = new Vector2(xPos, -25f);
+                labelX.GetComponent<TextMeshProUGUI>().text = (normalizedValue * valueListSize).ToString("F0");
+                _xLabelList.Add(labelX);
+            }
+
+            var yMin = float.MaxValue;
+            var yMax = float.MinValue;
+            foreach (var values in valuesLists)
+            {
+                var min = values.Min();
+                var max = values.Max();
+
+                if (yMin > min)
+                    yMin = min;
+                if (yMax < max)
+                    yMax = max;
+            }
+
+            bool startYScaleAtZero = yMin >= 0.0f;
+            var buffer = (yMax - yMin) * 0.1f;
+            yMax += buffer;
+            yMin -= buffer;
+
+            if (startYScaleAtZero)
+                yMin = 0;
+
+            for (int i = 0; i <= yMaxSeparatorCount; i++)
+            {
+                float normalizedValue = i / (float)yMaxSeparatorCount;
+
+                var dashY = Instantiate(dashTemplateY, graphContainer, false);
+                dashY.gameObject.SetActive(true);
+                dashY.anchoredPosition = new Vector2(0, normalizedValue * graphHeight);
+                dashY.sizeDelta = new Vector2(graphWidth * 100, 3);
+                _yDashList.Add(dashY);
+
+                var labelY = Instantiate(labelTemplateY, graphContainer, false);
+                labelY.gameObject.SetActive(true);
+                labelY.anchoredPosition = new Vector2(-30f, normalizedValue * graphHeight);
+                labelY.GetComponent<TextMeshProUGUI>().text = (yMin + normalizedValue * (yMax - yMin)).ToString("F1");
+                _yLabelList.Add(labelY);
+            }
+
+            for (int i = 0; i < _graphsVisuals.Length; i++)
+            {
+                var graphVisual = _graphsVisuals[i];
+                graphVisual.CreateGraphVisual(valuesLists[i], yMin, yMax);
+            }
         }
 
         public void SetGraph(List<float> xValueList, List<float> yValueList, GraphType graphType, string title,
@@ -148,7 +283,7 @@ namespace Graphs
                 _yLabelList.Add(labelY);
             }
 
-            graphVisual.CreateGraphVisual(valueList, yMin, yMax);
+            graphVisual.CreateGraphVisual(valueList.ToArray(), yMin, yMax);
         }
 
         private void AddValue(GraphVisual graphVisual, int value)

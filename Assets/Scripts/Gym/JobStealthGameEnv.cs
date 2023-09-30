@@ -42,7 +42,20 @@ namespace Gym
             //population sizes, a solution would be to check if the previous population size is the same as the new one,
             //if so there is no need to run this function, if not players and must be created or destroyed accordingly
             //and array values must be disposed 
-            if (!_player || populationSize == 0 || _populationSize > 0) return;
+            if (!_player || populationSize == 0 || _populationSize == populationSize) return;
+            
+            if (_populationSize > 0 && _populationSize != populationSize)
+            {
+                Dispose();
+                for (int i = 0; i < _populationSize; i++)
+                {
+                    var currentPlayer = _playerAgents[i];
+                    if (_player == currentPlayer) continue;
+                    
+                    Destroy(currentPlayer);
+                    _resettables.Remove(currentPlayer);
+                }
+            }
 
             _populationSize = populationSize;
 
