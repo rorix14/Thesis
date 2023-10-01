@@ -151,7 +151,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3540031}
   m_LocalRotation: {x: -0, y: -0.7083191, z: -0, w: 0.7058924}
-  m_LocalPosition: {x: 4.91, y: 1, z: -5.19}
+  m_LocalPosition: {x: 5.43, y: 1, z: -3.81}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 478621288}
@@ -1269,7 +1269,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &752207949
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1282,14 +1282,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23f445959184e9241a163ee53f0cadde, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   populationSize: 50
-  eliteNumber: 3
-  tournamentNumber: 6
-  mutationNoiseStd: 0.01
+  noiseStandardDeviation: 0
+  requiredSimulations: 0
   shader: {fileID: 7200000, guid: 010bb3406e14d204c9ef0d83fa08e5c6, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
+  noveltyRelevance: 0
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
+  eliteNumber: 3
+  tournamentNumber: 6
 --- !u!114 &752207950
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1302,12 +1312,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93b15678ae668de449dfe5989ba2b725, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   populationSize: 60
   noiseStandardDeviation: 0.01
+  requiredSimulations: 0
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 4
   numberOfEpisodes: 300
+  noveltyRelevance: 0
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
 --- !u!114 &752207951
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1320,12 +1340,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 005f50db4c0485841b4d3788d2e957c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsFinished: 0
+  Rewards: []
+  Loss: []
   populationSize: 50
   noiseStandardDeviation: 0.01
+  requiredSimulations: 0
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 7
   numberOfEpisodes: 300
+  noveltyRelevance: 0
+  activationFunction: 0
+  learningRate: 0
+  decayRate: 0
+  neuronNumber: 0
+  weightsInitStd: 0
 --- !u!114 &752207952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1346,6 +1376,8 @@ MonoBehaviour:
   simulationSpeed: 6
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -1356,6 +1388,9 @@ MonoBehaviour:
   supportSize: 51
   supportMinValue: -25
   supportMaxValue: 63
+  beta: 0
+  alpha: 0
+  sigma: 0
 --- !u!114 &752207953
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1376,6 +1411,8 @@ MonoBehaviour:
   simulationSpeed: 16
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -1404,6 +1441,8 @@ MonoBehaviour:
   simulationSpeed: 13
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -1429,12 +1468,15 @@ MonoBehaviour:
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
+  sigma: 0
 --- !u!114 &752207956
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1455,11 +1497,15 @@ MonoBehaviour:
   simulationSpeed: 18
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  beta: 0
+  alpha: 0
 --- !u!114 &752207957
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1480,6 +1526,8 @@ MonoBehaviour:
   simulationSpeed: 19
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -1506,6 +1554,8 @@ MonoBehaviour:
   simulationSpeed: 16
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -1531,6 +1581,8 @@ MonoBehaviour:
   simulationSpeed: 20
   numberOfEpisodes: 300
   targetNetworkCopyPeriod: 50
+  batchSize: 0
+  gamma: 0
   activationFunction: 0
   learningRate: 0
   decayRate: 0
@@ -1543,7 +1595,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 752207948}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ea41f288403654408e056b39553576c, type: 3}
   m_Name: 
@@ -1845,7 +1897,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 899876447}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.5, y: 1, z: -5.74}
+  m_LocalPosition: {x: -0.52, y: 1, z: -5.74}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1918760811}
@@ -1868,8 +1920,6 @@ MonoBehaviour:
   rotationSpeed: 10
   startingPositions:
   - {x: -0.52, y: 1, z: -5.74}
-  - {x: -4.33, y: 1, z: -5.74}
-  - {x: 2.5, y: 1, z: -5.74}
   viewRadius: 20
   wallChecks: 30
   obstacleMask:
@@ -2184,7 +2234,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1177854241
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2198,11 +2248,74 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   algorithmsPrefabs:
-  - {fileID: 2703651450852920366, guid: 0efca29b38e8aae4d9b96c36190ab738, type: 3}
+  - {fileID: 4810890153074692661, guid: 9e565f2c2fd3d544d84dc14d65e3caf8, type: 3}
+  - {fileID: 4810890153074692661, guid: 419756f44c97b804f9cce8852c425fdd, type: 3}
+  - {fileID: 2703651450852920366, guid: 14ce597808e58c54cbc7687ff6b42157, type: 3}
+  - {fileID: 2703651450852920366, guid: 2a9a0ebd309181746b672dee80f8c676, type: 3}
+  - {fileID: 2703651450852920366, guid: b35280fb87fc5214985f445e48bf8d23, type: 3}
+  - {fileID: 2703651450852920366, guid: 650d4448cd5029d4cb0e28e52150436d, type: 3}
+  - {fileID: 2703651450852920366, guid: 4764ea4c4458e494cb32da1c9f87b0de, type: 3}
+  - {fileID: 2703651450852920366, guid: a156594ae6723994e9136c6ab33d932f, type: 3}
+  - {fileID: 1865656198717489510, guid: c95ce06ba72bd0740a6c7a051e26cf66, type: 3}
+  - {fileID: 1865656198717489510, guid: 1d15d019a483cd2459805e3bb99803e1, type: 3}
+  - {fileID: 1865656198717489510, guid: ad7d8aad8b951514587ddf09fea44e8d, type: 3}
+  - {fileID: 1865656198717489510, guid: 9a35d84590b8f0b43915a1fbf7e098e2, type: 3}
+  - {fileID: 1865656198717489510, guid: f0304fbedd37d2f41a2e6ad6781f414d, type: 3}
+  - {fileID: 1865656198717489510, guid: 48269244cd48dbd4b86d73f3ab9b7c24, type: 3}
+  - {fileID: 1865656198717489510, guid: 2fe63143d36e28741b990d2455928951, type: 3}
+  - {fileID: 1865656198717489510, guid: 6f954e14feb1a714b868a9cec2a29b53, type: 3}
+  - {fileID: 7363805175022022706, guid: 7f048fc6cad29a747b0162063e69616e, type: 3}
+  - {fileID: 7363805175022022706, guid: 11365da2d7c943d45b13d789e528aaf2, type: 3}
+  - {fileID: 7363805175022022706, guid: 2694569156c880c47a37b5d97d5ecd76, type: 3}
+  - {fileID: 7363805175022022706, guid: 9656370f542e75d4faa051fccb50c0fa, type: 3}
+  - {fileID: 7363805175022022706, guid: 81c11b2beded6f9428a1ff8bcac48d70, type: 3}
+  - {fileID: 7363805175022022706, guid: 304ee23b86378ae4c88feff6079beb79, type: 3}
+  - {fileID: 7363805175022022706, guid: 7a5e56e468d0e9b4d80dc8c40044e30a, type: 3}
+  - {fileID: 7363805175022022706, guid: 8cca0382587d16348b6612a3ef3c32f6, type: 3}
+  - {fileID: -7914093410445437040, guid: 3a8c9c0f66c60d94f8e265d276454743, type: 3}
+  - {fileID: -7914093410445437040, guid: 00f19995bbf666e4eb4981bf4e7cf7c7, type: 3}
+  - {fileID: -7914093410445437040, guid: 1d93c8e90042a3b42ad91d797920ee5b, type: 3}
+  - {fileID: -7914093410445437040, guid: 8ed8cf4fb322d9c49acad58d8c6e2f65, type: 3}
+  - {fileID: -7914093410445437040, guid: 1ef1bd70a595aad48a7a18a6dd334e72, type: 3}
+  - {fileID: -7914093410445437040, guid: 2959f1da922e7df479be537ed5d8746d, type: 3}
+  - {fileID: -7914093410445437040, guid: 3cc6311b299ced840803af68c8ef871a, type: 3}
+  - {fileID: -7914093410445437040, guid: 0675ddcd30d1aa049830a1ff6b7329f3, type: 3}
+  - {fileID: -632884816801992317, guid: c91874245f502f24083c1b315f0c6349, type: 3}
+  - {fileID: -632884816801992317, guid: 7b829bbdf65accb47a5ab55736283cf0, type: 3}
+  - {fileID: -632884816801992317, guid: a5ce206e0fbbe66429ae5782b10de265, type: 3}
+  - {fileID: -632884816801992317, guid: 7af0798248cd805418210813dfbb7d21, type: 3}
+  - {fileID: -632884816801992317, guid: bb2c0a394a894ab48b273db8ee83b882, type: 3}
+  - {fileID: -632884816801992317, guid: cae6cb4377b41ae40a9a71831c22d757, type: 3}
+  - {fileID: -632884816801992317, guid: 868ae536d751dda488a20d975cb6b84f, type: 3}
+  - {fileID: -632884816801992317, guid: 12eac8b561513de4d862db29bdfe6b6a, type: 3}
+  - {fileID: -7743909116605026588, guid: 3bf87351c46ae9748be415ff4b31faa9, type: 3}
+  - {fileID: -7743909116605026588, guid: 6b04d182a604d2047a929dbf7e3a3371, type: 3}
+  - {fileID: -7743909116605026588, guid: b5062bf677a633049906418b0bd93016, type: 3}
+  - {fileID: -7743909116605026588, guid: 26a085fd2df342147aafe50cc07d188c, type: 3}
+  - {fileID: -7743909116605026588, guid: 53bf03ec24c92d346822292dd593d238, type: 3}
+  - {fileID: -7743909116605026588, guid: e7602bbe990344149be4c1c6591d1b51, type: 3}
+  - {fileID: -7743909116605026588, guid: d8dbd766a5ef3b741bba12b7cd1a58eb, type: 3}
+  - {fileID: -7743909116605026588, guid: 38c93c69547107e4ab507a84221b22e8, type: 3}
+  - {fileID: -2657597196572992824, guid: cb7425d2b008df5489172da59f07a6b7, type: 3}
+  - {fileID: -2657597196572992824, guid: 4dd95cf18b1173b46b1c047b619f84f7, type: 3}
+  - {fileID: -2657597196572992824, guid: 185f1810ed578014384fe7dbfb253d7b, type: 3}
+  - {fileID: -2657597196572992824, guid: 128e92dcb521d2045a5f4032b563eb99, type: 3}
+  - {fileID: -2657597196572992824, guid: dccbb5e99fb36474f80e9d105c04a6b5, type: 3}
+  - {fileID: -2657597196572992824, guid: 9231726b287032f4fa0b31703811cf89, type: 3}
+  - {fileID: -2657597196572992824, guid: 162417883a9fdf34e8f9b1d92ca32239, type: 3}
+  - {fileID: -2657597196572992824, guid: 160e2a98c2186b04cb017a64ee8d8910, type: 3}
+  - {fileID: -4589656829319374267, guid: 2e8dd5cb906dab44eb4c00984e4722c4, type: 3}
+  - {fileID: -4589656829319374267, guid: 090ef00a46038194faaa9d593f3ff10c, type: 3}
+  - {fileID: -4589656829319374267, guid: 95a45eeb85e43f6489a895a44970d123, type: 3}
+  - {fileID: -4589656829319374267, guid: 24da300de33dfd24684e3a4ec0aeb48d, type: 3}
+  - {fileID: -4589656829319374267, guid: 21cdf6be48a196e4dbc15647267ff00c, type: 3}
+  - {fileID: -4589656829319374267, guid: 3eaf00c9aead4a14cb0de089abc11324, type: 3}
+  - {fileID: -4589656829319374267, guid: f51b527c45abd254c9af437460d2aabf, type: 3}
+  - {fileID: -4589656829319374267, guid: d3dde692c6ff5f5429afb7a77334ad81, type: 3}
   testNumber: 10
   generatorSeed: 42
   saveInfo: 1
-  saveFileName: one DQN ReLu lr 0.0001, 1e-4
+  saveFileName: QA DQN Part 1
 --- !u!4 &1177854242
 Transform:
   m_ObjectHideFlags: 0
@@ -2296,7 +2409,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelSizeMaxMin: {x: 7, y: -7, z: 7, w: -7}
-  episodeLength: 700
+  episodeLength: 1400
   stealthLevels: []
   passiveReward: -0.01
   goalReachedReward: 50
@@ -2315,7 +2428,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelSizeMaxMin: {x: 7, y: -7, z: 7, w: -7}
-  episodeLength: 700
+  episodeLength: 1400
   stealthLevels: []
   passiveReward: -0.01
   goalReachedReward: 50
@@ -2334,7 +2447,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelSizeMaxMin: {x: 7, y: -7, z: 7, w: -7}
-  episodeLength: 700
+  episodeLength: 1400
   stealthLevels: []
   passiveReward: -0.01
   goalReachedReward: 50
@@ -2864,7 +2977,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1670888479}
   m_LocalRotation: {x: -0, y: -0.7083191, z: -0, w: 0.7058924}
-  m_LocalPosition: {x: -4.63, y: 1, z: 2.98}
+  m_LocalPosition: {x: -2.6, y: 1, z: 3.26}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 406567060}

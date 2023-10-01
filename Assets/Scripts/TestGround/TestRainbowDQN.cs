@@ -17,7 +17,7 @@ namespace TestGround
 
         public override string GetDescription()
         {
-            return "PER DQN, n-step " + stepNumber + ", max V " + supportMaxValue + " min V " + supportMinValue +
+            return "Rainbow DQN, n-step " + stepNumber + ", max V " + supportMaxValue + " min V " + supportMinValue +
                    ", alpha " + alpha + ", beta " + beta + ", sigma " + sigma + " , 3 layers, " + neuronNumber +
                    " neurons, " + activationFunction + ", " + batchSize + " batch size, " + gamma + " gamma, " +
                    targetNetworkCopyPeriod + "  copy network, lr " + learningRate + ", decay " + decayRate +

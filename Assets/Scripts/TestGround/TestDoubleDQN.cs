@@ -6,6 +6,14 @@ namespace TestGround
 {
     public class TestDoubleDQN : TestDQN
     {
+        public override string GetDescription()
+        {
+            return "Double DQN, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
+                   ", " + batchSize + " batch size, " + gamma + " gamma, " + targetNetworkCopyPeriod +
+                   "  copy network, lr " + learningRate + ", decay " + decayRate + ", initialization std " +
+                   weightsInitStd;
+        }
+        
         protected override void Start()
         {
             _currentSate = _env.ResetEnv();

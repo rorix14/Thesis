@@ -7,7 +7,6 @@ using Gym;
 using NN;
 using TestGround.Base;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace TestGround
