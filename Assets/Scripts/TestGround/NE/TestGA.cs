@@ -11,9 +11,11 @@ namespace TestGround.NE
 
         public override string GetDescription()
         {
-            return "GA, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
-                   ", " + populationSize + " population size, noise std " + noiseStandardDeviation + ", elite number " +
-                   eliteNumber + ", tournament number " + tournamentNumber + ", initialization std " + weightsInitStd;
+            return "GA" + (noveltyRelevance > 0 ? "-NS" : "") + ", 3 layers, " + neuronNumber + " neurons, " +
+                   activationFunction + ", " + populationSize + " population size, noise std " +
+                   noiseStandardDeviation + ", elite number " + eliteNumber + ", tournament number " +
+                   tournamentNumber + ", novelty relevance " + noveltyRelevance + ", initialization std " +
+                   weightsInitStd;
         }
 
         protected override void Start()
@@ -34,7 +36,8 @@ namespace TestGround.NE
             };
 
             var neModel = new GAModel(network);
-            _neModel = new GA(neModel, _env.GetNumberOfActions, populationSize, eliteNumber, tournamentNumber);
+            _neModel = new GA(neModel, _env.GetNumberOfActions, populationSize, eliteNumber, tournamentNumber,
+                noveltyRelevance: noveltyRelevance);
 
             Time.timeScale = simulationSpeed;
         }

@@ -51,7 +51,7 @@ MonoBehaviour:
   requiredSimulations: 1
   shader: {fileID: 7200000, guid: 010bb3406e14d204c9ef0d83fa08e5c6, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 8
+  simulationSpeed: 9
   numberOfEpisodes: 300
   noveltyRelevance: 0
   activationFunction: 0

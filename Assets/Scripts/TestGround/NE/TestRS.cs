@@ -8,9 +8,9 @@ namespace TestGround.NE
     {
         public override string GetDescription()
         {
-            return "RS, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
-                   ", " + populationSize + " population size, noise std " + noiseStandardDeviation +
-                   ", initialization std " + weightsInitStd;
+            return "RS" + (noveltyRelevance > 0 ? "-NS" : "") + ", 3 layers, " + neuronNumber + " neurons, " +
+                   activationFunction + ", " + populationSize + " population size, noise std " + noiseStandardDeviation +
+                   ", novelty relevance "  + noveltyRelevance + ", initialization std " + weightsInitStd;
         }
 
         protected override void Start()
@@ -30,7 +30,7 @@ namespace TestGround.NE
             };
 
             var neModel = new ESModel(network);
-            _neModel = new RS(neModel, _env.GetNumberOfActions, populationSize);
+            _neModel = new RS(neModel, _env.GetNumberOfActions, populationSize, noveltyRelevance: noveltyRelevance);
 
             Time.timeScale = simulationSpeed;
         }

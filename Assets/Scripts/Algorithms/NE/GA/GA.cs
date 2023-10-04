@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using NN;
-using UnityEngine;
+﻿using NN;
 using Random = UnityEngine.Random;
 
 namespace Algorithms.NE
@@ -25,7 +22,8 @@ namespace Algorithms.NE
         private readonly float[] _populationFitness;
 
         public GA(NetworkModel networkModel, int numberOfActions, int batchSize, int elitism, int tournamentSize,
-            float mutationMax = 0.10f, float mutationMin = 0.02f) : base(networkModel, numberOfActions, batchSize)
+            float mutationMax = 0.10f, float mutationMin = 0.02f, float noveltyRelevance = 0) : base(networkModel,
+            numberOfActions, batchSize, noveltyRelevance)
         {
             _gaModel = (GAModel)networkModel;
             _crossoverInfos = new CrossoverInfo[batchSize];
@@ -57,13 +55,13 @@ namespace Algorithms.NE
                 _episodeRewards[i] = 0f;
                 _completedAgents[i] = false;
 
-                //TODO: 8 is a magic number, this should be done differently, for example: _noveltyBonus * _noveltyScores[i] + individualFitness
-                //individualFitness = (individualFitness + 8) * _noveltyScores[i];
-                _populationFitness[i] = individualFitness;
+                //_populationFitness[i] = individualFitness;
+                var adjustedFitness = _useNovelty ? _adjustedPopulationFitness[i] : individualFitness;
+                _populationFitness[i] = adjustedFitness;
 
                 for (int j = 0; j < _elitism; j++)
                 {
-                    if (_elitismFitness[j] >= individualFitness) continue;
+                    if (_elitismFitness[j] >= adjustedFitness) continue;
 
                     for (int k = _elitism - 1; k > j; k--)
                     {
@@ -71,7 +69,7 @@ namespace Algorithms.NE
                         _elitismIndexes[k] = _elitismIndexes[k - 1];
                     }
 
-                    _elitismFitness[j] = individualFitness;
+                    _elitismFitness[j] = adjustedFitness;
                     _elitismIndexes[j] = i;
                     break;
                 }

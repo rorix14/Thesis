@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -31,6 +33,7 @@ namespace Graphs
         private List<RectTransform> _yLabelList;
         private List<RectTransform> _xDashList;
         private List<RectTransform> _yDashList;
+        private List<RectTransform> _graphsLabels;
 
         private List<float> _xValueList;
         private List<float> _yValueList;
@@ -38,7 +41,7 @@ namespace Graphs
         [SerializeField] private int xMaxSeparatorCount = 15;
         [SerializeField] private int yMaxSeparatorCount = 15;
 
-        private GraphVisual _graphVisual;
+        //private GraphVisual _graphVisual;
 
         private void Awake()
         {
@@ -46,8 +49,7 @@ namespace Graphs
             _yLabelList = new List<RectTransform>();
             _xDashList = new List<RectTransform>();
             _yDashList = new List<RectTransform>();
-
-            _graphVisual = null;
+            _graphsLabels = new List<RectTransform>();
 
             _xValueList = new List<float>();
             _yValueList = new List<float>();
@@ -58,13 +60,15 @@ namespace Graphs
         public void SetStaticGraph(IEnumerable<IEnumerable<float>> valuesLists, string title,
             string xLabel, string yLabel, IEnumerable<string> graphsLabels)
         {
-            if (_graphsVisuals != null && _graphsVisuals.Length > 1)
+            if (_graphsVisuals != null)
             {
                 foreach (var graphVisual in _graphsVisuals)
                 {
                     graphVisual?.CleanUp();
                 }
             }
+
+            CleanUpGraphStatics();
 
             var ttt = valuesLists.ToArray();
             var valuesListsTt = new float[ttt.Length][];
@@ -73,21 +77,21 @@ namespace Graphs
             for (int i = 0; i < ttt.Length; i++)
             {
                 valuesListsTt[i] = ttt[i].ToArray();
-                _graphsVisuals[i] = new LineGraphVisual(graphContainer, colors[i], 5f, 0f);
+                _graphsVisuals[i] = new LineGraphVisual(graphContainer, colors[i], 3.5f, 0f);
             }
 
             graphTitle.text = title;
             xGraphLabel.text = string.Concat("x= ", xLabel);
             yGraphLabel.text = string.Concat("y= ", yLabel);
-            
+
             var algorithmLabels = graphsLabels.ToArray();
-            //TODO: should destroy any previous label, should also save the label objects 
             for (int i = 0; i < algorithmLabels.Length; i++)
             {
                 var algorithmLabel = Instantiate(algorithmLabelTemplate, algorithmLabelContainer, false);
                 algorithmLabel.gameObject.SetActive(true);
                 algorithmLabel.GetComponentInChildren<TextMeshProUGUI>().text = algorithmLabels[i];
                 algorithmLabel.GetComponentInChildren<Image>().color = colors[i];
+                _graphsLabels.Add(algorithmLabel);
             }
 
             InitializeStaticGraph(valuesListsTt);
@@ -95,23 +99,6 @@ namespace Graphs
 
         private void InitializeStaticGraph(float[][] valuesLists)
         {
-            foreach (var xLabel in _xLabelList)
-                Destroy(xLabel.gameObject);
-
-            foreach (var yLabel in _yLabelList)
-                Destroy(yLabel.gameObject);
-
-            foreach (var xDash in _xDashList)
-                Destroy(xDash.gameObject);
-
-            foreach (var yDash in _yDashList)
-                Destroy(yDash.gameObject);
-
-            _xLabelList.Clear();
-            _yLabelList.Clear();
-            _xDashList.Clear();
-            _yDashList.Clear();
-
             int valueListSize = valuesLists[0].Length;
             var sizeDelta = graphContainer.rect.size;
             float graphWidth = sizeDelta.x;
@@ -173,7 +160,8 @@ namespace Graphs
                 var labelY = Instantiate(labelTemplateY, graphContainer, false);
                 labelY.gameObject.SetActive(true);
                 labelY.anchoredPosition = new Vector2(-30f, normalizedValue * graphHeight);
-                labelY.GetComponent<TextMeshProUGUI>().text = (yMin + normalizedValue * (yMax - yMin)).ToString("F1");
+                labelY.GetComponent<TextMeshProUGUI>().text =
+                    (yMin + normalizedValue * (yMax - yMin)).ToString("F1", CultureInfo.InvariantCulture);
                 _yLabelList.Add(labelY);
             }
 
@@ -190,41 +178,33 @@ namespace Graphs
             _xValueList = xValueList;
             _yValueList = yValueList;
 
-            _graphVisual?.CleanUp();
-            _graphVisual = graphType switch
+            if (_graphsVisuals != null)
             {
-                GraphType.LineGraph => new LineGraphVisual(graphContainer, Color.white, 5f, 0f),
-                GraphType.BarGraph => new BarChartVisual(graphContainer, Color.yellow, 0.9f, 0.5f),
-                _ => _graphVisual
-            };
+                foreach (var graphVisual in _graphsVisuals)
+                {
+                    graphVisual?.CleanUp();
+                }
+            }
 
+            CleanUpGraphStatics();
+
+            _graphsVisuals = new GraphVisual[1];
+            _graphsVisuals[0] = graphType switch
+            {
+                GraphType.LineGraph => new LineGraphVisual(graphContainer, new Color(1, 0.8629928f, 0), 4f, 0f),
+                GraphType.BarGraph => new BarChartVisual(graphContainer, Color.yellow, 0.9f, 0.5f),
+                _ => null
+            };
 
             //TODO: if done repeatedly cash text variables
             graphTitle.text = title;
             xGraphLabel.text = string.Concat("x= ", xLabel);
             yGraphLabel.text = string.Concat("y= ", yLabel);
-            InitializeGraph(_yValueList, _graphVisual);
+            InitializeGraph(_yValueList, _graphsVisuals[0]);
         }
 
         private void InitializeGraph(IReadOnlyList<float> valueList, GraphVisual graphVisual)
         {
-            foreach (var xLabel in _xLabelList)
-                Destroy(xLabel.gameObject);
-
-            foreach (var yLabel in _yLabelList)
-                Destroy(yLabel.gameObject);
-
-            foreach (var xDash in _xDashList)
-                Destroy(xDash.gameObject);
-
-            foreach (var yDash in _yDashList)
-                Destroy(yDash.gameObject);
-
-            _xLabelList.Clear();
-            _yLabelList.Clear();
-            _xDashList.Clear();
-            _yDashList.Clear();
-
             int valueListSize = valueList.Count;
             //var sizeDelta = graphContainer.sizeDelta;
             var sizeDelta = graphContainer.rect.size;
@@ -279,7 +259,8 @@ namespace Graphs
                 var labelY = Instantiate(labelTemplateY, graphContainer, false);
                 labelY.gameObject.SetActive(true);
                 labelY.anchoredPosition = new Vector2(-30f, normalizedValue * graphHeight);
-                labelY.GetComponent<TextMeshProUGUI>().text = (yMin + normalizedValue * (yMax - yMin)).ToString("F1");
+                labelY.GetComponent<TextMeshProUGUI>().text =
+                    (yMin + normalizedValue * (yMax - yMin)).ToString("F1", CultureInfo.InvariantCulture);
                 _yLabelList.Add(labelY);
             }
 
@@ -379,6 +360,30 @@ namespace Graphs
 
             if (startYScaleAtZero)
                 yMin = 0;
+        }
+
+        private void CleanUpGraphStatics()
+        {
+            foreach (var xLabel in _xLabelList)
+                Destroy(xLabel.gameObject);
+
+            foreach (var yLabel in _yLabelList)
+                Destroy(yLabel.gameObject);
+
+            foreach (var xDash in _xDashList)
+                Destroy(xDash.gameObject);
+
+            foreach (var yDash in _yDashList)
+                Destroy(yDash.gameObject);
+
+            foreach (var graphsLabel in _graphsLabels)
+                graphsLabel.gameObject.SetActive(false);
+
+            _xLabelList.Clear();
+            _yLabelList.Clear();
+            _xDashList.Clear();
+            _yDashList.Clear();
+            _graphsLabels.Clear();
         }
 
         private abstract class GraphVisual
@@ -566,7 +571,6 @@ namespace Graphs
 
             public override void CleanUp()
             {
-                print("Hello!?");
                 foreach (var line in _lineList)
                     Destroy(line.gameObject);
 

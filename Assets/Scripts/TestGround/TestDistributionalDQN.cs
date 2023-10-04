@@ -12,7 +12,7 @@ namespace TestGround
 
         public override string GetDescription()
         {
-            return "Distributional DQN, max " + supportMaxValue + ", min " + supportMinValue + ", 3 layers, " +
+            return "Dist DQN, max " + supportMaxValue + ", min " + supportMinValue + ", 3 layers, " +
                    neuronNumber + " neurons, " + activationFunction + ", " + batchSize + " batch size, " + gamma +
                    " gamma, " + targetNetworkCopyPeriod + " copy network, lr " + learningRate + ", decay " + decayRate +
                    ", initialization std " + weightsInitStd;

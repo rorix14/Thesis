@@ -39,9 +39,10 @@ namespace TestGround.NE
 
         public override string GetDescription()
         {
-            return "ES, 3 layers, " + neuronNumber + " neurons, " + activationFunction +
-                   ", " + populationSize + " population size, noise std " + noiseStandardDeviation + ", lr " +
-                   learningRate + ", decay " + decayRate + ", initialization std " + weightsInitStd;
+            return "ES" + (noveltyRelevance > 0 ? "-NS" : "") + ", 3 layers, " + neuronNumber + " neurons, " +
+                   activationFunction + ", " + populationSize + " population size, noise std " +
+                   noiseStandardDeviation + ", novelty relevance " + noveltyRelevance + ", lr " + learningRate +
+                   ", decay " + decayRate + ", initialization std " + weightsInitStd;
         }
 
         private void Awake()
@@ -105,7 +106,11 @@ namespace TestGround.NE
 
             if (_neModel.FinishedIndividuals < populationSize) return;
 
-            //_gaModel.DoNoveltySearch(_env.GetPlayersPositions());
+            if (noveltyRelevance > 0)
+            {
+                _neModel.DoNoveltySearch(_env.GetPlayersPositions());
+            }
+
             _neModel.Train();
 
             Rewards[_episodeIndex] = _neModel.EpisodeRewardMean;

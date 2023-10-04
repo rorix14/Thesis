@@ -88,17 +88,7 @@ namespace Algorithms.NE.NEAT
                 _weightsRandomBuffer[i] = neuronWeightStd * Random.Range(-4f, 4f);
                 _noiseRandomBuffer[i] = noiseStd * NnMath.RandomGaussian(-10, 10);
             }
-
-            _species = new List<SpeciesNEAT>()
-            {
-                new SpeciesNEAT(
-                    new GenomeNEAT(_genomeCount++, inputNumber, outputNumber, compatabilityDisjointWeight,
-                        compatabilityExcessWeight, compatabilityMatchedWeight), _speciesCount++, _speciesYoungThreshold,
-                    _speciesYoungBonus, _speciesOldThreshold, _speciesOldPenalty)
-            };
-
-            _bestSpecie = _species[0];
-
+            
             _innovationDB = new InnovationNEAT(inputNumber, outputNumber);
             _populationGenomes = new GenomeNEAT[populationSize];
 
@@ -109,6 +99,14 @@ namespace Algorithms.NE.NEAT
                 newGenome.CreatePhenotype();
                 _populationGenomes[i] = newGenome;
             }
+            
+            _species = new List<SpeciesNEAT>()
+            {
+                new SpeciesNEAT(_populationGenomes[0], _speciesCount++, _speciesYoungThreshold,
+                    _speciesYoungBonus, _speciesOldThreshold, _speciesOldPenalty)
+            };
+
+            _bestSpecie = _species[0];
         }
 
         public float[] Predict(float[,] input)
@@ -195,33 +193,43 @@ namespace Algorithms.NE.NEAT
             {
                 if (numSpawnedSoFar >= _populationSize) break;
 
+                var hasBest = false;
                 var specie = _species[i];
                 var numToSpawn = Mathf.CeilToInt(specie.CalculateSpawnAmount(populationAdjustedFitness));
                 while (numToSpawn > 0)
                 {
-                    parent1 = specie.GetRandomMember();
-                    if (specie.SpecieMemberCount > 1 && Random.value < _crossOverRate)
+                    if (!hasBest)
                     {
-                        parent2 = specie.GetRandomMember(parent1);
-                        // parent2 = Random.value > 0.01f
-                        //     ? specie.GetRandomMember(parent1)
-                        //     : _species[Random.Range(0, _species.Count)].GetRandomMember(parent1);
-                        
-                        offSpring = Crossover(parent1, parent2);
+                        offSpring = specie.Leader;
+                        hasBest = true;
                     }
                     else
                     {
-                        offSpring = new GenomeNEAT(_genomeCount++, parent1);
+                        parent1 = specie.GetRandomMember();
+                        if (specie.SpecieMemberCount > 1 && Random.value < _crossOverRate)
+                        {
+                            parent2 = specie.GetRandomMember(parent1);
+                            // parent2 = Random.value > 0.01f
+                            //     ? specie.GetRandomMember(parent1)
+                            //     : _species[Random.Range(0, _species.Count)].GetRandomMember(parent1);
+                        
+                            offSpring = Crossover(parent1, parent2);
+                        }
+                        else
+                        {
+                            offSpring = new GenomeNEAT(_genomeCount++, parent1);
+                        }
+
+                        offSpring.AddNeuron(_addNeuronRate, _innovationDB);
+                        offSpring.AddLink(_addLinkRate, _addRecurrentLinkRate, _innovationDB, 5, 5,
+                            _weightsRandomBuffer);
+                        offSpring.MutateWeights(_weightMutationRate, _weightReplaceRate, _weightsRandomBuffer,
+                            _noiseRandomBuffer);
+
+                        offSpring.SortGenes();
+                        offSpring.CreatePhenotype();
                     }
-
-                    offSpring.AddNeuron(_addNeuronRate, _innovationDB);
-                    offSpring.AddLink(_addLinkRate, _addRecurrentLinkRate, _innovationDB, 5, 5,
-                        _weightsRandomBuffer);
-                    offSpring.MutateWeights(_weightMutationRate, _weightReplaceRate, _weightsRandomBuffer,
-                        _noiseRandomBuffer);
-
-                    offSpring.SortGenes();
-                    offSpring.CreatePhenotype();
+                    
                     _populationGenomes[numSpawnedSoFar] = offSpring;
 
                     numSpawnedSoFar++;

@@ -36,7 +36,8 @@ namespace Algorithms.NE
         private readonly int _neighboursToCheck;
         private readonly float[] _noveltyScores;
         private readonly List<float>[] _agentsArchiveDistances;
-        private readonly float _noveltyRelevance;
+        protected readonly float _noveltyRelevance;
+        protected readonly bool _useNovelty;
 
         public float EpisodeRewardMean => _episodeRewardMean;
         public float EpisodeBestReward => _episodeBestReward;
@@ -63,12 +64,15 @@ namespace Algorithms.NE
             _archive = new List<Vector2>(batchSize);
             _noveltyRelevance = noveltyRelevance;
             // one fourth of the max possible distance
-            _noveltyThreshold = 98f;
-            _noveltyThresholdMinValue = 20f;
+            // _noveltyThreshold = 98f;
+            // _noveltyThresholdMinValue = 20f; 
+            _noveltyThreshold = 5f;
+            _noveltyThresholdMinValue = 1f;
             _timeout = 0;
             _neighboursToCheck = 10;
             _noveltyScores = new float[batchSize];
             _agentsArchiveDistances = new List<float>[batchSize];
+            _useNovelty = _noveltyRelevance > 0;
         }
 
         public virtual int[] SamplePopulationActions(float[,] states)
@@ -130,7 +134,8 @@ namespace Algorithms.NE
             for (int i = 0; i < _batchSize; i++)
             {
                 var episodeReward = _episodeRewards[i];
-                _episodeRewardUpdate[0, i] = episodeReward;
+                //_episodeRewardUpdate[0, i] = episodeReward;
+                _episodeRewardUpdate[0, i] = _useNovelty ? _adjustedPopulationFitness[i] : episodeReward;
                 _episodeRewardMean += episodeReward;
                 _episodeBestReward = episodeReward > _episodeBestReward ? episodeReward : _episodeBestReward;
                 _completedAgents[i] = false;
@@ -161,7 +166,7 @@ namespace Algorithms.NE
                     var archivePos = _archive[j];
                     var xDist = agentPosition.x - archivePos.x;
                     var yDist = agentPosition.y - archivePos.y;
-                    var currentDistance = xDist * xDist + yDist * yDist;
+                    var currentDistance = (float)Math.Sqrt(xDist * xDist + yDist * yDist);
                     _agentsArchiveDistances[i].Add(currentDistance);
 
                     if (minDistance < currentDistance) continue;
@@ -180,8 +185,7 @@ namespace Algorithms.NE
                     var currentPos = agentsFinalPositions[j];
                     var xDist = agentPosition.x - currentPos.x;
                     var yDist = agentPosition.y - currentPos.y;
-                    var currentDistance = xDist * xDist + yDist * yDist;
-                    _agentsArchiveDistances[i].Add(currentDistance);
+                    _agentsArchiveDistances[i].Add((float)Math.Sqrt(xDist * xDist + yDist * yDist));
                 }
 
                 _agentsArchiveDistances[i].Sort();

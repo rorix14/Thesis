@@ -52,7 +52,8 @@ namespace Algorithms.NE.NEAT
             for (int i = 0; i < _batchSize; i++)
             {
                 var episodeReward = _episodeRewards[i];
-                _episodeRewardUpdate[i] = episodeReward;
+                //_episodeRewardUpdate[i] = episodeReward;
+                _episodeRewardUpdate[i] = _useNovelty ? _adjustedPopulationFitness[i] : episodeReward;
                 _episodeRewardMean += episodeReward;
                 _episodeBestReward = episodeReward > _episodeBestReward ? episodeReward : _episodeBestReward;
                 _episodeRewards[i] = 0f;

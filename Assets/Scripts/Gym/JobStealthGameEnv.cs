@@ -52,8 +52,8 @@ namespace Gym
                     var currentPlayer = _playerAgents[i];
                     if (_player == currentPlayer) continue;
                     
-                    Destroy(currentPlayer);
                     _resettables.Remove(currentPlayer);
+                    Destroy(currentPlayer.gameObject);
                 }
             }
 

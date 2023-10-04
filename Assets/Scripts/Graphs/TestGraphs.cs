@@ -121,19 +121,29 @@ namespace Graphs
                 //print("pred: " + preds[i] + ", m: " + m[i]);
             }
 
-            var test = new float[5][];
+            var test = new float[8][];
             test[0] = new float[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
             test[1] = new float[] { 2, 5, 10, 1, 3, 2, 7, 10, 9, 6, 2, 10, 6, 5, 4, 9, 8 };
             test[2] = new float[] { 0, 1, 2, 10, 10, 6, 5, 4, 9, 8, 8, 2, 5, 10, 1, 3, 2 };
             test[3] = new float[17];
             test[4] = new float[17];
+            test[5] = new float[17];
+            test[6] = new float[17];
+            test[7] = new float[17];
             for (int i = 0; i < test[0].Length; i++)
             {
                 test[3][i] = Random.Range(0, 17);
                 test[4][i] = Random.Range(0, 17);
+                test[5][i] = Random.Range(2, 10);
+                test[6][i] = Random.Range(0, 6);
+                test[7][i] = Random.Range(8, 17);
             }
 
-            var labels = new string[] { "DQN", "Rainbow DQN", "NEAT", "PER DQN", "CMA-ES-NS" };
+            var labels = new string[]
+            {
+                "DQN", "Double DQN", "Duelling DQN", "N-Step DQN", "PER DQN", "Noisy DQN", "Dist DQN",
+                "Rainbow DQN"
+            };
 
             var graph = FindObjectOfType<WindowGraph>();
             if (graph)
@@ -141,6 +151,14 @@ namespace Graphs
                 //graph.SetGraph(new List<float>(), preds, GraphType.BarGraph, "Sin Wave", "Frequency", "Amplitude");
                 graph.SetStaticGraph(test, "Sin Wave", "Frequency", "Amplitude", labels);
             }
+            
+            StartCoroutine(TakeScreenShot());
+        }
+        
+        IEnumerator TakeScreenShot()
+        {
+            yield return new WaitForEndOfFrame();
+            ScreenCapture.CaptureScreenshot("screenshot_4.png", 4);
         }
 
         private IEnumerator RunEverySecond(WindowGraph graph)

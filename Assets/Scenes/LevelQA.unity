@@ -2234,7 +2234,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1177854241
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2242,7 +2242,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1177854240}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f35cae125de164c4f9223ab9b6c7e196, type: 3}
   m_Name: 
@@ -3687,6 +3687,74 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2041817668}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2061899604
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2061899606}
+  - component: {fileID: 2061899605}
+  m_Layer: 0
+  m_Name: Tester NE
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2061899605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2061899604}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f35cae125de164c4f9223ab9b6c7e196, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  algorithmsPrefabs:
+  - {fileID: 8293544776632624489, guid: 4b7acb5fd98633f468bc45a046673793, type: 3}
+  - {fileID: 8293544776632624489, guid: 82c9be676cec64d44a68d05497212823, type: 3}
+  - {fileID: 8293544776632624489, guid: 35ba4a9f712adfb4d891f1380b977d58, type: 3}
+  - {fileID: 8293544776632624489, guid: 5e01fa9b0db4feb428fe639abaf99af0, type: 3}
+  - {fileID: 8048831427862802974, guid: 3f4de5a6950cbbd4285364d0740a3388, type: 3}
+  - {fileID: 8048831427862802974, guid: 9705f04d82808fc4c8ebf56d1df8af05, type: 3}
+  - {fileID: 8048831427862802974, guid: 23e0b27a642eb1b4a95c76b31047f82c, type: 3}
+  - {fileID: 8048831427862802974, guid: edb39763ae2b7694f9d31d726fc79515, type: 3}
+  - {fileID: 8048831427862802974, guid: dedb16233e179b74d860bfae322bed0f, type: 3}
+  - {fileID: 8048831427862802974, guid: eab5e5f5cfa325048b7f527975191285, type: 3}
+  - {fileID: 8048831427862802974, guid: 46c2ba703e1982a4abca1076bb66b2d9, type: 3}
+  - {fileID: 8048831427862802974, guid: b1b7fc65bf925e54a9ea3e2b3f605aea, type: 3}
+  - {fileID: 8048831427862802974, guid: 2c141fcfdd4279347a692f7fdee5a1f2, type: 3}
+  - {fileID: 8048831427862802974, guid: dbe216438584891408c9df13b5ee90a5, type: 3}
+  - {fileID: 8048831427862802974, guid: b1084ab030d5db14a87ea0e5066dc080, type: 3}
+  - {fileID: 8048831427862802974, guid: 26dcdc58258cf614aac906fe56c62d07, type: 3}
+  - {fileID: 8048831427862802974, guid: 8c14e508d53b0a641b73d7012609023d, type: 3}
+  - {fileID: 8048831427862802974, guid: 8f15bb7f753d1ad4b8796b38d0266aae, type: 3}
+  - {fileID: 8048831427862802974, guid: 3dfa6b50dddd39f4599f1ca54fa66669, type: 3}
+  - {fileID: 8048831427862802974, guid: 454194364d81a6342a41f67bb2277b4a, type: 3}
+  testNumber: 10
+  generatorSeed: 42
+  saveInfo: 1
+  saveFileName: QA NE Part 1
+--- !u!4 &2061899606
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2061899604}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2123468616
 GameObject:
   m_ObjectHideFlags: 0
