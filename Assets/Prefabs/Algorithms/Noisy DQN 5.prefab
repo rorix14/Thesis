@@ -48,7 +48,7 @@ MonoBehaviour:
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 18
+  simulationSpeed: 21
   numberOfEpisodes: 600
   targetNetworkCopyPeriod: 50
   batchSize: 32

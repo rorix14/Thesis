@@ -1,10 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Algorithms.NE;
 using Graphs;
 using Gym;
 using NN;
 using TestGround.Base;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,6 +32,9 @@ namespace TestGround.NE
         private WindowGraph _graphReward;
         private WindowGraph _graphBestIndividualReward;
 
+        // private Stopwatch _stopwatch;
+        // private List<long> _times;
+
         //Only were for testing
         [SerializeField] protected ActivationFunction activationFunction;
         [SerializeField] protected float learningRate;
@@ -49,8 +54,8 @@ namespace TestGround.NE
         {
             _env = FindObjectOfType<JobStealthGameEnv>();
 
-            Rewards = new List<float>(numberOfEpisodes);
-            Loss = new List<float>(numberOfEpisodes);
+            Rewards = new List<float>(numberOfEpisodes / requiredSimulations);
+            Loss = new List<float>(numberOfEpisodes / requiredSimulations);
             for (int i = 0; i < Rewards.Capacity; i++)
             {
                 Rewards.Add(0f);
@@ -61,6 +66,9 @@ namespace TestGround.NE
             {
                 populationSize++;
             }
+            // _stopwatch = new Stopwatch(); 
+            // _times = new List<long>(1000000);
+            // Random.InitState(42);
         }
 
         protected virtual void Start()
@@ -98,62 +106,82 @@ namespace TestGround.NE
                 return;
             }
 
+            //_stopwatch.Restart();
+
             var actions = _neModel.SamplePopulationActions(_currentSates);
             var stepInfo = _env.DistributedStep(actions);
 
             _neModel.AddExperience(stepInfo.Rewards, stepInfo.Dones);
             _currentSates = stepInfo.Observations;
 
-            if (_neModel.FinishedIndividuals < populationSize) return;
-
-            if (noveltyRelevance > 0)
+            if (_neModel.FinishedIndividuals < populationSize)
             {
-                _neModel.DoNoveltySearch(_env.GetPlayersPositions());
+                // _stopwatch.Stop();
+                // _times.Add(_stopwatch.ElapsedMilliseconds);
+                return;
             }
 
-            _neModel.Train();
+            // if (noveltyRelevance > 0)
+            // {
+            //     _neModel.DoNoveltySearch(_env.GetPlayersPositions());
+            // }
+            
+            if (_episodeIndex % requiredSimulations == 0)
+            {
+                _neModel.Train();
+                Rewards[_episodeIndex / requiredSimulations] = _neModel.EpisodeRewardMean / requiredSimulations;
+                Loss[_episodeIndex / requiredSimulations] = _neModel.EpisodeBestReward / requiredSimulations;
+            }
+            else
+            {
+                _neModel.SoftReset();
+            }
 
-            Rewards[_episodeIndex] = _neModel.EpisodeRewardMean;
-            Loss[_episodeIndex] = _neModel.EpisodeBestReward;
+            //_neModel.Train();
+            //Rewards[_episodeIndex] = _neModel.EpisodeRewardMean;
+            //Loss[_episodeIndex] = _neModel.EpisodeBestReward;
 
             _currentSates = _env.DistributedResetEnv();
             ++_episodeIndex;
 
-            // if (_episodeIndex % requiredSimulations == 0)
-            // {
-            //     _neModel.Train();
-            // }
-            // else
-            // {
-            //     _neModel.SoftReset();
-            // }
+            // _stopwatch.Stop();
+            // _times.Add(_stopwatch.ElapsedMilliseconds);
         }
 
         private void PlotTrainingData()
         {
             Time.timeScale = 1;
 
-            float rewardSum = 0.0f;
-            foreach (var reward in Rewards)
-            {
-                rewardSum += reward;
-            }
-
-            float bestIndividualSum = 0.0f;
-            for (int i = 0; i < Loss.Count; i++)
-            {
-                var loss = Loss[i];
-                bestIndividualSum += loss;
-            }
-
-            print("Average population reward: " + rewardSum / Rewards.Count);
-            print("Average best individual reward: " + bestIndividualSum / Loss.Count);
-
-            var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
-            _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
-            _graphBestIndividualReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
-
-            StartCoroutine(ShowGraphs());
+            // float timeSum = 0.0f;
+            // foreach (var time in _times)
+            // {
+            //     timeSum += time;
+            // }
+            //
+            // print("Average Time: " + timeSum / _times.Count);
+            // EditorApplication.Beep();
+            // EditorApplication.ExitPlaymode();
+            // float rewardSum = 0.0f;
+            // foreach (var reward in Rewards)
+            // {
+            //     rewardSum += reward;
+            // }
+            //
+            // float bestIndividualSum = 0.0f;
+            // for (int i = 0; i < Loss.Count; i++)
+            // {
+            //     var loss = Loss[i];
+            //     bestIndividualSum += loss;
+            // }
+            //
+            // print("Average population reward: " + rewardSum / Rewards.Count);
+            // print("Average best individual reward: " + bestIndividualSum / Loss.Count);
+            //
+            // var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
+            // _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
+            // _graphBestIndividualReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
+            //
+            // StartCoroutine(ShowGraphs());
         }
 
         private IEnumerator ShowGraphs()

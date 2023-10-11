@@ -1,13 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Algorithms.RL;
 using Graphs;
 using Gym;
 using NN;
 using TestGround.Base;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace TestGround
 {
@@ -62,8 +65,10 @@ namespace TestGround
                 Loss.Add(0f);
             }
 
-            // _stopwatch = new Stopwatch();
+            // _stopwatch = new Stopwatch(); 
             // _times = new List<long>(1000000);
+            
+            //Random.InitState(42);
         }
 
         protected virtual void Start()
@@ -107,24 +112,23 @@ namespace TestGround
         {
             if (_episodeIndex >= numberOfEpisodes)
             {
-                //if (!_env) return;
+                if (!_env) return;
 
                 IsFinished = true;
-                //_env.Close();
-                //PlotTrainingData();
+                // _env.Close();
+                // PlotTrainingData();
                 return;
             }
 
+            //_stopwatch.Restart();
+            
             int action = _DQN.EpsilonGreedySample(_currentSate, _epsilon);
             var stepInfo = _env.Step(action);
 
             _DQN.AddExperience(_currentSate, action, stepInfo.Reward, stepInfo.Done, stepInfo.Observation);
 
-            //_stopwatch.Restart();
             _DQN.Train();
-            //_stopwatch.Stop();
-            //_times.Add(_stopwatch.ElapsedMilliseconds);
-
+            
             if (_totalIteration % targetNetworkCopyPeriod == 0)
             {
                 _DQN.SetTargetModel();
@@ -134,7 +138,12 @@ namespace TestGround
             Rewards[_episodeIndex] += stepInfo.Reward;
             ++_totalIteration;
 
-            if (!stepInfo.Done) return;
+            if (!stepInfo.Done)
+            {
+                // _stopwatch.Stop();
+                // _times.Add(_stopwatch.ElapsedMilliseconds);
+                return;
+            }
 
             Loss[_episodeIndex] = _DQN.SampleLoss();
             _currentSate = _env.ResetEnv();
@@ -143,28 +152,31 @@ namespace TestGround
             // could clamp epsilon value with a max function in order to have a min exploration value
             _epsilon = 1.0f / (float)Math.Sqrt(_episodeIndex + 1);
             //_epsilon = 0.0f;
+            
+            // _stopwatch.Stop();
+            // _times.Add(_stopwatch.ElapsedMilliseconds);
         }
 
         private void PlotTrainingData()
         {
             Time.timeScale = 1;
 
-            float rewardSum = 0.0f;
-            foreach (var reward in Rewards)
-            {
-                rewardSum += reward;
-            }
-
-            float lossSum = 0.0f;
-            for (int i = 0; i < Loss.Count; i++)
-            {
-                var loss = Loss[i];
-                lossSum += loss;
-                // if (loss > 1)
-                // {
-                //     _lossPerEpisode[i] = 1.0f;
-                // }
-            }
+            // float rewardSum = 0.0f;
+            // foreach (var reward in Rewards)
+            // {
+            //     rewardSum += reward;
+            // }
+            //
+            // float lossSum = 0.0f;
+            // for (int i = 0; i < Loss.Count; i++)
+            // {
+            //     var loss = Loss[i];
+            //     lossSum += loss;
+            //     // if (loss > 1)
+            //     // {
+            //     //     _lossPerEpisode[i] = 1.0f;
+            //     // }
+            // }
 
             // float timeSum = 0.0f;
             // foreach (var time in _times)
@@ -173,14 +185,17 @@ namespace TestGround
             // }
 
 
-            print("Average Reward: " + rewardSum / Rewards.Count);
-            print("Average Loss: " + lossSum / Loss.Count);
+            // print("Average Reward: " + rewardSum / Rewards.Count);
+            // print("Average Loss: " + lossSum / Loss.Count);
             //print("Average Time: " + timeSum / _times.Count);
 
-            var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
-            _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
-            _graphLoss = Instantiate(windowGraphPrefab, layoutGroup.transform);
-            StartCoroutine(ShowGraphs());
+            // var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
+            // _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
+            // _graphLoss = Instantiate(windowGraphPrefab, layoutGroup.transform);
+            // StartCoroutine(ShowGraphs());
+            
+            EditorApplication.Beep();
+            EditorApplication.ExitPlaymode();
         }
 
         private IEnumerator ShowGraphs()
