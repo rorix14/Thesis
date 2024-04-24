@@ -1,12 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Algorithms.NE;
+using DL.NN;
 using Graphs;
 using Gym;
 using NN;
 using TestGround.Base;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,13 +20,17 @@ namespace TestGround.NE
         [SerializeField] private WindowGraph windowGraphPrefab;
         [SerializeField] protected float simulationSpeed;
         [SerializeField] private int numberOfEpisodes;
+        [SerializeField] private int skippedFrames;
         [SerializeField] protected float noveltyRelevance;
-
+        
         private int _episodeIndex;
         protected JobStealthGameEnv _env;
         protected ES _neModel;
 
+        // Cashed variables
         protected float[,] _currentSates;
+        private int _currentSkippedFrame;
+        private int[] _actions;
 
         private WindowGraph _graphReward;
         private WindowGraph _graphBestIndividualReward;
@@ -66,6 +69,8 @@ namespace TestGround.NE
             {
                 populationSize++;
             }
+            
+            skippedFrames = skippedFrames > 0 ? skippedFrames : 1;
             // _stopwatch = new Stopwatch(); 
             // _times = new List<long>(1000000);
             // Random.InitState(42);
@@ -73,8 +78,6 @@ namespace TestGround.NE
 
         protected virtual void Start()
         {
-            //Random.InitState(42);
-
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();
 
@@ -100,19 +103,21 @@ namespace TestGround.NE
             if (_episodeIndex >= numberOfEpisodes)
             {
                 IsFinished = true;
-                // if (!_env) return;
-                // _env.Close();
-                // PlotTrainingData();
+                if (!_env) return;
+                _env.Close();
+                PlotTrainingData();
                 return;
             }
 
             //_stopwatch.Restart();
 
-            var actions = _neModel.SamplePopulationActions(_currentSates);
-            var stepInfo = _env.DistributedStep(actions);
+            _actions =  _currentSkippedFrame == 0 ? _neModel.SamplePopulationActions(_currentSates) : _actions;
+            var stepInfo = _env.DistributedStep(_actions);
 
             _neModel.AddExperience(stepInfo.Rewards, stepInfo.Dones);
             _currentSates = stepInfo.Observations;
+            
+            _currentSkippedFrame = (_currentSkippedFrame + 1) % skippedFrames;
 
             if (_neModel.FinishedIndividuals < populationSize)
             {
@@ -121,27 +126,28 @@ namespace TestGround.NE
                 return;
             }
 
-            // if (noveltyRelevance > 0)
-            // {
-            //     _neModel.DoNoveltySearch(_env.GetPlayersPositions());
-            // }
+            if (noveltyRelevance > 0)
+            {
+                _neModel.DoNoveltySearch(_env.GetPlayersPositions());
+            }
             
-            if (_episodeIndex % requiredSimulations == 0)
-            {
-                _neModel.Train();
-                Rewards[_episodeIndex / requiredSimulations] = _neModel.EpisodeRewardMean / requiredSimulations;
-                Loss[_episodeIndex / requiredSimulations] = _neModel.EpisodeBestReward / requiredSimulations;
-            }
-            else
-            {
-                _neModel.SoftReset();
-            }
+            // if (_episodeIndex % requiredSimulations == 0)
+            // {
+            //     _neModel.Train();
+            //     Rewards[_episodeIndex / requiredSimulations] = _neModel.EpisodeRewardMean / requiredSimulations;
+            //     Loss[_episodeIndex / requiredSimulations] = _neModel.EpisodeBestReward / requiredSimulations;
+            // }
+            // else
+            // {
+            //     _neModel.SoftReset();
+            // }
 
-            //_neModel.Train();
-            //Rewards[_episodeIndex] = _neModel.EpisodeRewardMean;
-            //Loss[_episodeIndex] = _neModel.EpisodeBestReward;
+            _neModel.Train();
+            Rewards[_episodeIndex] = _neModel.EpisodeRewardMean;
+            Loss[_episodeIndex] = _neModel.EpisodeBestReward;
 
             _currentSates = _env.DistributedResetEnv();
+            _currentSkippedFrame = 0;
             ++_episodeIndex;
 
             // _stopwatch.Stop();
@@ -161,27 +167,27 @@ namespace TestGround.NE
             // print("Average Time: " + timeSum / _times.Count);
             // EditorApplication.Beep();
             // EditorApplication.ExitPlaymode();
-            // float rewardSum = 0.0f;
-            // foreach (var reward in Rewards)
-            // {
-            //     rewardSum += reward;
-            // }
-            //
-            // float bestIndividualSum = 0.0f;
-            // for (int i = 0; i < Loss.Count; i++)
-            // {
-            //     var loss = Loss[i];
-            //     bestIndividualSum += loss;
-            // }
-            //
-            // print("Average population reward: " + rewardSum / Rewards.Count);
-            // print("Average best individual reward: " + bestIndividualSum / Loss.Count);
-            //
-            // var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
-            // _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
-            // _graphBestIndividualReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
-            //
-            // StartCoroutine(ShowGraphs());
+            float rewardSum = 0.0f;
+            foreach (var reward in Rewards)
+            {
+                rewardSum += reward;
+            }
+            
+            float bestIndividualSum = 0.0f;
+            for (int i = 0; i < Loss.Count; i++)
+            {
+                var loss = Loss[i];
+                bestIndividualSum += loss;
+            }
+            
+            print("Average population reward: " + rewardSum / Rewards.Count);
+            print("Average best individual reward: " + bestIndividualSum / Loss.Count);
+            
+            var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
+            _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
+            _graphBestIndividualReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
+            
+            StartCoroutine(ShowGraphs());
         }
 
         private IEnumerator ShowGraphs()

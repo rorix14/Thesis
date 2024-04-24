@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using NN.CPU_Single;
 using UnityEngine;
-using ActivationFunction = NN.ActivationFunction;
+using ActivationFunction = DL.NN.ActivationFunction;
 using Random = UnityEngine.Random;
 
 namespace Algorithms.NE.NEAT

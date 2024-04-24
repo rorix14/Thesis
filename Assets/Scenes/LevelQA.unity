@@ -972,15 +972,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 431779445}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1713da19f82f2b949960d54822646567, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   algorithmsPrefabs:
+  - {fileID: -3853046103869150412, guid: 167161d231913c54f9ae0b326b20c33b, type: 3}
   - {fileID: -681542920810152738, guid: 9a8dc1cad4a2372409b44bfef278fc88, type: 3}
   - {fileID: 8048831427862802974, guid: 6b4ac6f8b37bfef43a0e539834b0e0e3, type: 3}
-  - {fileID: -3853046103869150412, guid: 167161d231913c54f9ae0b326b20c33b, type: 3}
   - {fileID: 8293544776632624489, guid: 3af10ffa58c3e3f40b701448b90b10df, type: 3}
   - {fileID: -681542920810152738, guid: 85d11a7d62ed5d64da917d4f14974eee, type: 3}
   - {fileID: 8048831427862802974, guid: 73ef436fb3fc5ca448f37754449dc791, type: 3}
@@ -990,7 +990,7 @@ MonoBehaviour:
   generatorSeed: 42
   saveInfo: 0
   saveFileName: 
-  testSeeds: 150000005f00000063000000630000003b000000580000003b00000063000000
+  testSeeds: 63000000150000005f000000630000003b000000580000003b00000063000000
   windowGraphPrefab: {fileID: 2785640712507469928, guid: 6b86715d1289def408906d6e5f21955e, type: 3}
   graph1Title: Average Population Fitness
   graph1LabelX: Generation
@@ -2150,7 +2150,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &907602149
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2199,6 +2199,67 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 9
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &929681318
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 929681320}
+  - component: {fileID: 929681319}
+  m_Layer: 0
+  m_Name: Tester Graphs DQN (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &929681319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929681318}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1713da19f82f2b949960d54822646567, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  algorithmsPrefabs:
+  - {fileID: -7743909116605026588, guid: 472f9426af851a949a7d3c088cd18cea, type: 3}
+  - {fileID: -4589656829319374267, guid: b449ac0c9703a7a4498d4f13befd664f, type: 3}
+  - {fileID: -7914093410445437040, guid: 475b23f8170620545aa52b8d82f49723, type: 3}
+  testNumber: 0
+  generatorSeed: 42
+  saveInfo: 0
+  saveFileName: 
+  testSeeds: 58000000360000003b000000
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: 6b86715d1289def408906d6e5f21955e, type: 3}
+  graph1Title: Rewards per Episode
+  graph1LabelX: Episode
+  graph1LabelY: Reward
+  graph1ImageName: Best DQN Reward
+  graph2Title: Loss per Episode
+  graph2LabelX: Episode
+  graph2LabelY: Loss
+  graph2ImageName: Best DQN Loss
+--- !u!4 &929681320
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929681318}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1011.06335, y: 542.6884, z: -242.21938}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &959197024
 GameObject:
@@ -2501,7 +2562,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1438431761}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03fa7607dc859024392bfcfbd8dd5007, type: 3}
   m_Name: 
@@ -3247,6 +3308,67 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1756369473}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1807596669
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1807596671}
+  - component: {fileID: 1807596670}
+  m_Layer: 0
+  m_Name: Tester Graphs NE (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1807596670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1807596669}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1713da19f82f2b949960d54822646567, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  algorithmsPrefabs:
+  - {fileID: -3853046103869150412, guid: 167161d231913c54f9ae0b326b20c33b, type: 3}
+  - {fileID: 8048831427862802974, guid: 6b4ac6f8b37bfef43a0e539834b0e0e3, type: 3}
+  - {fileID: 8293544776632624489, guid: 3af10ffa58c3e3f40b701448b90b10df, type: 3}
+  testNumber: 0
+  generatorSeed: 42
+  saveInfo: 0
+  saveFileName: 
+  testSeeds: 3b0000005f00000063000000
+  windowGraphPrefab: {fileID: 2785640712507469928, guid: 6b86715d1289def408906d6e5f21955e, type: 3}
+  graph1Title: Average Population Fitness
+  graph1LabelX: Generation
+  graph1LabelY: Fitness
+  graph1ImageName: Best NE Population
+  graph2Title: 'Best Individual Fitness '
+  graph2LabelX: Generation
+  graph2LabelY: Fitness
+  graph2ImageName: Best NE Individual
+--- !u!4 &1807596671
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1807596669}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1011.06335, y: 542.6884, z: -242.21938}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 11
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1808382709
 GameObject:
   m_ObjectHideFlags: 0

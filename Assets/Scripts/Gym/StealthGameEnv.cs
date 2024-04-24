@@ -219,6 +219,7 @@ namespace Gym
             for (var i = 0; i < _enemyCount; i++)
             {
                 var enemy = _enemies[i];
+                //TODO: There might not be a need to call update enemy here. Test for other environments as well
                 enemy.UpdateEnemy();
                 var enemyPosition = enemy.transform.position;
 

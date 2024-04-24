@@ -1,7 +1,7 @@
 using NN.CPU_Single;
 using UnityEngine;
 
-namespace NN
+namespace DL.NN
 {
     public class NoisyNetworkLayer : NetworkLayer
     {

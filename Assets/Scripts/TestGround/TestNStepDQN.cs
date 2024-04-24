@@ -1,5 +1,5 @@
 using Algorithms.RL;
-using NN;
+using DL.NN;
 using UnityEngine;
 
 namespace TestGround
@@ -19,6 +19,15 @@ namespace TestGround
         protected override void Start()
         {
             _currentSate = _env.ResetEnv();
+            // var resetSate = _env.ResetEnv();
+            // _envStateSize = _env.GetObservationSize * skippedFrames;
+            // _nextSate = new float[_envStateSize];
+            // _currentSate = new float[_envStateSize];
+            // var startSateIndex = _envStateSize - _env.GetObservationSize;
+            // for (int i = 0; i < _env.GetObservationSize; i++)
+            // {
+            //     _currentSate[startSateIndex + i] = resetSate[i];
+            // }
 
             var updateLayers = new NetworkLayer[]
             {

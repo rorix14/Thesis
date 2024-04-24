@@ -2,10 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using DL.NN;
 using NN;
 using NN.CPU_Single;
 using UnityEngine;
-using ActivationFunction = NN.ActivationFunction;
+using ActivationFunction = DL.NN.ActivationFunction;
 using Random = UnityEngine.Random;
 
 namespace Graphs

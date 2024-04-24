@@ -22,6 +22,8 @@ namespace Stealth_Game
 
         private float _viewStepSize;
 
+        private bool _isActive;
+
         // This could be a list of objects that share an interface, this way the player character can interact with
         // more than just enemies
         public List<Transform> IterableObjects { get; private set; }
@@ -55,11 +57,25 @@ namespace Stealth_Game
 
         public void SoftMovePlayer(Vector3 velocity)
         {
+            if (!_isActive)
+            {
+                GoalReached = false;
+                IterableObjects.Clear();
+                _isActive = true;
+            }
+
             _characterController.Move(velocity);
         }
 
         public void MovePlayer(Vector3 movementDir)
         {
+            if (!_isActive)
+            {
+                GoalReached = false;
+                IterableObjects.Clear();
+                _isActive = true;
+            }
+            
             _moveDirection = movementDir;
             //_moveDirection.Normalize();
             _characterController.Move(_moveDirection * (moveSpeed * Time.fixedDeltaTime));
@@ -104,6 +120,8 @@ namespace Stealth_Game
 
         private void OnTriggerEnter(Collider other)
         {
+            if (!_isActive) return;
+
             if (other.CompareTag("Goal"))
             {
                 GoalReached = true;
@@ -135,6 +153,8 @@ namespace Stealth_Game
 
             GoalReached = false;
             IterableObjects.Clear();
+
+            _isActive = false;
         }
     }
 }

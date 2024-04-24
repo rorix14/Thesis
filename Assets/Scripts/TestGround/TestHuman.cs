@@ -12,7 +12,13 @@ namespace TestGround
         [SerializeField] private WindowGraph windowGraphPrefab;
         [SerializeField] private int numberOfEpisodes;
         [SerializeField] private float simulationSpeed;
+        [SerializeField] private int skippedFrames;
+
         private int _episodeIndex;
+        
+        private int _currentSkippedFrame;
+        private int _action;
+        private float _reward;
 
         private StealthGameEnv _env;
         private Vector3 _currentPlayerAction;
@@ -22,15 +28,24 @@ namespace TestGround
         private WindowGraph _graphReward;
         private WindowGraph _graphLoss;
 
+        private int _actionsPerformed;
+
+        private readonly int[] _fixedActions = new[]
+        {
+            4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1,
+            4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1,
+            4, 1, 4, 1, 4, 1, 4, 1,  4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1
+        };
+
         private void Awake()
         {
-            _env = FindObjectOfType<StealthGameEnv>();
+            _env = FindObjectOfType<ImageStealthGameEnv>();
             _rewardsOverTime = new List<float>(numberOfEpisodes);
             for (int i = 0; i < _rewardsOverTime.Capacity; i++)
             {
                 _rewardsOverTime.Add(0f);
             }
-            
+
             _movementToAction = new Dictionary<Vector3, int>
             {
                 { Vector3.zero, 0 }, { Vector3.forward, 1 }, { Vector3.back, 2 }, { Vector3.right, 3 },
@@ -38,6 +53,8 @@ namespace TestGround
                 { Vector3.forward + Vector3.right, 5 }, { Vector3.forward + Vector3.left, 6 },
                 { Vector3.back + Vector3.right, 7 }, { Vector3.back + Vector3.left, 8 }, { Vector3.up, 9 },
             };
+            
+            skippedFrames = skippedFrames > 0 ? skippedFrames : 1;
         }
 
         private void Start()
@@ -45,7 +62,7 @@ namespace TestGround
             var layoutGroup = FindObjectOfType<VerticalLayoutGroup>();
             _graphReward = Instantiate(windowGraphPrefab, layoutGroup.transform);
             _graphLoss = Instantiate(windowGraphPrefab, layoutGroup.transform);
-            
+
             _graphReward.gameObject.SetActive(false);
             _graphLoss.gameObject.SetActive(false);
 
@@ -71,12 +88,26 @@ namespace TestGround
                 return;
             }
 
-            var stepInfo = _env.Step(_movementToAction[_currentPlayerAction]);
+            var skippFrame = _currentSkippedFrame < skippedFrames - 1;
+
+            // if (_actionsPerformed >= _fixedActions.Length) return;
+            
+            _action = skippFrame ? _action : _movementToAction[_currentPlayerAction];
+            var stepInfo = _env.Step(_action);
+            // var stepInfo = _env.Step(_movementToAction[_currentPlayerAction]);
             //var stepInfo = _env.Step(Random.Range(0, 10));
-            _rewardsOverTime[_episodeIndex] += stepInfo.Reward;
+            
+            _reward += stepInfo.Reward;
+            ++_currentSkippedFrame;
+
+            if (!stepInfo.Done && skippFrame) return;
+            
+            _rewardsOverTime[_episodeIndex] += _reward;
+            _reward = 0f;
+            _currentSkippedFrame = 0;
 
             if (!stepInfo.Done) return;
-            
+
             _env.ResetEnv();
             _episodeIndex++;
         }
@@ -84,13 +115,13 @@ namespace TestGround
         private void PlotTrainingData()
         {
             Time.timeScale = 1;
-            
+
             float rewardSum = 0.0f;
             foreach (var reward in _rewardsOverTime)
             {
                 rewardSum += reward;
             }
-            
+
             print("Average Reward: " + rewardSum / _rewardsOverTime.Count);
 
             _graphReward.gameObject.SetActive(true);
@@ -101,10 +132,10 @@ namespace TestGround
         private IEnumerator ShowGraphs()
         {
             yield return new WaitForSeconds(0.1f);
-            
+
             _graphReward.SetGraph(null, _rewardsOverTime, GraphType.LineGraph,
                 "Rewards per Episode", "episodes", "rewards");
-            
+
             _graphLoss.SetGraph(null, _rewardsOverTime, GraphType.LineGraph,
                 "Rewards per Episode", "episodes", "rewards");
         }

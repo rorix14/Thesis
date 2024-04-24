@@ -1,4 +1,5 @@
-﻿using NN;
+﻿using DL.NN;
+using NN;
 
 namespace Algorithms.NE
 {

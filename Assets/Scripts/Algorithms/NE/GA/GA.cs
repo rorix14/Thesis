@@ -1,4 +1,5 @@
-﻿using NN;
+﻿using DL.NN;
+using NN;
 using Random = UnityEngine.Random;
 
 namespace Algorithms.NE

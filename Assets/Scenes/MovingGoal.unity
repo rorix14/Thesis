@@ -123,6 +123,62 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &43472509
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 43472511}
+  - component: {fileID: 43472510}
+  m_Layer: 0
+  m_Name: Tester Skip Frame
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &43472510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 43472509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f35cae125de164c4f9223ab9b6c7e196, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  algorithmsPrefabs:
+  - {fileID: 4810890153074692661, guid: 020cb12a8fc721c44bebd252bbf21149, type: 3}
+  - {fileID: 4810890153074692661, guid: f28364a17e3011640afedb06f8e6ac0a, type: 3}
+  - {fileID: 2703651450852920366, guid: 33070356401ae344ba47a1a8bae4581d, type: 3}
+  - {fileID: 2703651450852920366, guid: f1fe1a4129d1a734eb658ec29a1c8f50, type: 3}
+  - {fileID: 2703651450852920366, guid: 0803b3fdcb314464a894bf5db4f543b8, type: 3}
+  - {fileID: 2703651450852920366, guid: f9e24e9946f023d4aa3b903735838040, type: 3}
+  - {fileID: 2703651450852920366, guid: 9aafc11c3f4d5cb43b25bf2fbe24c398, type: 3}
+  - {fileID: 2703651450852920366, guid: ff45e0feca380d24cb5673c7ab3583da, type: 3}
+  testNumber: 10
+  generatorSeed: 42
+  saveInfo: 0
+  saveFileName: skip frame normal
+--- !u!4 &43472511
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 43472509}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 9
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &123041081
 GameObject:
   m_ObjectHideFlags: 0
@@ -175,8 +231,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 7.2
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -200,7 +256,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 123041081}
   m_LocalRotation: {x: 0.7071068, y: 0.000000029802322, z: 0.000000044703484, w: 0.7071068}
-  m_LocalPosition: {x: 0.79202116, y: 15.040878, z: -0.25570256}
+  m_LocalPosition: {x: 0, y: 15, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -663,7 +719,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 82eeed02b0335fb46967949ff4e984d0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -709,7 +765,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &797145188
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -796,6 +852,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 20
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -804,6 +861,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
 --- !u!114 &845216471
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -819,6 +880,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   numberOfEpisodes: 300
   simulationSpeed: 1
+  skippedFrames: 0
 --- !u!4 &845216472
 Transform:
   m_ObjectHideFlags: 0
@@ -852,6 +914,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -860,6 +923,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
   stepNumber: 3
 --- !u!114 &845216474
 MonoBehaviour:
@@ -880,6 +947,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 12
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -888,6 +956,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
 --- !u!114 &845216475
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -907,6 +979,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -915,6 +988,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
   beta: 0
   alpha: 0
 --- !u!114 &845216476
@@ -936,6 +1013,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -944,6 +1022,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
   sigma: 0
 --- !u!114 &845216477
@@ -965,6 +1047,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 13
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -973,6 +1056,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
 --- !u!114 &845216478
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -992,6 +1079,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 15
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -1000,6 +1088,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
   supportSize: 51
   supportMinValue: -7
   supportMaxValue: 50
@@ -1022,6 +1114,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 6
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -1030,6 +1123,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
   stepNumber: 3
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
   supportSize: 51
@@ -1391,7 +1488,7 @@ Transform:
   m_GameObject: {fileID: 1428398470}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.3707, y: 1.3707, z: 1.3707}
+  m_LocalScale: {x: 1.38, y: 1.38, z: 1.38}
   m_Children: []
   m_Father: {fileID: 762597733}
   m_RootOrder: 0
@@ -1741,7 +1838,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 82eeed02b0335fb46967949ff4e984d0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1783,6 +1880,7 @@ GameObject:
   - component: {fileID: 1689843103}
   - component: {fileID: 1689843105}
   - component: {fileID: 1689843106}
+  - component: {fileID: 1689843107}
   m_Layer: 0
   m_Name: Enviroment
   m_TagString: Untagged
@@ -1864,6 +1962,28 @@ MonoBehaviour:
   goalReachedReward: 50
   spottedReward: -20
   assassinateReward: 15
+--- !u!114 &1689843107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1689843102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a84d1e360072425b9b90464e8fba63cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelSizeMaxMin: {x: 7, y: -7, z: 7, w: -7}
+  episodeLength: 700
+  stealthLevels: []
+  passiveReward: -0.01
+  goalReachedReward: 50
+  spottedReward: -20
+  assassinateReward: 15
+  captureCamera: {fileID: 123041083}
+  imageWithHeight: 56
+  imageProcessorCs: {fileID: 7200000, guid: 2e6b92d08cd20054fba1b98287d71b63, type: 3}
 --- !u!1 &1758427384
 GameObject:
   m_ObjectHideFlags: 0
@@ -1995,7 +2115,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 82eeed02b0335fb46967949ff4e984d0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2090,7 +2210,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 82eeed02b0335fb46967949ff4e984d0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

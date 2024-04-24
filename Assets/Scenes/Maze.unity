@@ -804,16 +804,21 @@ MonoBehaviour:
   Loss: []
   shader: {fileID: 7200000, guid: ab0072efd32ffaa4aaa81a20e323151b, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
-  simulationSpeed: 1
-  numberOfEpisodes: 300
+  simulationSpeed: 20
+  numberOfEpisodes: 450
+  skippedFrames: 3
   targetNetworkCopyPeriod: 50
-  batchSize: 0
-  gamma: 0
+  batchSize: 32
+  gamma: 0.99
   activationFunction: 0
-  learningRate: 0
-  decayRate: 0
-  neuronNumber: 0
-  weightsInitStd: 0
+  learningRate: 0.0001
+  decayRate: 0.0000001
+  neuronNumber: 256
+  weightsInitStd: 0.005
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
 --- !u!114 &400505065
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -829,6 +834,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   numberOfEpisodes: 350
   simulationSpeed: 3
+  skippedFrames: 0
 --- !u!4 &400505066
 Transform:
   m_ObjectHideFlags: 0
@@ -862,6 +868,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 12
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -870,6 +877,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
 --- !u!114 &400505068
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -889,6 +900,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -897,6 +909,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
   stepNumber: 3
 --- !u!114 &400505069
 MonoBehaviour:
@@ -917,6 +933,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -925,6 +942,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
   beta: 0
   alpha: 0
 --- !u!114 &400505070
@@ -946,6 +967,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -954,6 +976,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
   sigma: 0
 --- !u!114 &400505071
@@ -975,6 +1001,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 13
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -983,6 +1010,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
 --- !u!114 &400505072
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1002,6 +1033,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -1010,6 +1042,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
   supportSize: 51
   supportMinValue: -7
   supportMaxValue: 50
@@ -1032,6 +1068,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 6
   numberOfEpisodes: 300
+  skippedFrames: 0
   targetNetworkCopyPeriod: 50
   batchSize: 0
   gamma: 0
@@ -1040,6 +1077,10 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
+  actions: 
+  episodesLength: 
+  actionsPrev: 
+  episodesLengthPrev: 
   stepNumber: 3
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
   supportSize: 51
@@ -1065,7 +1106,7 @@ MonoBehaviour:
   Loss: []
   populationSize: 50
   noiseStandardDeviation: 0.01
-  requiredSimulations: 0
+  requiredSimulations: 1
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 17
@@ -1093,7 +1134,7 @@ MonoBehaviour:
   Loss: []
   populationSize: 60
   noiseStandardDeviation: 0.01
-  requiredSimulations: 0
+  requiredSimulations: 1
   shader: {fileID: 7200000, guid: 5f89ce9020f923e4b8bcc0b692c89952, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 5
@@ -1121,7 +1162,7 @@ MonoBehaviour:
   Loss: []
   populationSize: 50
   noiseStandardDeviation: 0
-  requiredSimulations: 0
+  requiredSimulations: 1
   shader: {fileID: 7200000, guid: 010bb3406e14d204c9ef0d83fa08e5c6, type: 3}
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 19
@@ -1141,7 +1182,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 400505063}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b032d2ee4b37cae4aae7f6072bb05d83, type: 3}
   m_Name: 
@@ -2255,7 +2296,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1549279737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2763,3 +2804,51 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1996611158}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2143814780
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2143814782}
+  - component: {fileID: 2143814781}
+  m_Layer: 0
+  m_Name: Tester Skip Frame
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2143814781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2143814780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f35cae125de164c4f9223ab9b6c7e196, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  algorithmsPrefabs: []
+  testNumber: 10
+  generatorSeed: 42
+  saveInfo: 0
+  saveFileName: skip frame normal
+--- !u!4 &2143814782
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2143814780}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 9
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

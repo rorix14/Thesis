@@ -1,7 +1,8 @@
+using DL.NN;
 using NN;
 using NN.CPU_Single;
 using UnityEngine;
-using ActivationFunction = NN.ActivationFunction;
+using ActivationFunction = DL.NN.ActivationFunction;
 
 namespace Algorithms.NE
 {
@@ -153,6 +154,11 @@ namespace Algorithms.NE
                 _threadGroupYInputsBackward, _threadGroupZInputsBackward);
             _shader.Dispatch(_kernelHandleInputsBackward, _threadGroupXInputsBackward, _threadGroupYInputsBackward,
                 _threadGroupZInputsBackward);
+
+            // var testW = new float[_weights.GetLength(0), _weights.GetLength(1)];
+            // var testB = new float[_biases.GetLength(0), _biases.GetLength(1)];
+            // _weightsTempBuffer.GetData(testW);
+            // _biasesTempBuffer.GetData(testB);
             
             for (int i = 0; i < totalWeightsMutations; i++)
             {

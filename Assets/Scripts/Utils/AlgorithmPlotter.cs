@@ -134,12 +134,12 @@ namespace Utils
 
         private IEnumerator DisplayGraphs(WindowGraph graphReward, WindowGraph graphLoss)
         {
-            yield return Enumerator(graphReward, graphLoss);
+            yield return SaveGraphImages(graphReward, graphLoss);
             CalculateMovingAverage(3);
-            yield return Enumerator(graphReward, graphLoss, " Smooth");
+            yield return SaveGraphImages(graphReward, graphLoss, " Smooth");
         }
 
-        private IEnumerator Enumerator(WindowGraph graphReward, WindowGraph graphLoss, string prefix = "")
+        private IEnumerator SaveGraphImages(WindowGraph graphReward, WindowGraph graphLoss, string prefix = "")
         {
             graphLoss.gameObject.SetActive(false);
             graphReward.gameObject.SetActive(true);

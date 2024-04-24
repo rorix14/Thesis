@@ -1,7 +1,7 @@
 using NN.CPU_Single;
 using UnityEngine;
 
-namespace NN
+namespace DL.NN
 {
     public class NetworkModel
     {
@@ -63,6 +63,15 @@ namespace NN
             for (int j = _layers.Length - 2; j >= 0; j--)
             {
                 _layers[j].Backward(_layers[j + 1].DInputs, _currentLearningRate, _bata1Corrected, _bata2Corrected);
+            }
+
+            if (_iteration % 10 == 0)
+            {
+                for (int i = 0; i < _layers.Length; i++)
+                {
+                    var weights = new float[_layers[i]._weights.GetLength(0), _layers[i]._weights.GetLength(1)]; 
+                    _layers[i].weightsTestBuffer.GetData(weights);
+                }
             }
 
             return _layers[0].DInputs;

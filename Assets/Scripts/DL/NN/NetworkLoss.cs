@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace NN
+namespace DL.NN
 {
     // This class uses a single thread, this is because DQN uses small batch sizes, the matrix parameters are of size 32x10
     // For smaller sizes single thread is faster, if matrices get bigger consider jobs first,

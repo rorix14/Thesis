@@ -74,6 +74,7 @@ namespace Gym
                 var newPlayer = Instantiate(_player, _player.transform.parent);
                 _playerAgents[i] = newPlayer;
                 _resettables.Add(newPlayer);
+                newPlayer.name += i;
 
                 tempPlayerTransforms[i] = newPlayer.transform;
             }
@@ -342,7 +343,7 @@ namespace Gym
             for (int i = 0; i < _populationSize; i++)
             {
                 _playerAgents[i].SetPosition(playerPosition);
-
+                
                 for (int j = 0; j < ObservationLenght; j++)
                 {
                     _resetObservationBatch[i, j] = _resetObservation[j];

@@ -200,7 +200,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 123041081}
   m_LocalRotation: {x: 0.7071068, y: 0.000000029802322, z: 0.000000044703484, w: 0.7071068}
-  m_LocalPosition: {x: 0.79202116, y: 15.040878, z: -0.25570256}
+  m_LocalPosition: {x: 0, y: 12, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -474,7 +474,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 758482690}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 10.59, z: 5.75}
+  m_LocalPosition: {x: 5, y: 0, z: 5}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_Children: []
   m_Father: {fileID: 1689843104}
@@ -714,7 +714,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 845216469}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ea41f288403654408e056b39553576c, type: 3}
   m_Name: 
@@ -1062,7 +1062,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 845216469}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b032d2ee4b37cae4aae7f6072bb05d83, type: 3}
   m_Name: 
@@ -1698,6 +1698,7 @@ GameObject:
   - component: {fileID: 1689843103}
   - component: {fileID: 1689843105}
   - component: {fileID: 1689843106}
+  - component: {fileID: 1689843107}
   m_Layer: 0
   m_Name: Enviroment
   m_TagString: Untagged
@@ -1779,6 +1780,28 @@ MonoBehaviour:
   goalReachedReward: 50
   spottedReward: -20
   assassinateReward: 15
+--- !u!114 &1689843107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1689843102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a84d1e360072425b9b90464e8fba63cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelSizeMaxMin: {x: 7, y: -7, z: 7, w: -7}
+  episodeLength: 100
+  stealthLevels: []
+  passiveReward: -0.01
+  goalReachedReward: 50
+  spottedReward: -20
+  assassinateReward: 15
+  imageCamera: {fileID: 123041083}
+  imageWithHeight: 36
+  imageProcessorCs: {fileID: 7200000, guid: 2e6b92d08cd20054fba1b98287d71b63, type: 3}
 --- !u!1 &1758427384
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,0 +1,34 @@
+#define MATRIX_THREAD_COUNT_X 8
+#define MATRIX_THREAD_COUNT_Y 8
+
+#pragma kernel image_to_matrix
+#pragma kernel image_to_matrix_grayscale
+
+unsigned int image_width;
+unsigned int image_height;
+unsigned int image_size; // image_height * image_width
+
+Texture2D input_texture;
+RWStructuredBuffer<float> image_mat;
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void image_to_matrix(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= image_width || id.y >= image_height) return;
+
+    const float4 current_pixel = input_texture[id.xy];
+    const int mat_index = id.y * image_width + id.x;
+
+    image_mat[mat_index] = current_pixel[0];
+    image_mat[mat_index + image_size] = current_pixel[1];
+    image_mat[mat_index + image_size * 2] = current_pixel[2];
+}
+
+[numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
+void image_to_matrix_grayscale(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= image_width || id.y >= image_height) return;
+
+    const float4 current_pixel = input_texture[id.xy];
+    image_mat[id.y * image_width + id.x] = (current_pixel[0] + current_pixel[1] + current_pixel[2]) / 3;
+}

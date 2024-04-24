@@ -1,7 +1,8 @@
+using DL.NN;
 using NN;
 using NN.CPU_Single;
 using UnityEngine;
-using ActivationFunction = NN.ActivationFunction;
+using ActivationFunction = DL.NN.ActivationFunction;
 
 namespace Algorithms.NE
 {
