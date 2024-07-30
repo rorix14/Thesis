@@ -1,4 +1,5 @@
 using Algorithms.RL;
+using DL;
 using DL.NN;
 using UnityEngine;
 
@@ -29,7 +30,7 @@ namespace TestGround
             //     _currentSate[startSateIndex + i] = resetSate[i];
             // }
 
-            var updateLayers = new NetworkLayer[]
+            var updateLayers = new Layer[]
             {
                 new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true,
                     paramsCoefficient: weightsInitStd),
@@ -41,7 +42,7 @@ namespace TestGround
             var updateModel = new NetworkModel(updateLayers, new MeanSquaredError(Instantiate(shader)), learningRate,
                 decayRate);
 
-            var targetLayers = new NetworkLayer[]
+            var targetLayers = new Layer[]
             {
                 new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true,
                     paramsCoefficient: weightsInitStd),

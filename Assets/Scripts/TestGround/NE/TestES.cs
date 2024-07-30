@@ -1,10 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using Algorithms.NE;
-using DL.NN;
+using DL;
 using Graphs;
 using Gym;
-using NN;
 using TestGround.Base;
 using UnityEngine;
 using UnityEngine.UI;
@@ -81,7 +80,7 @@ namespace TestGround.NE
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();
 
-            var network = new NetworkLayer[]
+            var network = new Layer[]
             {
                 new ESNetworkLayer(AlgorithmNE.ES, populationSize, noiseStandardDeviation, _env.GetObservationSize,
                     neuronNumber, activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),
@@ -103,9 +102,9 @@ namespace TestGround.NE
             if (_episodeIndex >= numberOfEpisodes)
             {
                 IsFinished = true;
-                if (!_env) return;
-                _env.Close();
-                PlotTrainingData();
+                // if (!_env) return;
+                // _env.Close();
+                // PlotTrainingData();
                 return;
             }
 

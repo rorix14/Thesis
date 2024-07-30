@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ActivationFunction = DL.NN.ActivationFunction;
+using DL;
 using Random = UnityEngine.Random;
 
 namespace Algorithms.NE.NEAT

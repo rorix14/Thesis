@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using NN.CPU_Single;
 using UnityEngine;
-using ActivationFunction = DL.NN.ActivationFunction;
 using Random = UnityEngine.Random;
+using ActivationFunction = DL.ActivationFunction;
+
 
 namespace Algorithms.NE.NEAT
 {

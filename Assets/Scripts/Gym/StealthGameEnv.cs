@@ -103,7 +103,7 @@ namespace Gym
             ObservationLenght += _enemies[0].ViewPoints.Length * 2 * _enemies.Count;
         }
 
-        public override StepInfo Step(int actionIndex)
+        public override StepInfo Step(int actionIndex, bool skippFrame = false)
         {
             var action = ActionLookup[actionIndex];
             var observation = new float[ObservationLenght];
@@ -188,11 +188,11 @@ namespace Gym
             }
             else
             {
-                base.ResetEnv();
+               BaseResetEnv();
             }
             
             Physics.SyncTransforms();
-            
+
             _resetObservation = new float[ObservationLenght];
 
             var goalPosition = _goalTransform.position;
@@ -235,7 +235,7 @@ namespace Gym
                     obsIndex += 2;
                 }
             }
-            
+
             return _resetObservation;
         }
     }

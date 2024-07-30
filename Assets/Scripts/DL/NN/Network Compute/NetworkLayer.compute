@@ -29,7 +29,8 @@ RWStructuredBuffer<float> output;
 
 //TODO: should see if a MATRIX_THREAD_COUNT_Y of 1 is faster, as inputs and outputs might just have the size of 1
 
-float forward_pass(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,  RWStructuredBuffer<float> biases);
+float forward_pass(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,
+                   RWStructuredBuffer<float> biases);
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
@@ -37,7 +38,7 @@ void forward_pass_ReLU(uint3 id : SV_DispatchThreadID)
     //TODO: checking for x value might not be necessary, out of bounds always returns zero
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
-    
+
     const float result = forward_pass(id, input, weights, biases);
     output[id.x * weights_row_size + id.y] = result < 0.0f ? 0.0f : result;
 }
@@ -68,21 +69,18 @@ void backwards_pass_ReLU_inputs(uint3 id : SV_DispatchThreadID)
 // Adam optimizer variables
 float beta_1;
 float beta_2;
+float negated_beta_1;
+float negated_beta_2;
 float epsilon;
 float current_learning_rate;
-float beta_1_corrected;
-float beta_2_corrected;
+// float beta_1_corrected;
+// float beta_2_corrected;
 
 RWStructuredBuffer<float> weights_momentum;
 RWStructuredBuffer<float> weights_cache;
 
 RWStructuredBuffer<float> biases_momentum;
 RWStructuredBuffer<float> biases_cache;
-
-RWStructuredBuffer<float> weights_test;
-
-void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
-                    RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache, RWStructuredBuffer<float> test);
 
 void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
                     RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache);
@@ -106,7 +104,7 @@ void backwards_pass_ReLU_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
     }
 
     const float weight_index = id.x * weights_row_size + id.y;
-    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache, weights_test);
+    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache);
 
     if (id.x != 0) return;
 
@@ -120,7 +118,7 @@ void forward_pass_Tanh(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
-    
+
     const float result = forward_pass(id, input, weights, biases);
     const float exp_pos = exp(result);
     const float exp_neg = exp(-result);
@@ -168,7 +166,7 @@ void backwards_pass_Tanh_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
     }
 
     const float weight_index = id.x * weights_row_size + id.y;
-    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache, weights_test);
+    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache);
 
     if (id.x != 0) return;
 
@@ -178,7 +176,7 @@ void backwards_pass_Tanh_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
 ////////// Functions used for Softmax layers ///////////////
 
 unsigned int head_number;
-unsigned int distribution_lenght;
+unsigned int distribution_length;
 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,1)]
 void forward_pass_softmax(uint3 id : SV_DispatchThreadID)
@@ -186,24 +184,24 @@ void forward_pass_softmax(uint3 id : SV_DispatchThreadID)
     if (id.x >= input_column_size || id.y >= head_number)
         return;
 
-    const int current_distribution = distribution_lenght * id.y;
+    const int current_distribution = distribution_length * id.y;
     const int start_index = id.x * weights_row_size + current_distribution;
 
     float sum = 0.0f;
     float max_value = -3.402823466e+38f;
-    for (unsigned int i = 0; i < distribution_lenght; ++i)
+    for (unsigned int i = 0; i < distribution_length; ++i)
     {
         max_value = max(max_value, output[start_index + i]);
     }
 
-    for (unsigned int j = 0; j < distribution_lenght; ++j)
+    for (unsigned int j = 0; j < distribution_length; ++j)
     {
         const int index = start_index + j;
         const float result = exp(output[index] - max_value);
         output[index] = result;
         sum += result;
     }
-    for (unsigned int m = 0; m < distribution_lenght; ++m)
+    for (unsigned int m = 0; m < distribution_length; ++m)
     {
         output[start_index + m] /= sum;
     }
@@ -245,7 +243,7 @@ void backwards_pass_softmax_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
     }
 
     const float weight_index = id.x * weights_row_size + id.y;
-    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache, weights_test);
+    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache);
 
     if (id.x != 0) return;
 
@@ -259,7 +257,7 @@ void forward_pass_linear(uint3 id : SV_DispatchThreadID)
 {
     if (id.x >= input_column_size || id.y >= weights_row_size)
         return;
-    
+
     output[id.x * weights_row_size + id.y] = forward_pass(id, input, weights, biases);
 }
 
@@ -296,14 +294,15 @@ void backwards_pass_linear_weights_biases_Adam(uint3 id : SV_DispatchThreadID)
     }
 
     const float weight_index = id.x * weights_row_size + id.y;
-    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache, weights_test);
+    Adam_optimizer(weight_index, d_weight, weights, weights_momentum, weights_cache);
 
     if (id.x != 0) return;
 
     Adam_optimizer(id.y, d_bias, biases, biases_momentum, biases_cache);
 }
 
-inline float forward_pass(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,  RWStructuredBuffer<float> biases)
+inline float forward_pass(uint3 id, StructuredBuffer<float> input, RWStructuredBuffer<float> weights,
+                          RWStructuredBuffer<float> biases)
 {
     const int input_column_index = id.x * input_row_size;
     float result = 0;
@@ -315,29 +314,28 @@ inline float forward_pass(uint3 id, StructuredBuffer<float> input, RWStructuredB
 }
 
 inline void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
-                           RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache, RWStructuredBuffer<float> test)
-{
-    momentum[index] = beta_1 * momentum[index] + (1 - beta_1) * d_value;
-    const float momentum_corrected = momentum[index] / (1 - beta_1_corrected);
-
-    cache[index] = beta_2 * cache[index] + (1 - beta_2) * (d_value * d_value);
-    const float cash_corrected = cache[index] / (1 - beta_2_corrected);
-
-    buffer_to_update[index] += -current_learning_rate * momentum_corrected / (sqrt(cash_corrected) + epsilon);
-    test[index] += momentum_corrected / (sqrt(cash_corrected) + epsilon);
-}
-inline void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
                            RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache)
 {
-    momentum[index] = beta_1 * momentum[index] + (1 - beta_1) * d_value;
-    const float momentum_corrected = momentum[index] / (1 - beta_1_corrected);
+    const float new_momentum = beta_1 * momentum[index] + negated_beta_1 * d_value;
+    const float new_cache = beta_2 * cache[index] + negated_beta_2 * (d_value * d_value);
+    momentum[index] = new_momentum;
+    cache[index] = new_cache;
 
-    cache[index] = beta_2 * cache[index] + (1 - beta_2) * (d_value * d_value);
-    const float cash_corrected = cache[index] / (1 - beta_2_corrected);
-
-    buffer_to_update[index] += -current_learning_rate * momentum_corrected / (sqrt(cash_corrected) + epsilon);
+    buffer_to_update[index] += -current_learning_rate * new_momentum / (sqrt(new_cache) + epsilon);
 }
 
+// Normal version, according to the original ADAM paper the version above is an optimized version of the same function 
+// inline void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
+//                            RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache)
+// {
+//     momentum[index] = beta_1 * momentum[index] + (1 - beta_1) * d_value;
+//     const float momentum_corrected = momentum[index] / (1 - beta_1_corrected);
+//
+//     cache[index] = beta_2 * cache[index] + (1 - beta_2) * (d_value * d_value);
+//     const float cash_corrected = cache[index] / (1 - beta_2_corrected);
+//
+//     buffer_to_update[index] += -current_learning_rate * momentum_corrected / (sqrt(cash_corrected) + epsilon);
+// }
 
 
 ////////// Loss Functions, currently they are not being used, might also be outdated and incomplete
@@ -409,7 +407,6 @@ inline void Adam_optimizer(const int index, const float d_value, RWStructuredBuf
 //     d_inputs_loss[index] = -2.0f * (y_true[index] - output[index]) * sample_weights[id.x] / weights_row_size /
 //         input_column_size;
 // }
-
 
 
 /*

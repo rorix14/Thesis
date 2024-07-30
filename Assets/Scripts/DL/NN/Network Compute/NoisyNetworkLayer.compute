@@ -81,10 +81,10 @@ void backwards_pass_ReLU_inputs(uint3 id : SV_DispatchThreadID)
 // Adam optimizer variables
 float beta_1;
 float beta_2;
+float negated_beta_1;
+float negated_beta_2;
 float epsilon;
 float current_learning_rate;
-float beta_1_corrected;
-float beta_2_corrected;
 
 RWStructuredBuffer<float> weights_momentum;
 RWStructuredBuffer<float> weights_cache;
@@ -333,11 +333,10 @@ void backwards_pass_linear_biases_Adam(uint3 id : SV_DispatchThreadID)
 inline void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
                            RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache)
 {
-    momentum[index] = beta_1 * momentum[index] + (1 - beta_1) * d_value;
-    const float momentum_corrected = momentum[index] / (1 - beta_1_corrected);
+    const float new_momentum = beta_1 * momentum[index] + negated_beta_1 * d_value;
+    const float new_cache = beta_2 * cache[index] + negated_beta_2 * (d_value * d_value);
+    momentum[index] = new_momentum;
+    cache[index] = new_cache;
 
-    cache[index] = beta_2 * cache[index] + (1 - beta_2) * (d_value * d_value);
-    const float cash_corrected = cache[index] / (1 - beta_2_corrected);
-
-    buffer_to_update[index] += -current_learning_rate * momentum_corrected / (sqrt(cash_corrected) + epsilon);
+    buffer_to_update[index] += -current_learning_rate * new_momentum / (sqrt(new_cache) + epsilon);
 }

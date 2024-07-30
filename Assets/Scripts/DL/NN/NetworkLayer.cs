@@ -1,103 +1,69 @@
 // TODO: see if the math NN library needs to be in this name space
-
+using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace DL.NN
 {
-    public enum ActivationFunction
+    public class NetworkLayer : Layer
     {
-        ReLu,
-        Tanh,
-        Softmax,
-        Linear
-    }
-
-    public class NetworkLayer
-    {
-        // Neural network variables
-        public float[,] Output;
-        public float[,] DInputs;
-        public readonly float[,] _weights;
-        public readonly float[,] _biases;
-
         protected readonly ActivationFunction _activationFunction;
 
-        private readonly bool _isFirstLayer;
-        private bool _forwardInitialized;
-        private bool _backwardInitialized;
         private readonly int _headNumber;
 
-        // Compute buffer variables
-        protected readonly ComputeShader _shader;
-
-        private ComputeBuffer _inputBuffer;
-        protected ComputeBuffer _outputBuffer;
-        protected readonly ComputeBuffer _weightsBuffer;
-        protected readonly ComputeBuffer _biasesBuffer;
-
         // forward only variables
-        protected readonly int _kernelHandleForward;
         private int _threadGroupXOutputForward;
         private int _threadGroupYOutputForward;
+
         private readonly int _kernelHandleForward2;
         private int _threadGroupYOutputForward2;
 
         //backwards variables
-        protected ComputeBuffer _dValuesBuffer;
-        private ComputeBuffer _dInputsBuffer;
-
-        protected int _kernelHandleInputsBackward;
-        protected int _kernelHandleWeightsBiasesBackward;
-
         protected int _threadGroupXInputsBackward;
         protected int _threadGroupYInputsBackward;
         protected int _threadGroupXWeightsBackward;
         protected int _threadGroupYWeightsBackward;
 
-        // Adam optimizer
-        private ComputeBuffer _weightsMomentumBuffer;
-        private ComputeBuffer _weightsCacheBuffer;
-        protected ComputeBuffer _biasesMomentumBuffer;
-        protected ComputeBuffer _biasesCacheBuffer;
-        // cashed variables
-        private readonly int _currentLearningRateID;
-        private readonly int _beta1CorrectedID;
-        private readonly int _beta2CorrectedID;
-        
+
         //TODO: erase, oly uses for testing peruses
-        public ComputeBuffer weightsTestBuffer;
+        // public ComputeBuffer weightsTestBuffer;
 
         public NetworkLayer(int nInputs, int nNeurons, ActivationFunction activationFunction, ComputeShader shader,
-            bool isFirstLayer = false, float paramsRange = 4.0f, float paramsCoefficient = 0.005f, int headNumber = 1)
+            bool isFirstLayer = false, float paramsRange = 4.0f, float paramsCoefficient = 0.005f,
+            int headNumber = 1) : base(shader, isFirstLayer)
         {
             // Seed used to better reproduce results, usual seeds are 42, 50, 34
             //Random.InitState(42);
             // neural networks standard init
-            _weights = new float[nInputs, nNeurons];
-            _biases = new float[1, nNeurons];
-            _isFirstLayer = isFirstLayer;
+            var weightsTemp = new float[nInputs, nNeurons];
+            var biasesTemp = new float[1, nNeurons];
 
             //paramsRange = 1f / Mathf.Sqrt(nInputs);
             //paramsRange = Mathf.Sqrt(6) / Mathf.Sqrt(nInputs + nNeurons);
             //paramsCoefficient = Mathf.Sqrt(2f / nInputs);
 
-            for (int i = 0; i < _weights.GetLength(1); i++)
+            for (int i = 0; i < weightsTemp.GetLength(1); i++)
             {
                 // _biases[0, i] = 0.1f;
                 //_biases[0, i] = Random.Range(-paramsRange, paramsRange);
-                _biases[0, i] = paramsCoefficient * Random.Range(-paramsRange, paramsRange) /*NnMath.RandomGaussian(-paramsRange, paramsRange)*/;
-                for (int j = 0; j < _weights.GetLength(0); j++)
+                biasesTemp[0, i] =
+                    paramsCoefficient *
+                    Random.Range(-paramsRange, paramsRange) /*NnMath.RandomGaussian(-paramsRange, paramsRange)*/;
+                for (int j = 0; j < weightsTemp.GetLength(0); j++)
                 {
                     // _weights[j, i] = 0.01f;
                     //_weights[j, i] = Random.Range(-paramsRange, paramsRange);
-                    _weights[j, i] = paramsCoefficient * Random.Range(-paramsRange, paramsRange) /*NnMath.RandomGaussian(-paramsRange, paramsRange)*/;
+                    weightsTemp[j, i] =
+                        paramsCoefficient *
+                        Random.Range(-paramsRange, paramsRange) /*NnMath.RandomGaussian(-paramsRange, paramsRange)*/;
                 }
             }
+            _weights = weightsTemp;
+            _biases = biasesTemp;
 
             // compute shader variables
-            _shader = shader;
-            _activationFunction = activationFunction;
             _headNumber = headNumber;
+            _activationFunction = activationFunction;
             switch (activationFunction)
             {
                 case ActivationFunction.ReLu:
@@ -132,24 +98,20 @@ namespace DL.NN
             _biasesBuffer = new ComputeBuffer(_biases.Length, sizeof(float));
             _weightsBuffer.SetData(_weights);
             _biasesBuffer.SetData(_biases);
-            
-            _currentLearningRateID = Shader.PropertyToID("current_learning_rate");
-            _beta1CorrectedID = Shader.PropertyToID("beta_1_corrected");
-            _beta2CorrectedID = Shader.PropertyToID("beta_2_corrected");
-            
-            weightsTestBuffer = new ComputeBuffer(_weights.Length, sizeof(float));
-            weightsTestBuffer.SetData(new float[_weights.Length]);
-            _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "weights_test", weightsTestBuffer);
+
+            // weightsTestBuffer = new ComputeBuffer(_weights.Length, sizeof(float));
+            // weightsTestBuffer.SetData(new float[_weights.Length]);
+            // _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "weights_test", weightsTestBuffer);
         }
 
-        public virtual void Forward(float[,] inputs)
+        public override void Forward(Array input)
         {
             if (!_forwardInitialized)
             {
-                InitializeForwardBuffers(inputs);
+                InitializeForwardBuffers(input);
             }
 
-            _inputBuffer.SetData(inputs);
+            _inputBuffer.SetData(input);
             _shader.Dispatch(_kernelHandleForward, _threadGroupXOutputForward, _threadGroupYOutputForward, 1);
 
             if (_activationFunction == ActivationFunction.Softmax)
@@ -160,17 +122,14 @@ namespace DL.NN
             _outputBuffer.GetData(Output);
         }
 
-        public virtual void Backward(float[,] dValues, float currentLearningRate, float beta1Corrected,
-            float beta2Corrected)
+        public override void Backward(Array dValue, float currentLearningRate)
         {
             if (!_backwardInitialized)
             {
-                InitializeBackwardsBuffers(dValues);
+                InitializeBackwardsBuffers(dValue);
             }
 
             _shader.SetFloat(_currentLearningRateID, currentLearningRate);
-            _shader.SetFloat(_beta1CorrectedID, beta1Corrected);
-            _shader.SetFloat(_beta2CorrectedID, beta2Corrected);
 
             // for (int i = 0; i < dValues.GetLength(0); i++)
             // {
@@ -179,19 +138,19 @@ namespace DL.NN
             //         dValues[i, j] = Random.Range(5, 1000);
             //     }
             // }
-            _dValuesBuffer.SetData(dValues);
+            _dValuesBuffer.SetData(dValue);
 
             if (!_isFirstLayer)
             {
                 _shader.Dispatch(_kernelHandleInputsBackward, _threadGroupXInputsBackward,
                     _threadGroupYInputsBackward, 1);
-                _dInputsBuffer.GetData(DInputs);
+                _dInputsBuffer.GetData(DInput);
             }
 
             _shader.Dispatch(_kernelHandleWeightsBiasesBackward, _threadGroupXWeightsBackward,
                 _threadGroupYWeightsBackward, 1);
             //_shader.Dispatch(_kernelHandleBiasesBackward, _threadGroupXBiasesBackward, 1, 1);
-            
+
             // _weightsBuffer.GetData(_weights);
             // _biasesBuffer.GetData(_biases);
             // var weightMomentum = new float[_weights.GetLength(0), _weights.GetLength(1)];
@@ -205,48 +164,10 @@ namespace DL.NN
             // _biasesCacheBuffer.GetData(biasCache);
         }
 
-        public void SetOptimizerVariables(float beta1, float beta2, float epsilon)
-        {
-            //TODO: can set set different optimizers based on a condition
-            _shader.SetFloat("beta_1", beta1);
-            _shader.SetFloat("beta_2", beta2);
-            _shader.SetFloat("epsilon", epsilon);
-        }
-
-        public virtual void CopyLayer(NetworkLayer otherLayer)
-        {
-            _weightsBuffer.GetData(otherLayer._weights);
-            otherLayer._weightsBuffer.SetData(otherLayer._weights);
-
-            _biasesBuffer.GetData(otherLayer._biases);
-            otherLayer._biasesBuffer.SetData(otherLayer._biases);
-
-            // _weightsBuffer.GetData(_weights);
-            // _biasesBuffer.GetData(_biases);
-        }
-
-        public virtual void Dispose()
-        {
-            _weightsMomentumBuffer?.Dispose();
-            _weightsCacheBuffer?.Dispose();
-            _biasesMomentumBuffer?.Dispose();
-            _biasesCacheBuffer?.Dispose();
-
-            _inputBuffer?.Dispose();
-            _outputBuffer?.Dispose();
-            _weightsBuffer?.Dispose();
-            _biasesBuffer?.Dispose();
-
-            _dValuesBuffer?.Dispose();
-            _dInputsBuffer?.Dispose();
-            
-            weightsTestBuffer?.Dispose();
-        }
-
-        protected virtual void InitializeForwardBuffers(float[,] inputs)
+        protected override void InitializeForwardBuffers(Array inputs)
         {
             Output ??= new float[inputs.GetLength(0), _weights.GetLength(1)];
-            
+
             _shader.SetInt("input_column_size", inputs.GetLength(0));
 
             _shader.GetKernelThreadGroupSizes(_kernelHandleForward, out var threadSizeX, out var threadSizeY, out _);
@@ -265,20 +186,20 @@ namespace DL.NN
             {
                 _threadGroupYOutputForward2 = Mathf.CeilToInt(_headNumber / (float)threadSizeY);
                 _shader.SetInt("head_number", _headNumber);
-                _shader.SetInt("distribution_lenght", _weights.GetLength(1) / _headNumber);
+                _shader.SetInt("distribution_length", _weights.GetLength(1) / _headNumber);
                 _shader.SetBuffer(_kernelHandleForward2, "output", _outputBuffer);
             }
 
             _forwardInitialized = true;
         }
 
-        protected virtual void InitializeBackwardsBuffers(float[,] dValues)
+        protected override void InitializeBackwardsBuffers(Array dValue)
         {
-            DInputs = new float[dValues.GetLength(0), _weights.GetLength(0)];
+            DInput = new float[dValue.GetLength(0), _weights.GetLength(0)];
 
             _shader.GetKernelThreadGroupSizes(_kernelHandleInputsBackward, out var x, out var y, out _);
-            _threadGroupXInputsBackward = Mathf.CeilToInt(DInputs.GetLength(0) / (float)x);
-            _threadGroupYInputsBackward = Mathf.CeilToInt(DInputs.GetLength(1) / (float)y);
+            _threadGroupXInputsBackward = Mathf.CeilToInt(DInput.GetLength(0) / (float)x);
+            _threadGroupYInputsBackward = Mathf.CeilToInt(DInput.GetLength(1) / (float)y);
 
             _shader.GetKernelThreadGroupSizes(_kernelHandleWeightsBiasesBackward, out var threadSizeX,
                 out var threadSizeY, out _);
@@ -294,8 +215,8 @@ namespace DL.NN
                 _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "output", _outputBuffer);
             }
 
-            _dValuesBuffer = new ComputeBuffer(dValues.Length, sizeof(float));
-            _dInputsBuffer = new ComputeBuffer(DInputs.Length, sizeof(float));
+            _dValuesBuffer = new ComputeBuffer(dValue.Length, sizeof(float));
+            _dInputsBuffer = new ComputeBuffer(DInput.Length, sizeof(float));
 
             _shader.SetBuffer(_kernelHandleInputsBackward, "d_values", _dValuesBuffer);
             _shader.SetBuffer(_kernelHandleInputsBackward, "d_inputs", _dInputsBuffer);

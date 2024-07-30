@@ -172,7 +172,7 @@ namespace Gym
             }
             else
             {
-                base.DistributedResetEnv();
+                BaseResetEnv();
             }
 
             //TODO: Should just return a normal array

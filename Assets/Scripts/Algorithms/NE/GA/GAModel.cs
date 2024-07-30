@@ -1,5 +1,5 @@
-﻿using DL.NN;
-using NN;
+﻿using DL;
+using DL.NN;
 
 namespace Algorithms.NE
 {
@@ -7,7 +7,7 @@ namespace Algorithms.NE
     {
         private readonly GANetworkLayer[] _gaNetworkLayers;
 
-        public GAModel(NetworkLayer[] layers) : base(layers,
+        public GAModel(Layer[] layers) : base(layers,
             new NoLoss(null))
         {
             _gaNetworkLayers = new GANetworkLayer[layers.Length];
@@ -19,7 +19,7 @@ namespace Algorithms.NE
 
         public void Update(CrossoverInfo[] crossoverInfos, float[] mutationsVolume)
         {
-            for (int i = 0; i < _gaNetworkLayers.Length; i++)
+            for (int i = 0; i < _layersCount; i++)
             {
                 _gaNetworkLayers[i].UpdateLayer(crossoverInfos, mutationsVolume);
             }

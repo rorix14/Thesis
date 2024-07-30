@@ -644,7 +644,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 343454277}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03fa7607dc859024392bfcfbd8dd5007, type: 3}
   m_Name: 
@@ -727,8 +727,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 7.2
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -752,7 +752,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 372802505}
   m_LocalRotation: {x: 0.7071068, y: 0.000000029802322, z: 0.000000044703484, w: 0.7071068}
-  m_LocalPosition: {x: 0.79202116, y: 15.040878, z: -0.25570256}
+  m_LocalPosition: {x: 0, y: 15, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -815,10 +815,6 @@ MonoBehaviour:
   decayRate: 0.0000001
   neuronNumber: 256
   weightsInitStd: 0.005
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
 --- !u!114 &400505065
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -877,10 +873,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
 --- !u!114 &400505068
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -909,10 +901,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
   stepNumber: 3
 --- !u!114 &400505069
 MonoBehaviour:
@@ -942,10 +930,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
   beta: 0
   alpha: 0
 --- !u!114 &400505070
@@ -976,10 +960,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
   sigma: 0
 --- !u!114 &400505071
@@ -1010,10 +990,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
 --- !u!114 &400505072
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1042,10 +1018,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
   supportSize: 51
   supportMinValue: -7
   supportMaxValue: 50
@@ -1077,10 +1049,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
   stepNumber: 3
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
   supportSize: 51
@@ -1111,6 +1079,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 17
   numberOfEpisodes: 300
+  skippedFrames: 0
   noveltyRelevance: 0
   activationFunction: 0
   learningRate: 0
@@ -1139,6 +1108,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 5
   numberOfEpisodes: 300
+  skippedFrames: 0
   noveltyRelevance: 0
   activationFunction: 0
   learningRate: 0
@@ -1167,6 +1137,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 19
   numberOfEpisodes: 300
+  skippedFrames: 0
   noveltyRelevance: 0
   activationFunction: 0
   learningRate: 0
@@ -1197,6 +1168,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
+  skippedFrames: 0
   noveltyRelevance: 0
   activationFunction: 1
   learningRate: 0

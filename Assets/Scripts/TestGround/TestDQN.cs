@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Algorithms.RL;
+using DL;
 using DL.NN;
 using Graphs;
 using Gym;
@@ -31,7 +32,7 @@ namespace TestGround
         private int _action;
         private float _reward;
         protected int _envStateSize;
-        
+
         // DQN specific variables
         protected ModelDQN _DQN;
         protected float _epsilon;
@@ -45,17 +46,17 @@ namespace TestGround
         [SerializeField] protected int batchSize;
         [SerializeField] protected float gamma;
 
-        //Only were for testing
+        //Only here for testing
         [SerializeField] protected ActivationFunction activationFunction;
         [SerializeField] protected float learningRate;
         [SerializeField] protected float decayRate;
         [SerializeField] protected int neuronNumber;
         [SerializeField] protected float weightsInitStd;
 
-        public List<int> actions;
-        public int[] episodesLength;
-        public List<int> actionsPrev;
-        public int[] episodesLengthPrev;
+        // public List<int> actions;
+        // public int[] episodesLength;
+        // public List<int> actionsPrev;
+        // public int[] episodesLengthPrev;
 
         public override string GetDescription()
         {
@@ -67,15 +68,15 @@ namespace TestGround
 
         private void Awake()
         {
-            foreach (var env in FindObjectsOfType<StealthGameEnv>())
-            {
-                if (env.GetType() != typeof(StealthGameEnv)) continue;
-                
-                _env = env;
-                break;
-            }
-            
-            // _env = FindObjectOfType<ImageStealthGameEnv>();
+            // foreach (var env in FindObjectsOfType<StealthGameEnv>())
+            // {
+            //     if (env.GetType() != typeof(StealthGameEnv)) continue;
+            //
+            //     _env = env;
+            //     break;
+            // }
+
+            _env = FindObjectOfType<ImageStealthGameEnv>();
             Rewards = new List<float>(numberOfEpisodes);
             Loss = new List<float>(numberOfEpisodes);
             for (int i = 0; i < Rewards.Capacity; i++)
@@ -90,7 +91,7 @@ namespace TestGround
             // _times = new List<long>(1000000);
             // actions = new List<int>();
             // episodesLength = new int[numberOfEpisodes];
-            Random.InitState(42);
+            // Random.InitState(42);
         }
 
         protected virtual void Start()
@@ -106,7 +107,7 @@ namespace TestGround
             //     _currentSate[startSateIndex + i] = resetSate[i];
             // }
 
-            var updateLayers = new NetworkLayer[]
+            var updateLayers = new Layer[]
             {
                 new NetworkLayer(_env.GetObservationSize * skippedFrames, neuronNumber, activationFunction,
                     Instantiate(shader), true, paramsCoefficient: weightsInitStd),
@@ -118,7 +119,7 @@ namespace TestGround
             var updateModel = new NetworkModel(updateLayers, new MeanSquaredError(Instantiate(shader)), learningRate,
                 decayRate);
 
-            var targetLayers = new NetworkLayer[]
+            var targetLayers = new Layer[]
             {
                 new NetworkLayer(_env.GetObservationSize * skippedFrames, neuronNumber, activationFunction,
                     Instantiate(shader), true, paramsCoefficient: weightsInitStd),
@@ -144,18 +145,21 @@ namespace TestGround
             if (_episodeIndex >= numberOfEpisodes)
             {
                 IsFinished = true;
-                
-                if (!_env) return;
-                _env.Close();
-                PlotTrainingData();
+
+                // if (!_env) return;
+                // _env.Close();
+                // PlotTrainingData();
                 return;
             }
 
             //_stopwatch.Restart();
 
             _action = _currentSkippedFrame == 0 ? _DQN.EpsilonGreedySample(_currentSate, _epsilon) : _action;
-            var stepInfo = _env.Step(_action);
-            
+            ++_currentSkippedFrame;
+
+            var skippFrame = _currentSkippedFrame < skippedFrames;
+            var stepInfo = _env.Step(_action, skippFrame);
+
             _reward += stepInfo.Reward;
 
             _nextSate = stepInfo.Observation;
@@ -164,10 +168,9 @@ namespace TestGround
             // {
             //     _nextSate[nextStateStartIndex + i] = stepInfo.Observation[i];
             // }
-            
+
             // _currentSkippedFrame = (_currentSkippedFrame + 1) % skippedFrames;
-            ++_currentSkippedFrame;
-            if (!stepInfo.Done && _currentSkippedFrame < skippedFrames) return;
+            if (!stepInfo.Done && skippFrame) return;
 
             _DQN.AddExperience(_currentSate, _action, _reward, stepInfo.Done, _nextSate);
 

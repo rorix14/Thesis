@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using Stealth_Game;
-using UnityEditor;
 using UnityEngine;
 
 namespace Gym
 {
+    //TODO: should think about refactoring this class, in particular the StepInfo struct, Step function, and ResetEnv function,
+    //should be more generic, and allow for different return types as to not have to have different versions of them
     public abstract class Environment<T> : MonoBehaviour
     {
         public struct StepInfo
@@ -58,7 +59,7 @@ namespace Gym
             _levelSizeRange = new Vector2(levelSizeMaxMin.x - levelSizeMaxMin.y, levelSizeMaxMin.z - levelSizeMaxMin.w);
             _levelMaxDistance =
                 Mathf.Sqrt(_levelSizeRange.x * _levelSizeRange.x + _levelSizeRange.y * _levelSizeRange.y);
-            
+
             // float[] myArray = { 2, 3, 4, 5, 6, 7, 8, 9, 10 };
             // for (int i = 0; i < myArray.Length; i++)
             // {
@@ -67,33 +68,33 @@ namespace Gym
         }
 
         //TODO: Test with returning a tuple, allocating in the heap, might be faster then copying structs 
-        public abstract StepInfo Step(int action);
+        public abstract StepInfo Step(int action, bool skippFrame = false);
 
         public virtual DistributedStepInfo DistributedStep(int[] actions)
         {
             return new DistributedStepInfo();
         }
-
+        
+        protected void BaseResetEnv()
+        {
+            EpisodeLengthIndex = 0;
+            foreach (var resettable in _resettables)
+            {
+                resettable.ResetAgent();
+            }
+        }
 
         public virtual float[] ResetEnv()
         {
-            EpisodeLengthIndex = 0;
-            foreach (var resettable in _resettables)
-            {
-                resettable.ResetAgent();
-            }
+            BaseResetEnv();
 
             return null;
         }
-
+        
         public virtual float[,] DistributedResetEnv()
         {
-            EpisodeLengthIndex = 0;
-            foreach (var resettable in _resettables)
-            {
-                resettable.ResetAgent();
-            }
-
+            BaseResetEnv();
+        
             return null;
         }
 
@@ -121,7 +122,7 @@ namespace Gym
                 range = _levelSizeRange.x;
                 min = levelSizeMaxMin.y;
             }
-            
+
             return 2.0f * (value - min) / range - 1.0f;
         }
 

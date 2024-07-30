@@ -1,8 +1,9 @@
+using System;
 using DL.NN;
-using NN;
 using NN.CPU_Single;
 using UnityEngine;
-using ActivationFunction = DL.NN.ActivationFunction;
+using ActivationFunction = DL.ActivationFunction;
+using Random = UnityEngine.Random;
 
 namespace Algorithms.NE
 {
@@ -86,10 +87,9 @@ namespace Algorithms.NE
             _shader.SetFloat(_rewardStdID, rewardStd);
         }
 
-        public override void Backward(float[,] dValues, float currentLearningRate, float beta1Corrected,
-            float beta2Corrected)
+        public override void Backward(Array dValue, float currentLearningRate)
         {
-            base.Backward(dValues, currentLearningRate, beta1Corrected, beta2Corrected);
+            base.Backward(dValue, currentLearningRate);
 
             SetNoise();
         }
@@ -104,16 +104,16 @@ namespace Algorithms.NE
             _noiseInputOutputBuffer.SetData(_noiseInputOutput);
         }
 
-        protected override void InitializeForwardBuffers(float[,] inputs)
+        protected override void InitializeForwardBuffers(Array input)
         {
-            base.InitializeForwardBuffers(inputs);
+            base.InitializeForwardBuffers(input);
 
             _shader.SetBuffer(_kernelHandleForward, "noise_input_output_buffer", _noiseInputOutputBuffer);
         }
 
-        protected override void InitializeBackwardsBuffers(float[,] dValues)
+        protected override void InitializeBackwardsBuffers(Array dValue)
         {
-            base.InitializeBackwardsBuffers(dValues);
+            base.InitializeBackwardsBuffers(dValue);
 
             _shader.SetBuffer(_kernelHandleWeightsBiasesBackward, "noise_input_output_buffer", _noiseInputOutputBuffer);
         }

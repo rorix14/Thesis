@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Algorithms;
+using DL;
 using DL.NN;
 using Unity.Burst;
 using Unity.Collections;

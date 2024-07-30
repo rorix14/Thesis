@@ -277,7 +277,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &82632403
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -336,10 +336,6 @@ MonoBehaviour:
   decayRate: 0.0000001
   neuronNumber: 128
   weightsInitStd: 0.005
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
 --- !u!114 &82632406
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -368,10 +364,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
 --- !u!114 &82632407
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -379,7 +371,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 82632402}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b395153931b86c8438218e8c887a3318, type: 3}
   m_Name: 
@@ -400,10 +392,6 @@ MonoBehaviour:
   decayRate: 0.00001
   neuronNumber: 128
   weightsInitStd: 0.005
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
   stepNumber: 3
 --- !u!114 &82632408
 MonoBehaviour:
@@ -433,10 +421,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
   beta: 0
   alpha: 0
 --- !u!114 &82632409
@@ -458,21 +442,17 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
-  skippedFrames: 0
+  skippedFrames: 1
   targetNetworkCopyPeriod: 50
-  batchSize: 0
-  gamma: 0
+  batchSize: 32
+  gamma: 0.99
   activationFunction: 0
-  learningRate: 0
-  decayRate: 0
-  neuronNumber: 0
-  weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
+  learningRate: 0.0001
+  decayRate: 0.0000001
+  neuronNumber: 128
+  weightsInitStd: 0.005
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
-  sigma: 0
+  sigma: 0.05
 --- !u!114 &82632410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -501,10 +481,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
 --- !u!114 &82632411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -524,19 +500,15 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 16
   numberOfEpisodes: 300
-  skippedFrames: 0
+  skippedFrames: 1
   targetNetworkCopyPeriod: 50
-  batchSize: 0
-  gamma: 0
-  activationFunction: 0
-  learningRate: 0
-  decayRate: 0
-  neuronNumber: 0
-  weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
+  batchSize: 32
+  gamma: 0.99
+  activationFunction: 1
+  learningRate: 0.0005
+  decayRate: 0.00001
+  neuronNumber: 128
+  weightsInitStd: 0.005
   supportSize: 51
   supportMinValue: -25
   supportMaxValue: 63
@@ -568,10 +540,6 @@ MonoBehaviour:
   decayRate: 0
   neuronNumber: 0
   weightsInitStd: 0
-  actions: 
-  episodesLength: 
-  actionsPrev: 
-  episodesLengthPrev: 
   stepNumber: 3
   noisyShader: {fileID: 7200000, guid: 3f9065ee7e7528341869d113d8d4c46b, type: 3}
   supportSize: 51
@@ -602,7 +570,7 @@ MonoBehaviour:
   windowGraphPrefab: {fileID: 2785640712507469928, guid: b72fc5485f9a1724c9fa9a8e8d79eb32, type: 3}
   simulationSpeed: 18
   numberOfEpisodes: 300
-  skippedFrames: 4
+  skippedFrames: 1
   noveltyRelevance: 0
   activationFunction: 0
   learningRate: 0.01
@@ -1539,7 +1507,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 886758024}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03fa7607dc859024392bfcfbd8dd5007, type: 3}
   m_Name: 
@@ -1590,7 +1558,8 @@ MonoBehaviour:
   spottedReward: -20
   assassinateReward: 15
   captureCamera: {fileID: 1134439936}
-  imageWithHeight: 56
+  isGrayscale: 1
+  imageWithHeight: 28
   imageProcessorCs: {fileID: 7200000, guid: 2e6b92d08cd20054fba1b98287d71b63, type: 3}
 --- !u!1 &965094408
 GameObject:
@@ -2381,7 +2350,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1489071770
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2394,7 +2363,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f35cae125de164c4f9223ab9b6c7e196, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  algorithmsPrefabs: []
+  algorithmsPrefabs:
+  - {fileID: 8019296417850588349, guid: 2a976e26854ba67449e375d4f940e0b1, type: 3}
+  - {fileID: 670264597442123898, guid: adfc1ef0d7462694e98adcdc3998bdf5, type: 3}
+  - {fileID: 8019296417850588349, guid: f0ebde8eaf408374c9d001a52fb2e9aa, type: 3}
+  - {fileID: 670264597442123898, guid: a0a16d54f76f7054c9e7c6fdeb440f55, type: 3}
+  - {fileID: 8019296417850588349, guid: a89db128a8ede7d44ae601ceb4d8be12, type: 3}
+  - {fileID: 670264597442123898, guid: a1f3a3fb035436f43a9785e847fe9c68, type: 3}
+  - {fileID: 8019296417850588349, guid: 780d26b700864f74fad8fa10efa3615e, type: 3}
+  - {fileID: 670264597442123898, guid: 64469f42786af9745a02ad6c2c24c311, type: 3}
   testNumber: 10
   generatorSeed: 42
   saveInfo: 0

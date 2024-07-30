@@ -1,6 +1,6 @@
 using Algorithms.RL;
+using DL;
 using DL.NN;
-using NN;
 using UnityEngine;
 
 namespace TestGround
@@ -19,20 +19,20 @@ namespace TestGround
         {
             _currentSate = _env.ResetEnv();
 
-            var inputLayers = new NetworkLayer[]
+            var inputLayers = new Layer[]
             {
                 new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true),
             };
             var inputModel = new NetworkModel(inputLayers, new NoLoss(Instantiate(shader)), learningRate, decayRate);
 
-            var valueLayers = new NetworkLayer[]
+            var valueLayers = new Layer[]
             {
                 new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
                 new NetworkLayer(neuronNumber, 1, ActivationFunction.Linear, Instantiate(shader)),
             };
             var valueModel = new NetworkModel(valueLayers, new NoLoss(Instantiate(shader)), learningRate, decayRate);
 
-            var advantageLayers = new NetworkLayer[]
+            var advantageLayers = new Layer[]
             {
                 new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
                 new NetworkLayer(neuronNumber, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))
@@ -43,21 +43,21 @@ namespace TestGround
             var updateModel = new DuellingNetwork(inputModel, valueModel, advantageModel);
 
             // target creation
-            var inputTargetLayers = new NetworkLayer[]
+            var inputTargetLayers = new Layer[]
             {
                 new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true),
             };
             var inputTargetModel = new NetworkModel(inputTargetLayers, new NoLoss(Instantiate(shader)), learningRate,
                 decayRate);
 
-            var valueTargetLayers = new NetworkLayer[]
+            var valueTargetLayers = new Layer[]
             {
                 new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
                 new NetworkLayer(neuronNumber, 1, ActivationFunction.Linear, Instantiate(shader)),
             };
             var valueTargetModel = new NetworkModel(valueTargetLayers, new NoLoss(Instantiate(shader)));
 
-            var advantageTargetLayers = new NetworkLayer[]
+            var advantageTargetLayers = new Layer[]
             {
                 new NetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(shader)),
                 new NetworkLayer(neuronNumber, _env.GetNumberOfActions, ActivationFunction.Linear, Instantiate(shader))

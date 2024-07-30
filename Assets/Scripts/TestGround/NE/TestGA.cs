@@ -1,6 +1,5 @@
 using Algorithms.NE;
-using DL.NN;
-using NN;
+using DL;
 using UnityEngine;
 
 namespace TestGround.NE
@@ -26,7 +25,7 @@ namespace TestGround.NE
             _env.CreatePopulation(populationSize);
             _currentSates = _env.DistributedResetEnv();
 
-            var network = new NetworkLayer[]
+            var network = new Layer[]
             {
                 new GANetworkLayer(populationSize, noiseStandardDeviation, _env.GetObservationSize, neuronNumber,
                     activationFunction, Instantiate(shader), paramsCoefficient: weightsInitStd),

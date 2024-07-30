@@ -1,5 +1,7 @@
+using System;
 using NN.CPU_Single;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace DL.NN
 {
@@ -13,7 +15,7 @@ namespace DL.NN
         private readonly float[] _noiseSamplesBuffer;
 
         // Cashed variables
-        private readonly int _epsilonArrayLenght;
+        private readonly int _epsilonArrayLength;
         private readonly int _noiseSamplesSize;
 
         // Compute buffer variables
@@ -38,7 +40,7 @@ namespace DL.NN
             _sigmaWeights = new float[nInputs, nNeurons];
             _sigmaBiases = new float[1, nNeurons];
             _epsilonInputOutput = new float[nInputs + nNeurons];
-            _epsilonArrayLenght = _epsilonInputOutput.Length;
+            _epsilonArrayLength = _epsilonInputOutput.Length;
 
             //var sigmaInitialValues = 0;
             var sigmaInitialValues = sigma / Mathf.Sqrt(nInputs);
@@ -81,25 +83,24 @@ namespace DL.NN
             }
         }
 
-        public override void Forward(float[,] inputs)
+        public override void Forward(Array input)
         {
-            for (int i = 0; i < _epsilonArrayLenght; i++)
+            for (int i = 0; i < _epsilonArrayLength; i++)
             {
                 _epsilonInputOutput[i] = _noiseSamplesBuffer[Random.Range(0, _noiseSamplesSize)];
             }
 
             _epsilonInputOutputBuffer.SetData(_epsilonInputOutput);
-            base.Forward(inputs);
+            base.Forward(input);
         }
 
-        public override void Backward(float[,] dValues, float currentLearningRate, float beta1Corrected,
-            float beta2Corrected)
+        public override void Backward(Array dValue, float currentLearningRate)
         {
-            base.Backward(dValues, currentLearningRate, beta1Corrected, beta2Corrected);
+            base.Backward(dValue, currentLearningRate);
             _shader.Dispatch(_kernelHandleBiasesBackward, _threadGroupXBiasesBackward, 1, 1);
         }
 
-        public override void CopyLayer(NetworkLayer otherLayer)
+        public override void CopyLayer(Layer otherLayer)
         {
             base.CopyLayer(otherLayer);
 
@@ -127,18 +128,18 @@ namespace DL.NN
             _sigmaBiasesCacheBuffer?.Dispose();
         }
 
-        protected override void InitializeForwardBuffers(float[,] inputs)
+        protected override void InitializeForwardBuffers(Array input)
         {
-            base.InitializeForwardBuffers(inputs);
+            base.InitializeForwardBuffers(input);
 
             _shader.SetBuffer(_kernelHandleForward, "sigma_weights", _sigmaWeightsBuffer);
             _shader.SetBuffer(_kernelHandleForward, "sigma_biases", _sigmaBiasesBuffer);
             _shader.SetBuffer(_kernelHandleForward, "epsilon_inputs_outputs", _epsilonInputOutputBuffer);
         }
 
-        protected override void InitializeBackwardsBuffers(float[,] dValues)
+        protected override void InitializeBackwardsBuffers(Array dValue)
         {
-            base.InitializeBackwardsBuffers(dValues);
+            base.InitializeBackwardsBuffers(dValue);
 
             _shader.GetKernelThreadGroupSizes(_kernelHandleBiasesBackward, out var x, out _, out _);
             _threadGroupXBiasesBackward = Mathf.CeilToInt(_biases.GetLength(1) / (float)x);

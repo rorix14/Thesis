@@ -6,6 +6,7 @@ namespace Gym
     public class ImageStealthGameEnv : StealthGameEnv
     {
         [SerializeField] private Camera captureCamera;
+        [SerializeField] private bool isGrayscale;
         [SerializeField] private int imageWithHeight; // should be 30 or 36
         [SerializeField] private ComputeShader imageProcessorCs;
 
@@ -20,6 +21,8 @@ namespace Gym
         private Texture2D _envStateTexture;
         private Rect _imageView;
 
+        public int ImageWithHeight => imageWithHeight;
+        public bool IsGrayscale => isGrayscale;
 
         protected override void Start()
         {
@@ -27,13 +30,13 @@ namespace Gym
 
             _envStarted = true;
 
-            // ObservationLenght = imageWithHeight * imageWithHeight * 3;
-            ObservationLenght = imageWithHeight * imageWithHeight;
+            ObservationLenght = imageWithHeight * imageWithHeight * (isGrayscale ? 1 : 3);
 
             _imageShader = Instantiate(imageProcessorCs);
 
-            // _imageToMatrixKernel = _imageShader.FindKernel("image_to_matrix");
-            _imageToMatrixKernel = _imageShader.FindKernel("image_to_matrix_grayscale");
+            string tt = isGrayscale ? "image_to_matrix_grayscale" : "image_to_matrix";
+            _imageToMatrixKernel =
+                _imageShader.FindKernel(isGrayscale ? "image_to_matrix_grayscale" : "image_to_matrix");
 
             _imageShader.SetInt("image_width", imageWithHeight);
             _imageShader.SetInt("image_height", imageWithHeight);
@@ -53,7 +56,7 @@ namespace Gym
             _imageView = new Rect(0, 0, imageWithHeight, imageWithHeight);
         }
 
-        public override StepInfo Step(int actionIndex)
+        public override StepInfo Step(int actionIndex, bool skippFrame = false)
         {
             var action = ActionLookup[actionIndex];
             var observation = new float[ObservationLenght];
@@ -94,18 +97,21 @@ namespace Gym
                 stepInfo.Reward = goalReachedReward;
             }
 
-            captureCamera.targetTexture = _rt;
-            captureCamera.Render();
+            if (stepInfo.Done || !skippFrame)
+            {
+                captureCamera.targetTexture = _rt;
+                captureCamera.Render();
 
-            RenderTexture.active = _rt;
-            _envStateTexture.ReadPixels(_imageView, 0, 0);
-            _envStateTexture.Apply();
+                RenderTexture.active = _rt;
+                _envStateTexture.ReadPixels(_imageView, 0, 0);
+                _envStateTexture.Apply();
 
-            _imageShader.Dispatch(_imageToMatrixKernel, _threadGroupsX, _threadGroupsX, 1);
-            _imageOutputBuffer.GetData(observation);
+                _imageShader.Dispatch(_imageToMatrixKernel, _threadGroupsX, _threadGroupsX, 1);
+                _imageOutputBuffer.GetData(observation);
 
-            RenderTexture.active = null;
-            captureCamera.targetTexture = null;
+                RenderTexture.active = null;
+                captureCamera.targetTexture = null;
+            }
 
             // if (EpisodeLengthIndex == 300) FillAndSaveImages(observation, "image_reset_" + test);
 
@@ -124,7 +130,7 @@ namespace Gym
             }
             else
             {
-                base.ResetEnv();
+                BaseResetEnv();
             }
 
             Physics.SyncTransforms();

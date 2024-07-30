@@ -1,12 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
+using DL;
 using DL.NN;
-using NN;
 using NN.CPU_Single;
 using UnityEngine;
-using ActivationFunction = DL.NN.ActivationFunction;
+using ActivationFunction = NN.CPU_Single.ActivationFunction;
 using Random = UnityEngine.Random;
 
 namespace Graphs
@@ -23,11 +22,11 @@ namespace Graphs
 
             var preds = new List<float>(y.Length);
 
-            var layers = new NetworkLayer[]
+            var layers = new Layer[]
             {
-                new NetworkLayer(x.GetLength(1), 64, ActivationFunction.ReLu, Instantiate(shader)),
-                new NetworkLayer(64, 64, ActivationFunction.ReLu, Instantiate(shader)),
-                new NetworkLayer(64, 1, ActivationFunction.Linear, Instantiate(shader))
+                new NetworkLayer(x.GetLength(1), 64, DL.ActivationFunction.ReLu, Instantiate(shader)),
+                new NetworkLayer(64, 64,  DL.ActivationFunction.ReLu, Instantiate(shader)),
+                new NetworkLayer(64, 1,  DL.ActivationFunction.Linear, Instantiate(shader))
             };
 
             var model = new NetworkModel(layers, new MeanSquaredError(Instantiate(shader)));

@@ -42,6 +42,8 @@ RWStructuredBuffer<float> output_max_pool;
 void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
                     RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache);
 
+// Assume valid type padding for all functions in this script
+
 // y and x are image sizes, and z is current input from the batch of inputs
 // Relu activation function is being used 
 [numthreads(MATRIX_THREAD_COUNT_X,MATRIX_THREAD_COUNT_Y,MATRIX_THREAD_COUNT_Z)]
@@ -200,36 +202,38 @@ void backward_pass_max_pool_input(uint3 id : SV_DispatchThreadID)
     const unsigned int input_y_x_index = id.z * input_element_size + id.y * input_height_width + id.x;
     const unsigned int d_output_element_index = id.z * output_element_size;
 
-    for (unsigned int fy = id.y % filter_stride; fy < filter_height_width; fy += filter_stride)
+    for (unsigned int d = 0; d < filter_depth; ++d)
     {
-        int d_output_y_index = (id.y - fy) / filter_stride;
-        if (d_output_y_index < 0 || step(output_height_width, d_output_y_index)) continue;
+        float d_input = 0;
+        const int filter_depth_index = d * filter_size;
 
-        d_output_y_index = d_output_y_index * output_height_width + d_output_element_index;
-
-        const int filter_y_index = fy * filter_height_width;
-
-        for (unsigned int fx = id.x % filter_stride; fx < filter_height_width; fx += filter_stride)
+        for (unsigned int fy = id.y % filter_stride; fy < filter_height_width; fy += filter_stride)
         {
-            int d_output_x_index = (id.x - fx) / filter_stride;
-            if (d_output_x_index < 0 || step(output_height_width, d_output_x_index)) continue;
+            int d_output_y_index = (id.y - fy) / filter_stride;
+            if (d_output_y_index < 0 || step(output_height_width, d_output_y_index)) continue;
 
-            d_output_x_index += d_output_y_index;
+            d_output_y_index = d_output_y_index * output_height_width + d_output_element_index;
 
-            const int filter_y_x_index = filter_y_index + fx;
+            const int filter_y_index = fy * filter_height_width + filter_depth_index;
 
-            for (unsigned int fn = 0; fn < filter_number; ++fn)
+            for (unsigned int fx = id.x % filter_stride; fx < filter_height_width; fx += filter_stride)
             {
-                const int filter_element_index = fn * filter_element_size + filter_y_x_index;
-                const float d_value = d_output[fn * output_size + d_output_x_index];
+                int d_output_x_index = (id.x - fx) / filter_stride;
+                if (d_output_x_index < 0 || step(output_height_width, d_output_x_index)) continue;
 
-                for (unsigned int d = 0; d < filter_depth; ++d)
+                d_output_x_index += d_output_y_index;
+
+                const int filter_y_x_index = filter_y_index + fx;
+
+                for (unsigned int fn = 0; fn < filter_number; ++fn)
                 {
-                    d_inputs[d * input_size + input_y_x_index] += filter[d * filter_size + filter_element_index] *
-                        d_value;
+                    d_input += filter[fn * filter_element_size + filter_y_x_index] * d_output[fn * output_size +
+                        d_output_x_index];
                 }
             }
         }
+
+        d_inputs[d * input_size + input_y_x_index] = d_input;
     }
 }
 
@@ -257,7 +261,6 @@ void backward_pass_max_pool_filter(uint3 id : SV_DispatchThreadID)
         for (unsigned int oy = 0; oy < output_height_width; ++oy)
         {
             const int d_output_y_index = oy * output_height_width + d_output_depth_index;
-            const int bias_y_index = oy * output_height_width + d_output_depth_index;
             const int input_y_index = (id.y + oy * filter_stride) * input_height_width + input_depth_index;
 
             for (unsigned int ox = 0; ox < output_height_width; ++ox)
@@ -275,7 +278,7 @@ void backward_pass_max_pool_filter(uint3 id : SV_DispatchThreadID)
 
                 if (update_bias)
                 {
-                    Adam_optimizer(bias_y_index + ox, d_bias, bias, bias_momentum, bias_cache);
+                    Adam_optimizer(d_output_y_x_index, d_bias, bias, bias_momentum, bias_cache);
                 }
             }
         }
@@ -292,38 +295,40 @@ void backward_pass_input(uint3 id : SV_DispatchThreadID)
     const unsigned int input_y_x_index = id.z * input_element_size + id.y * input_height_width + id.x;
     const unsigned int d_output_element_index = id.z * output_element_size;
 
-    for (unsigned int fy = id.y % filter_stride; fy < filter_height_width; fy += filter_stride)
+    for (unsigned int d = 0; d < filter_depth; ++d)
     {
-        int d_output_y_index = (id.y - fy) / filter_stride;
-        if (d_output_y_index < 0 || step(output_height_width, d_output_y_index)) continue;
+        float d_input = 0;
+        const int filter_depth_index = d * filter_size;
 
-        d_output_y_index = d_output_y_index * output_height_width + d_output_element_index;
-
-        const int filter_y_index = fy * filter_height_width;
-
-        for (unsigned int fx = id.x % filter_stride; fx < filter_height_width; fx += filter_stride)
+        for (unsigned int fy = id.y % filter_stride; fy < filter_height_width; fy += filter_stride)
         {
-            int d_output_x_index = (id.x - fx) / filter_stride;
-            if (d_output_x_index < 0 || step(output_height_width, d_output_x_index)) continue;
+            int d_output_y_index = (id.y - fy) / filter_stride;
+            if (d_output_y_index < 0 || step(output_height_width, d_output_y_index)) continue;
 
-            d_output_x_index += d_output_y_index;
+            d_output_y_index = d_output_y_index * output_height_width + d_output_element_index;
 
-            const int filter_y_x_index = filter_y_index + fx;
+            const int filter_y_index = fy * filter_height_width + filter_depth_index;
 
-            for (unsigned int fn = 0; fn < filter_number; ++fn)
+            for (unsigned int fx = id.x % filter_stride; fx < filter_height_width; fx += filter_stride)
             {
-                const int filter_element_index = fn * filter_element_size + filter_y_x_index;
+                int d_output_x_index = (id.x - fx) / filter_stride;
+                if (d_output_x_index < 0 || step(output_height_width, d_output_x_index)) continue;
 
-                const int d_output_full_index = fn * output_size + d_output_x_index;
-                const float d_value = output[d_output_full_index] > 0.0f ? d_values[d_output_full_index] : 0.0f;
+                d_output_x_index += d_output_y_index;
 
-                for (unsigned int d = 0; d < filter_depth; ++d)
+                const int filter_y_x_index = filter_y_index + fx;
+
+                for (unsigned int fn = 0; fn < filter_number; ++fn)
                 {
-                    d_inputs[d * input_size + input_y_x_index] += filter[d * filter_size + filter_element_index] *
-                        d_value;
+                    const int d_output_full_index = fn * output_size + d_output_x_index;
+                    d_input += filter[fn * filter_element_size + filter_y_x_index] * (output[d_output_full_index] > 0.0f
+                            ? d_values[d_output_full_index]
+                            : 0.0f);
                 }
             }
         }
+        
+        d_inputs[d * input_size + input_y_x_index] = d_input;
     }
 }
 
@@ -346,7 +351,6 @@ void backward_pass_filter(uint3 id : SV_DispatchThreadID)
         for (unsigned int oy = 0; oy < output_height_width; ++oy)
         {
             const int d_output_y_index = oy * output_height_width + d_output_depth_index;
-            const int bias_y_index = oy * output_height_width + d_output_depth_index;
             const int input_y_index = (id.y + oy * filter_stride) * input_height_width + input_depth_index;
 
             for (unsigned int ox = 0; ox < output_height_width; ++ox)
@@ -365,7 +369,7 @@ void backward_pass_filter(uint3 id : SV_DispatchThreadID)
 
                 if (update_bias)
                 {
-                    Adam_optimizer(bias_y_index + ox, d_bias, bias, bias_momentum, bias_cache);
+                    Adam_optimizer(d_output_y_x_index, d_bias, bias, bias_momentum, bias_cache);
                 }
             }
         }
@@ -376,15 +380,16 @@ void backward_pass_filter(uint3 id : SV_DispatchThreadID)
 
 float beta_1;
 float beta_2;
+float negated_beta_1;
+float negated_beta_2;
 float epsilon;
 float current_learning_rate;
 
 inline void Adam_optimizer(const int index, const float d_value, RWStructuredBuffer<float> buffer_to_update,
                            RWStructuredBuffer<float> momentum, RWStructuredBuffer<float> cache)
 {
-    //TODO: Could pass the (1 - beta) 
-    const float new_momentum = beta_1 * momentum[index] + (1 - beta_1) * d_value;
-    const float new_cache = beta_2 * cache[index] + (1 - beta_2) * (d_value * d_value);
+    const float new_momentum = beta_1 * momentum[index] + negated_beta_1 * d_value;
+    const float new_cache = beta_2 * cache[index] + negated_beta_2 * (d_value * d_value);
     momentum[index] = new_momentum;
     cache[index] = new_cache;
 

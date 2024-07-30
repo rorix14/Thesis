@@ -1,6 +1,6 @@
 using Algorithms.RL;
+using DL;
 using DL.NN;
-using NN;
 using UnityEngine;
 
 namespace TestGround
@@ -21,7 +21,7 @@ namespace TestGround
         {
             _currentSate = _env.ResetEnv();
 
-            var updateLayers = new NetworkLayer[]
+            var updateLayers = new Layer[]
             {
                 new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true),
                 new NoisyNetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(noisyShader), sigma),
@@ -31,7 +31,7 @@ namespace TestGround
             var updateModel = new NetworkModel(updateLayers, new MeanSquaredError(Instantiate(shader)), learningRate,
                 decayRate);
 
-            var targetLayers = new NetworkLayer[]
+            var targetLayers = new Layer[]
             {
                 new NetworkLayer(_env.GetObservationSize, neuronNumber, activationFunction, Instantiate(shader), true),
                 new NoisyNetworkLayer(neuronNumber, neuronNumber, activationFunction, Instantiate(noisyShader), sigma),

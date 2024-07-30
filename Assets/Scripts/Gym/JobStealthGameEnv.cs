@@ -44,6 +44,7 @@ namespace Gym
             //and array values must be disposed 
             if (!_player || populationSize == 0 || _populationSize == populationSize) return;
             
+            //TODO: second condition might not be necessary
             if (_populationSize > 0 && _populationSize != populationSize)
             {
                 Dispose();
@@ -293,7 +294,7 @@ namespace Gym
             }
             else
             {
-                base.DistributedResetEnv();
+                BaseResetEnv();
             }
 
             //TODO: Should just return a normal array
