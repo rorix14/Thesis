@@ -7,7 +7,7 @@ namespace TestGround
 {
     public class TestNStepDQN : TestDQN
     {
-        [SerializeField] private int stepNumber;
+        [SerializeField] protected int stepNumber;
 
         public override string GetDescription()
         {

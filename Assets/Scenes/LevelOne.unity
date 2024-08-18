@@ -1558,7 +1558,7 @@ MonoBehaviour:
   spottedReward: -20
   assassinateReward: 15
   captureCamera: {fileID: 1134439936}
-  isGrayscale: 1
+  isGrayscale: 0
   imageWithHeight: 28
   imageProcessorCs: {fileID: 7200000, guid: 2e6b92d08cd20054fba1b98287d71b63, type: 3}
 --- !u!1 &965094408
@@ -2364,14 +2364,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   algorithmsPrefabs:
-  - {fileID: 8019296417850588349, guid: 2a976e26854ba67449e375d4f940e0b1, type: 3}
-  - {fileID: 670264597442123898, guid: adfc1ef0d7462694e98adcdc3998bdf5, type: 3}
-  - {fileID: 8019296417850588349, guid: f0ebde8eaf408374c9d001a52fb2e9aa, type: 3}
-  - {fileID: 670264597442123898, guid: a0a16d54f76f7054c9e7c6fdeb440f55, type: 3}
-  - {fileID: 8019296417850588349, guid: a89db128a8ede7d44ae601ceb4d8be12, type: 3}
-  - {fileID: 670264597442123898, guid: a1f3a3fb035436f43a9785e847fe9c68, type: 3}
-  - {fileID: 8019296417850588349, guid: 780d26b700864f74fad8fa10efa3615e, type: 3}
-  - {fileID: 670264597442123898, guid: 64469f42786af9745a02ad6c2c24c311, type: 3}
+  - {fileID: 1022785106812946944, guid: ff5f06ceda9623042a0b784f8ede62f2, type: 3}
+  - {fileID: 1022785106812946944, guid: 7f25863b07793e94d80ee922de3b6e59, type: 3}
+  - {fileID: 1022785106812946944, guid: f8760ecfa6ae1db49996edbd1194973a, type: 3}
+  - {fileID: 1022785106812946944, guid: 86571fd26d11acd43bc136c940f26183, type: 3}
   testNumber: 10
   generatorSeed: 42
   saveInfo: 0

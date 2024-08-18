@@ -22,16 +22,24 @@ namespace TestGround.Image
 
             var updateLayers = new Layer[]
             {
-                new ConvolutionalLayer(envImage.ImageWithHeight, inputDepth, 5, 4, 1, true, Instantiate(shaderCNN),
-                    true),
-                new ConvolutionalLayer(12, 4, 3, 8, 1, true, Instantiate(shaderCNN)),
-                new NetworkLayer(5 * 5 * 8, neuronNumber, activationFunction, Instantiate(shader),
-                    paramsCoefficient: weightsInitStd),
+                // model V1
+                // new ConvolutionalLayer(envImage.ImageWithHeight, inputDepth, 5, 4, 1, true, Instantiate(shaderCNN),
+                //     true),
+                // new ConvolutionalLayer(12, 4, 3, 8, 1, true, Instantiate(shaderCNN)),
+                // new NetworkLayer(5 * 5 * 8, neuronNumber, activationFunction, Instantiate(shader),
+                //     paramsCoefficient: weightsInitStd),
+                // model V2
                 // new ConvolutionalLayer(envImage.ImageWithHeight, inputDepth, 3, 16, 1, true, Instantiate(shaderCNN),
                 // true),
                 // new ConvolutionalLayer(13, 16, 3, 32, 1, true, Instantiate(shaderCNN)),
                 // new NetworkLayer(5 * 5 * 32, neuronNumber, activationFunction, Instantiate(shader),
                 //     paramsCoefficient: weightsInitStd),
+                // model V3
+                new ConvolutionalLayer(envImage.ImageWithHeight, inputDepth, 3, 16, 2, false, Instantiate(shaderCNN),
+                    true),
+                new ConvolutionalLayer(13, 16, 3, 32, 1, false, Instantiate(shaderCNN)),
+                new NetworkLayer(11 * 11 * 32, neuronNumber, activationFunction, Instantiate(shader),
+                    paramsCoefficient: weightsInitStd),
                 new NetworkLayer(neuronNumber, _env.GetNumberOfActions, ActivationFunction.Linear,
                     Instantiate(shader), paramsCoefficient: weightsInitStd)
             };
@@ -40,16 +48,21 @@ namespace TestGround.Image
 
             var targetLayers = new Layer[]
             {
-                new ConvolutionalLayer(envImage.ImageWithHeight, inputDepth, 5, 4, 1, true, Instantiate(shaderCNN),
-                    true),
-                new ConvolutionalLayer(12, 4, 3, 8, 1, true, Instantiate(shaderCNN)),
-                new NetworkLayer(5 * 5 * 8, neuronNumber, activationFunction, Instantiate(shader),
-                    paramsCoefficient: weightsInitStd),
+                // new ConvolutionalLayer(envImage.ImageWithHeight, inputDepth, 5, 4, 1, true, Instantiate(shaderCNN),
+                //     true),
+                // new ConvolutionalLayer(12, 4, 3, 8, 1, true, Instantiate(shaderCNN)),
+                // new NetworkLayer(5 * 5 * 8, neuronNumber, activationFunction, Instantiate(shader),
+                //     paramsCoefficient: weightsInitStd),
                 // new ConvolutionalLayer(envImage.ImageWithHeight, inputDepth, 3, 16, 1, true, Instantiate(shaderCNN),
                 //     true),
                 // new ConvolutionalLayer(13, 16, 3, 32, 1, true, Instantiate(shaderCNN)),
                 // new NetworkLayer(5 * 5 * 32, neuronNumber, activationFunction, Instantiate(shader),
                 //     paramsCoefficient: weightsInitStd),
+                new ConvolutionalLayer(envImage.ImageWithHeight, inputDepth, 3, 16, 2, false, Instantiate(shaderCNN),
+                    true),
+                new ConvolutionalLayer(13, 16, 3, 32, 1, false, Instantiate(shaderCNN)),
+                new NetworkLayer(11 * 11 * 32, neuronNumber, activationFunction, Instantiate(shader),
+                    paramsCoefficient: weightsInitStd),
                 new NetworkLayer(neuronNumber, _env.GetNumberOfActions, ActivationFunction.Linear,
                     Instantiate(shader), paramsCoefficient: weightsInitStd)
             };
